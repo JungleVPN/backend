@@ -11,7 +11,9 @@
     "test": "turbo test",
     "clean": "turbo clean && rm -rf node_modules",
     "docker:up": "docker compose up --build -d",
-    "docker:down": "docker compose down"
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:prod": "docker compose down && docker compose up --build -d && docker compose logs -f"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.3",

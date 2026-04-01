@@ -16,13 +16,19 @@
     "./entities/*": {
       "types": "./src/entities/*",
       "default": "./dist/entities/*"
+    },
+    "./run-migrations": {
+      "default": "./dist/run-migrations.js"
     }
   },
   "scripts": {
     "build": "tsc",
     "dev": "tsc -w",
     "lint": "biome lint ./src",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "migration:generate": "tsc && typeorm migration:generate -d ./dist/datasource.js",
+    "migration:run": "tsc && typeorm migration:run -d ./dist/datasource.js",
+    "migration:revert": "tsc && typeorm migration:revert -d ./dist/datasource.js"
   },
   "dependencies": {
     "@workspace/types": "workspace:*",

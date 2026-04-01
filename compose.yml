@@ -3,7 +3,7 @@ services:
     image: postgres:17.6
     env_file: .env
     ports:
-      - "127.0.0.1:$POSTGRES_HOST_PORT:5432"
+      - "127.0.0.1:${POSTGRES_HOST_PORT}:5432"
     networks:
       - jungle-net
     volumes:
@@ -19,33 +19,80 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: npm run migration:run:prod
+    command: ["node", "packages/database/dist/run-migrations.js"]
     networks:
       - jungle-net
-    env_file: .env
     depends_on:
       db:
         condition: service_healthy
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
 
-  bot:
+  payments:
     build:
       context: .
       dockerfile: Dockerfile
+    command: ["node", "apps/payments/dist/src/main.js"]
     networks:
       - jungle-net
     depends_on:
-      migration:
-        condition: service_completed_successfully
       db:
         condition: service_healthy
+      migration:
+        condition: service_completed_successfully
     env_file: .env
-    expose:
-      - "$PORT"
+    environment:
+      POSTGRES_HOST: db
+    ports:
+      - "127.0.0.1:${PAYMENTS_PORT}:${PAYMENTS_PORT}"
     restart: always
+
+  remnawave:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["node", "apps/remnawave/dist/main.js"]
+    networks:
+      - jungle-net
+    depends_on:
+      db:
+        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
+    ports:
+      - "127.0.0.1:${REMNAWAVE_PORT}:${REMNAWAVE_PORT}"
+    restart: always
+
+  webhook:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: [ "node", "apps/webhook/dist/main.js" ]
+    networks:
+      - jungle-net
+    depends_on:
+      db:
+        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
+      payments:
+        condition: service_started
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
+      PAYMENTS_URL: http://payments:${PAYMENTS_PORT}
+    ports:
+      - "127.0.0.1:${WEBHOOK_PORT}:${WEBHOOK_PORT}"
+    restart: always
+
 
 volumes:
   db:
 
 networks:
   jungle-net:
-    external: true
+    external: false

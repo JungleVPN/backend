@@ -3,5 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "main": "./index.ts",
-  "files": ["tsconfig.base.json", "tsconfig.nestjs.json"]
+  "files": [
+    "tsconfig.base.json",
+    "tsconfig.nestjs.json"
+  ]
 }
