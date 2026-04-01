@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "nest build",
-    "dev": "turbo build --filter='./packages/*' && nest start --watch",
+    "dev": "nest start --watch",
     "start": "node dist/main.js",
     "start:prod": "node dist/main.js",
     "lint": "biome lint ./src",
@@ -17,16 +17,17 @@
     "@nestjs/event-emitter": "^3.0.0",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/typeorm": "11.0.0",
+    "@workspace/database": "workspace:*",
+    "@workspace/types": "workspace:*",
+    "axios": "^1.7.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "stripe": "^20.0.0",
-    "@workspace/database": "workspace:*",
-    "@workspace/types": "workspace:*"
+    "vitest": "^4.1.2"
   },
   "devDependencies": {
-    "@workspace/shared-config": "workspace:*",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^10.1.2",
+    "@workspace/shared-config": "workspace:*",
     "typescript": "^5.4.5"
   }
 }

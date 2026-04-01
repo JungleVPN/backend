@@ -1,0 +1,64 @@
+import type { RawBodyRequest } from '@nestjs/common';
+import { Body, Controller, Headers, HttpCode, Post, Req } from '@nestjs/common';
+import type { UserDto, YookassaWebhookPayload } from '@workspace/types';
+import { WebhookService } from './webhook.service';
+
+@Controller('webhook')
+export class WebhookController {
+  constructor(private readonly webhookService: WebhookService) {}
+
+  @Post('remnawave')
+  async handleRemnaEvents(
+    @Headers('x-remnawave-signature') signature: string,
+    @Body() payload: {
+      event: string;
+      data: UserDto;
+      timestamp: string;
+    },
+  ) {
+    this.webhookService.validateAndProcessRemna(signature, payload);
+    return { ok: true };
+  }
+
+  @Post('torrent')
+  async handleTorrentEvents(
+    @Headers('Authorization') token: string,
+    @Body() payload: {
+      username: string;
+      ip: string;
+      server: string;
+      action: string;
+      duration: string;
+      timestamp: string;
+    },
+  ) {
+    this.webhookService.validateAndProcessTorrent(token, payload);
+    return { ok: true };
+  }
+
+  @Post('payment/yookassa')
+  @HttpCode(200)
+  async handleYookassaEvents(
+    @Headers('x-forwarded-for') xForwardedFor: string,
+    @Headers('x-real-ip') xRealIp: string,
+    @Body() payload: YookassaWebhookPayload,
+  ) {
+    await this.webhookService.forwardYookassaWebhook(payload, xForwardedFor || xRealIp || '');
+    return { ok: true };
+  }
+
+  @Post('payment/stripe')
+  @HttpCode(200)
+  async handleStripeEvents(
+    @Headers('stripe-signature') signature: string,
+    @Req() req: RawBodyRequest<Record<string, unknown>>,
+  ) {
+    const rawBody = req.rawBody;
+    if (!rawBody) {
+      return { received: false, error: 'Missing raw body' };
+    }
+
+    await this.webhookService.forwardStripeWebhook(rawBody, signature);
+    return { received: true };
+  }
+}

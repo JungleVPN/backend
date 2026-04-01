@@ -1,9 +1,8 @@
-import { mapEURAmountToMonthsNumber, mapToCorrectAmount } from '@workspace/utils';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { StripeInvoicePayload } from './stripe.types';
 import { StripeProvider } from './stripe.provider';
-import { customerToId, subscriptionToId } from './stripe.utils';
+import { customerToId, mapEURAmountToMonthsNumber, mapToCorrectAmount, subscriptionToId } from './stripe.utils';
 import Stripe from 'stripe';
 
 @Injectable()

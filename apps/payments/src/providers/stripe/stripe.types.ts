@@ -1,11 +1,10 @@
-import type { PaymentCurrency } from '@workspace/types';
 import type Stripe from 'stripe';
 
 export interface CreateStripePaymentDto {
   readonly userId: string;
   readonly payment: {
     readonly amount: number | string;
-    readonly currency: PaymentCurrency;
+    readonly currency: 'EUR';
   };
   readonly metadata?: Record<string, any>;
 }
@@ -20,7 +19,7 @@ export interface StripeInvoicePayload {
   stripeCustomerId: string | null;
   stripeSubscriptionId: string | null;
   amount: number | null;
-  currency: PaymentCurrency | null;
+  currency: 'EUR' | null;
   status: Stripe.Invoice.Status | string;
   url: string | null;
   invoiceUrl: string | null;

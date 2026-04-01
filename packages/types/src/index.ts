@@ -15,15 +15,6 @@ export {
   UpdateUserCommand,
 } from '@remnawave/backend-contract';
 
-// ── Remnawave webhook types ─────────────────────────────────────────
-
-/**
- * Events emitted by the Remnawave panel webhook.
- * TODO: Replace with the actual enum/union from @remnawave/backend-contract
- * once the contract package exposes it.
- */
-export type WebHookEvent = string;
-
 /**
  * Minimal user shape returned by the Remnawave panel.
  * Used in webhook payloads. The full type comes from CreateUserCommand.Response.
@@ -38,14 +29,6 @@ export interface UserDto {
   [key: string]: unknown;
 }
 
-// ── Payment types (shared between database entity and apps) ─────────
-
-export type PaymentProvider = 'yookassa' | 'stripe';
-
-export type PaymentCurrency = 'RUB' | 'EUR';
-
-export type PaymentPeriod = 'month_1' | 'month_3' | 'month_6';
-
 /**
  * Union of all payment statuses from both providers.
  * Yookassa: 'pending' | 'succeeded'
@@ -54,9 +37,55 @@ export type PaymentPeriod = 'month_1' | 'month_3' | 'month_6';
  * We keep this as a string to avoid pulling the full Stripe SDK
  * into the types package. Individual apps can narrow the type.
  */
-export type PaymentStatus = 'pending' | 'succeeded' | 'paid' | 'open' | 'draft' | 'void' | 'uncollectible' | string;
+// ── Yookassa webhook types (shared between payments and webhook apps) ─
 
-export type PaymentNotificationEvent =
+export type YookassaPaymentStatus = 'pending' | 'succeeded';
+
+export type YookassaNotificationEvent =
   | 'payment.succeeded'
   | 'payment.canceled'
   | 'payment.waiting_for_capture';
+
+export interface YookassaPaymentPayload {
+  id: string;
+  status: YookassaPaymentStatus;
+  paid: boolean;
+  amount: {
+    value: string;
+    currency: string;
+  };
+  authorization_details?: {
+    rrn?: string;
+    auth_code?: string;
+    three_d_secure?: {
+      applied: boolean;
+    };
+  };
+  created_at: string;
+  description?: string;
+  expires_at?: string;
+  metadata: Record<string, any>;
+  payment_method?: {
+    type: string;
+    id: string;
+    saved: boolean;
+    card?: {
+      first6?: string;
+      last4?: string;
+      expiry_month?: string;
+      expiry_year?: string;
+      card_type?: string;
+      issuer_country?: string;
+      issuer_name?: string;
+    };
+    title?: string;
+  };
+  refundable: boolean;
+  test: boolean;
+}
+
+export interface YookassaWebhookPayload {
+  type: 'notification';
+  event: YookassaNotificationEvent;
+  object: YookassaPaymentPayload;
+}

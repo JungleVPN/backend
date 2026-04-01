@@ -18,7 +18,6 @@
     "@nestjs/typeorm": "11.0.0",
     "@workspace/database": "workspace:*",
     "@workspace/types": "workspace:*",
-    "@workspace/utils": "workspace:*",
     "axios": "^1.7.0",
     "cidr-matcher": "^2.1.1",
     "stripe": "^20.0.0",

@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { dataSourceOptions } from '@workspace/database/datasource';
-import { WebhookModule } from './webhook.module';
+import { WebhookModule } from './main/webhook.module';
 
 @Module({
   imports: [
@@ -12,7 +10,6 @@ import { WebhookModule } from './webhook.module';
       envFilePath: ['.env', '../../.env'],
     }),
     EventEmitterModule.forRoot(),
-    TypeOrmModule.forRoot(dataSourceOptions),
     WebhookModule,
   ],
 })
