@@ -4,9 +4,10 @@ import { YookassaController } from '@payments/providers/yookassa/yookassa.contro
 import { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
 import { YookassaWebhookService } from '@payments/providers/yookassa/yookassa-webhook.service';
 import { YookassaPayment } from '@workspace/database';
+import { PaymentStatusModule } from '../../payment-status/payment-status.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([YookassaPayment])],
+  imports: [TypeOrmModule.forFeature([YookassaPayment]), PaymentStatusModule],
   controllers: [YookassaController],
   exports: [YooKassaProvider, YookassaWebhookService],
   providers: [YooKassaProvider, YookassaWebhookService],

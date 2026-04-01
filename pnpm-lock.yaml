@@ -76,7 +76,7 @@ importers:
         specifier: ^5.4.5
         version: 5.9.3
 
-  apps/remnawave:
+  apps/referrals:
     dependencies:
       '@nestjs/common':
         specifier: ^11.0.1
@@ -96,15 +96,9 @@ importers:
       '@nestjs/typeorm':
         specifier: ^10.0.2
         version: 10.0.2(@nestjs/common@11.1.17(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.17)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.28(pg@8.20.0))
-      '@remnawave/backend-contract':
-        specifier: '*'
-        version: 2.7.2
       '@workspace/database':
         specifier: workspace:*
         version: link:../../packages/database
-      '@workspace/types':
-        specifier: workspace:*
-        version: link:../../packages/types
       axios:
         specifier: ^1.7.0
         version: 1.14.0
@@ -123,6 +117,52 @@ importers:
       typeorm:
         specifier: ^0.3.20
         version: 0.3.28(pg@8.20.0)
+    devDependencies:
+      '@nestjs/cli':
+        specifier: ^11.0.0
+        version: 11.0.17(@types/node@25.5.0)
+      '@nestjs/schematics':
+        specifier: ^10.1.2
+        version: 10.2.3(chokidar@4.0.3)(typescript@5.9.3)
+      '@workspace/shared-config':
+        specifier: workspace:*
+        version: link:../../packages/shared-config
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
+  apps/remnawave:
+    dependencies:
+      '@nestjs/common':
+        specifier: ^11.0.1
+        version: 11.1.17(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/config':
+        specifier: ^4.0.2
+        version: 4.0.3(@nestjs/common@11.1.17(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: ^11.0.1
+        version: 11.1.17(@nestjs/common@11.1.17(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.17)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/platform-express':
+        specifier: ^11.0.1
+        version: 11.1.17(@nestjs/common@11.1.17(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.17)
+      '@remnawave/backend-contract':
+        specifier: '*'
+        version: 2.7.2
+      '@workspace/types':
+        specifier: workspace:*
+        version: link:../../packages/types
+      axios:
+        specifier: ^1.7.0
+        version: 1.14.0
+      date-fns:
+        specifier: ^3.6.0
+        version: 3.6.0
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      rxjs:
+        specifier: ^7.8.1
+        version: 7.8.2
     devDependencies:
       '@nestjs/cli':
         specifier: ^11.0.0

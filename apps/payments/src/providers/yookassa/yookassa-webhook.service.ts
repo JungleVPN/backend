@@ -1,18 +1,18 @@
 import * as process from 'node:process';
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import {
+import type {
   YookassaNotificationEvent,
   YookassaWebhookPayload,
 } from '@payments/providers/yookassa/yookassa.model';
 import { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
+import { PaymentStatusService } from '../../payment-status/payment-status.service';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const CIDRMatcher = require('cidr-matcher');
 
 @Injectable()
 export class YookassaWebhookService {
-  private readonly logger = new Logger('YookassaWebhookService');
+  private readonly logger = new Logger(YookassaWebhookService.name);
   private readonly validIpAddresses: string[] = JSON.parse(
     process.env.YOOKASSA_PAYMENT_VALID_IP_ADDRESS || '[]',
   );
@@ -20,7 +20,7 @@ export class YookassaWebhookService {
   constructor(
     @Inject(forwardRef(() => YooKassaProvider))
     readonly yooKassaProvider: YooKassaProvider,
-    readonly eventEmitter: EventEmitter2,
+    private readonly paymentStatusService: PaymentStatusService,
   ) {}
 
   async handleWebhook(payload: YookassaWebhookPayload, ip: string) {
@@ -32,11 +32,7 @@ export class YookassaWebhookService {
       return;
     }
 
-    const {
-      paymentId,
-      status: webhookStatus,
-      event,
-    } = {
+    const { paymentId, status: webhookStatus, event } = {
       paymentId: payload.object.id,
       status: payload.object.status,
       event: payload.event,
@@ -51,17 +47,35 @@ export class YookassaWebhookService {
         return;
       }
 
-      this.eventEmitter.emit(event, payload);
+      if (event === 'payment.succeeded') {
+        await this.handlePaymentSucceeded(payload);
+      }
     } catch (apiError) {
-      console.error(`API verification failed for payment ${paymentId}`, apiError);
+      this.logger.error(`API verification failed for payment ${paymentId}`, apiError);
     }
+  }
+
+  private async handlePaymentSucceeded(payload: YookassaWebhookPayload): Promise<void> {
+    const { metadata } = payload.object;
+    if (!metadata?.telegramId) {
+      this.logger.warn('No telegramId in Yookassa payment metadata');
+      return;
+    }
+
+    const telegramId = Number(metadata.telegramId);
+    const selectedPeriod = Number(metadata.selectedPeriod);
+
+    if (!telegramId || !selectedPeriod) {
+      this.logger.warn('Invalid telegramId or selectedPeriod in Yookassa metadata');
+      return;
+    }
+
+    await this.paymentStatusService.handlePaymentSucceeded(telegramId, selectedPeriod);
   }
 
   async isIPRangeValid(ip: string): Promise<boolean> {
     const normalizedIps = this.getNormalizedIPs();
-
     const matcher = new CIDRMatcher(normalizedIps);
-
     const ips = ip.split(',').map((i) => i.trim());
 
     if (!ips.some((i) => matcher.contains(i))) {
