@@ -1,0 +1,38 @@
+{
+  "name": "@workspace/database",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./datasource": {
+      "types": "./src/datasource.ts",
+      "default": "./dist/datasource.js"
+    },
+    "./entities/*": {
+      "types": "./src/entities/*",
+      "default": "./dist/entities/*"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc -w",
+    "lint": "biome lint ./src",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@workspace/types": "workspace:*",
+    "typeorm": "^0.3.20",
+    "pg": "^8.13.0",
+    "dotenv": "^17.2.3",
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "@workspace/shared-config": "workspace:*",
+    "typescript": "^5.4.5"
+  }
+}

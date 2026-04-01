@@ -1,0 +1,51 @@
+services:
+  db:
+    image: postgres:17.6
+    env_file: .env
+    ports:
+      - "127.0.0.1:$POSTGRES_HOST_PORT:5432"
+    networks:
+      - jungle-net
+    volumes:
+      - db:/var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migration:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: npm run migration:run:prod
+    networks:
+      - jungle-net
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - jungle-net
+    depends_on:
+      migration:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+    env_file: .env
+    expose:
+      - "$PORT"
+    restart: always
+
+volumes:
+  db:
+
+networks:
+  jungle-net:
+    external: true

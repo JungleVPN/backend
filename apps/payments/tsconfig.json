@@ -1,0 +1,14 @@
+{
+  "extends": "@workspace/shared-config/tsconfig.nestjs.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "rootDir": ".",
+    "strictPropertyInitialization": false,
+    "paths": {
+      "@payments/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "test"]
+}

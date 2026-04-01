@@ -1,0 +1,117 @@
+import type { RawBodyRequest } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  HttpCode,
+  Logger,
+  NotFoundException,
+  Param,
+  Patch,
+  Post,
+  Req,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { StripePayment } from '@workspace/database';
+import { Repository } from 'typeorm';
+import { StripeProvider } from './stripe.provider';
+import type { CreateStripePaymentDto, Session } from './stripe.types';
+
+@Controller('payments/stripe')
+export class StripeController {
+  private readonly logger = new Logger(StripeController.name);
+
+  constructor(
+    @InjectRepository(StripePayment)
+    private readonly stripePaymentRepo: Repository<StripePayment>,
+    private readonly stripeProvider: StripeProvider,
+  ) {}
+
+  /** List all Stripe payments, newest first */
+  @Get()
+  async list() {
+    return this.stripePaymentRepo.find({ order: { createdAt: 'DESC' } });
+  }
+
+  /** Get a single Stripe payment by id */
+  @Get(':id')
+  async getById(@Param('id') id: string) {
+    const payment = await this.stripePaymentRepo.findOneBy({ id });
+    if (!payment) throw new NotFoundException(`Stripe payment ${id} not found`);
+    return payment;
+  }
+
+  /** Update a Stripe payment status (and optional fields) */
+  @Patch(':id')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() body: { status?: string; paidAt?: string | null },
+  ) {
+    const payment = await this.stripePaymentRepo.findOneBy({ id });
+    if (!payment) throw new NotFoundException(`Stripe payment ${id} not found`);
+
+    if (body.status !== undefined) payment.status = body.status;
+    if (body.paidAt !== undefined) payment.paidAt = body.paidAt ? new Date(body.paidAt) : null;
+
+    return this.stripePaymentRepo.save(payment);
+  }
+
+  /** Create a checkout / portal session via Stripe */
+  @Post('create-session')
+  async createSession(@Body() dto: CreateStripePaymentDto): Promise<Session> {
+    const session = await this.stripeProvider.createPayment(dto);
+
+    const customer = typeof session.customer === 'string' ? session.customer : session.customer?.id;
+
+    const existing = await this.stripePaymentRepo.findOne({
+      where: { customer },
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!existing) {
+      const record = this.stripePaymentRepo.create({
+        id: session.id,
+        url: session.url,
+        customer: customer,
+        status: 'pending',
+        amount: +dto.payment.amount,
+        currency: dto.payment.currency,
+        userId: dto.userId,
+        paidAt: null,
+        stripeSubscriptionId: null,
+        invoiceUrl: null,
+      });
+      await this.stripePaymentRepo.save(record);
+    }
+
+    return session;
+  }
+
+  /** Stripe webhook endpoint — raw body required for signature verification */
+  @Post('webhook')
+  @HttpCode(200)
+  async webhook(
+    @Req() req: RawBodyRequest<Record<string, unknown>>,
+    @Headers('stripe-signature') signature: string,
+  ) {
+    const rawBody = req.rawBody;
+    if (!rawBody) {
+      this.logger.error('Missing raw body for Stripe webhook');
+      return { received: false };
+    }
+
+    try {
+      const event = this.stripeProvider.stripe.webhooks.constructEvent(
+        rawBody,
+        signature,
+        process.env.STRIPE_WEBHOOK_SECRET || '',
+      );
+      await this.stripeProvider.handleWebhook(event);
+      return { received: true };
+    } catch (err) {
+      this.logger.error('Stripe webhook verification failed', err);
+      return { received: false };
+    }
+  }
+}

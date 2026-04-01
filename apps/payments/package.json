@@ -1,0 +1,34 @@
+{
+  "name": "@workspace/payments",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "nest build",
+    "dev": "nest start --watch",
+    "start": "node dist/main.js",
+    "start:prod": "node dist/main.js",
+    "lint": "biome lint ./src",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/core": "^11.0.1",
+    "@nestjs/event-emitter": "^3.0.0",
+    "@nestjs/typeorm": "11.0.0",
+    "@workspace/database": "workspace:*",
+    "@workspace/types": "workspace:*",
+    "@workspace/utils": "workspace:*",
+    "axios": "^1.7.0",
+    "cidr-matcher": "^2.1.1",
+    "stripe": "^20.0.0",
+    "typeorm": "^0.3.20",
+    "vitest": "^4.1.2"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/schematics": "^10.1.2",
+    "@workspace/shared-config": "workspace:*",
+    "typescript": "^5.4.5"
+  }
+}

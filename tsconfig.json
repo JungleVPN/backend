@@ -1,0 +1,7 @@
+{
+  "extends": "./packages/shared-config/tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "."
+  },
+  "exclude": ["node_modules", "dist", "apps", "packages"]
+}

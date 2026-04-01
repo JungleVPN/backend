@@ -1,0 +1,12 @@
+node_modules
+/dist
+.env*
+.idea
+.turbo
+
+err.log
+out.log
+pgdata
+postgres-data
+DOCS.md
+credentials.json
