@@ -76,7 +76,7 @@ export class UserService {
     payload: Pick<CreateUserRequestDto, 'username' | 'telegramId' | 'description'>,
   ): Promise<CreateUserResponseDto> {
     const trialDays = Number(this.configService.get('TRIAL_PERIOD_IN_DAYS', '3'));
-    const squads = JSON.parse(this.configService.get('INTERNAL_SQUADS', '[]'));
+    const squads = JSON.parse(this.configService.get('REMNAWAVE_INTERNAL_SQUADS', '[]'));
     const expiryTime = addDays(new Date(), trialDays);
 
     const body: CreateUserRequestDto = {

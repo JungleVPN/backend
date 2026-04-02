@@ -91,6 +91,25 @@ services:
       - "127.0.0.1:${REFERRALS_PORT}:${REFERRALS_PORT}"
     restart: always
 
+  broadcasts:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["node", "apps/broadcasts/dist/src/main.js"]
+    networks:
+      - jungle-net
+    depends_on:
+      db:
+        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
+    ports:
+      - "127.0.0.1:${BROADCASTS_PORT}:${BROADCASTS_PORT}"
+    restart: always
+
   webhook:
     build:
       context: .

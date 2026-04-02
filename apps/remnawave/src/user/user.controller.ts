@@ -5,7 +5,6 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  NotFoundException,
   Param,
   Patch,
   Post,
@@ -25,12 +24,8 @@ export class UserController {
   @Get('by-telegramId/:telegramId')
   async getUserByTelegramId(
     @Param('telegramId') telegramId: Remnawave.CreateUserRequestDto['telegramId'],
-  ): Promise<Remnawave.GetUserByTelegramIdResponseDto> {
-    const user = await this.userService.getUserByTgId(telegramId);
-    if (!user) {
-      throw new NotFoundException(`User with telegramId ${telegramId} not found`);
-    }
-    return user;
+  ): Promise<Remnawave.GetUserByTelegramIdResponseDto | null> {
+    return this.userService.getUserByTgId(telegramId);
   }
 
   @Post()

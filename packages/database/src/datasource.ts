@@ -2,6 +2,8 @@ import path from 'node:path';
 import * as process from 'node:process';
 import { config } from 'dotenv';
 import { DataSource, type DataSourceOptions } from 'typeorm';
+import { Broadcast } from './entities/broadcast.entity';
+import { BroadcastMessage } from './entities/broadcast-message.entity';
 import { Referral } from './entities/referral.entity';
 import { StripePayment } from './entities/stripe-payment.entity';
 import { YookassaPayment } from './entities/yookassa-payment.entity';
@@ -20,7 +22,7 @@ export const dataSourceOptions: DataSourceOptions = {
   username: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DB,
-  entities: [Referral, StripePayment, YookassaPayment],
+  entities: [Referral, StripePayment, YookassaPayment, Broadcast, BroadcastMessage],
   migrations: [migrationsDir],
   migrationsRun: false,
   synchronize: false,

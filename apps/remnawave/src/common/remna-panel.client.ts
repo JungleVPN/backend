@@ -5,7 +5,6 @@ import axios, { AxiosInstance } from 'axios';
 @Injectable()
 export class RemnaPanelClient implements OnModuleInit {
   private readonly logger = new Logger(RemnaPanelClient.name);
-  // @ts-expect-error
   private client: AxiosInstance;
   constructor(private readonly configService: ConfigService) {}
 

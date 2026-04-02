@@ -32,7 +32,11 @@ export class YookassaWebhookService {
       return;
     }
 
-    const { paymentId, status: webhookStatus, event } = {
+    const {
+      paymentId,
+      status: webhookStatus,
+      event,
+    } = {
       paymentId: payload.object.id,
       status: payload.object.status,
       event: payload.event,
