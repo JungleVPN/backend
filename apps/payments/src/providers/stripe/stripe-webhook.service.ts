@@ -1,5 +1,7 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import type Stripe from 'stripe';
+import { PAYMENT_EVENTS, PaymentSucceededEvent } from '../../notifications/payment-events';
 import { PaymentStatusService } from '../../payment-status/payment-status.service';
 import type { StripeInvoicePayload } from './stripe.types';
 import { StripeProvider } from './stripe.provider';
@@ -18,6 +20,7 @@ export class StripeWebhookService {
     @Inject(forwardRef(() => StripeProvider))
     private readonly stripeProvider: StripeProvider,
     private readonly paymentStatusService: PaymentStatusService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async handleWebhook(event: Stripe.Event) {
@@ -43,7 +46,16 @@ export class StripeWebhookService {
       return;
     }
 
-    await this.paymentStatusService.handlePaymentSucceeded(telegramId, selectedPeriod);
+    const result = await this.paymentStatusService.handlePaymentSucceeded(telegramId, selectedPeriod);
+
+    if (result.userId) {
+      this.eventEmitter.emit(PAYMENT_EVENTS.SUCCEEDED, {
+        telegramId,
+        provider: 'stripe',
+        selectedPeriod,
+        invoiceUrl: payload.invoiceUrl ?? undefined,
+      } satisfies PaymentSucceededEvent);
+    }
   }
 
   private async handleInvoiceFailure(event: Stripe.Event) {

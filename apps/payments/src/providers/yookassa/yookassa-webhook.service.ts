@@ -1,10 +1,12 @@
 import * as process from 'node:process';
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import type {
   YookassaNotificationEvent,
   YookassaWebhookPayload,
 } from '@payments/providers/yookassa/yookassa.model';
 import { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
+import { PAYMENT_EVENTS, PaymentSucceededEvent } from '../../notifications/payment-events';
 import { PaymentStatusService } from '../../payment-status/payment-status.service';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -21,15 +23,19 @@ export class YookassaWebhookService {
     @Inject(forwardRef(() => YooKassaProvider))
     readonly yooKassaProvider: YooKassaProvider,
     private readonly paymentStatusService: PaymentStatusService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async handleWebhook(payload: YookassaWebhookPayload, ip: string) {
-    const isIPRangeValid = await this.isIPRangeValid(ip);
-    if (!isIPRangeValid) return;
+    const isProd = process.env.NODE_ENV === 'production';
+    if (isProd) {
+      const isIPRangeValid = await this.isIPRangeValid(ip);
+      if (!isIPRangeValid) return;
 
-    if (!this.isValidWebhookPayload(payload)) {
-      this.logger.warn('Invalid webhook payload structure');
-      return;
+      if (!this.isValidWebhookPayload(payload)) {
+        this.logger.warn('Invalid webhook payload structure');
+        return;
+      }
     }
 
     const {
@@ -43,15 +49,17 @@ export class YookassaWebhookService {
     };
 
     try {
-      const status = await this.yooKassaProvider.checkPaymentStatus(paymentId);
-      if (status !== webhookStatus) {
-        this.logger.warn(
-          `Payment ${paymentId} status mismatch! Webhook: ${webhookStatus}, API: ${status}. Possible fake webhook.`,
-        );
-        return;
+      if (isProd) {
+        const status = await this.yooKassaProvider.checkPaymentStatus(paymentId);
+        if (status !== webhookStatus) {
+          this.logger.warn(
+            `Payment ${paymentId} status mismatch! Webhook: ${webhookStatus}, API: ${status}. Possible fake webhook.`,
+          );
+          return;
+        }
       }
 
-      if (event === 'payment.succeeded') {
+      if (event === PAYMENT_EVENTS.SUCCEEDED) {
         await this.handlePaymentSucceeded(payload);
       }
     } catch (apiError) {
@@ -61,20 +69,26 @@ export class YookassaWebhookService {
 
   private async handlePaymentSucceeded(payload: YookassaWebhookPayload): Promise<void> {
     const { metadata } = payload.object;
-    if (!metadata?.telegramId) {
-      this.logger.warn('No telegramId in Yookassa payment metadata');
-      return;
-    }
 
     const telegramId = Number(metadata.telegramId);
     const selectedPeriod = Number(metadata.selectedPeriod);
 
-    if (!telegramId || !selectedPeriod) {
-      this.logger.warn('Invalid telegramId or selectedPeriod in Yookassa metadata');
-      return;
+    if (!telegramId) {
+      this.logger.warn('Invalid telegramId in Yookassa metadata');
     }
 
-    await this.paymentStatusService.handlePaymentSucceeded(telegramId, selectedPeriod);
+    const result = await this.paymentStatusService.handlePaymentSucceeded(
+      telegramId,
+      selectedPeriod,
+    );
+
+    if (result.userId) {
+      this.eventEmitter.emit(PAYMENT_EVENTS.SUCCEEDED, {
+        telegramId,
+        provider: 'yookassa',
+        selectedPeriod,
+      } satisfies PaymentSucceededEvent);
+    }
   }
 
   async isIPRangeValid(ip: string): Promise<boolean> {
