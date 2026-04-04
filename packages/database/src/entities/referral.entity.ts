@@ -1,21 +1,27 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-export type ReferralStatus = 'PENDING' | 'FIRST_REWARD' | 'COMPLETED';
+type ReferralStatus = 'FIRST_REWARD' | 'COMPLETED';
+
+/** TypeORM returns bigint as string — this converts it back to number on read. */
+const bigintTransformer = {
+  to: (value: number) => value,
+  from: (value: string | null) => (value === null ? null : Number(value)),
+};
 
 @Entity('referrals')
 export class Referral {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'bigint', unique: false })
+  @Column({ type: 'bigint', unique: false, transformer: bigintTransformer })
   inviterId: number;
 
-  @Column({ type: 'bigint', unique: true })
+  @Column({ type: 'bigint', unique: true, transformer: bigintTransformer })
   invitedId: number;
 
   @Column({
     type: 'varchar',
-    default: 'PENDING',
+    default: 'FIRST_REWARD',
   })
   status: ReferralStatus;
 

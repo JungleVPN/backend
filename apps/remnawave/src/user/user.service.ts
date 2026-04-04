@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   CreateUserCommand,
@@ -22,6 +22,7 @@ import {
 
 @Injectable()
 export class UserService {
+  readonly logger = new Logger(UserService.name);
   constructor(
     private readonly panelClient: RemnaPanelClient,
     private readonly configService: ConfigService,

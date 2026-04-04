@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Referral } from '@workspace/database';
 import { add } from 'date-fns';
 import { Repository } from 'typeorm';
-import { generateReferralCode } from './referral.utils';
+import { ReferralRewardedEvent } from '../notifications/referrals-events';
 import { RemnaClient } from './remna.client';
 
 @Injectable()
@@ -39,15 +39,25 @@ export class ReferralService {
   async handleNewUser(
     inviterId: number,
     invitedTelegramId: number,
-    locale?: string,
   ): Promise<{ success: boolean; reason?: string }> {
     if (inviterId === invitedTelegramId) {
       this.logger.warn(`User ${invitedTelegramId} tried to refer themselves.`);
       return { success: false, reason: 'self_referral' };
     }
 
-    const existingUser = await this.remnaClient.getUserByTgId(invitedTelegramId);
-    if (existingUser) {
+    const referral = await this.getReferralByInvitedId(invitedTelegramId);
+
+    if (referral && inviterId !== referral.inviterId) {
+      this.logger.warn('Someone has already invited: ', referral?.invitedId);
+      return { success: false, reason: 'user_is_invited' };
+    }
+
+    if (referral && referral.status === 'COMPLETED') {
+      this.logger.warn(`Invited user ${invitedTelegramId} already completed referral.`);
+      return { success: false, reason: 'referral_completed' };
+    }
+
+    if (referral && inviterId === referral.inviterId && referral.status === 'FIRST_REWARD') {
       this.logger.warn(`Invited user ${invitedTelegramId} is not new.`);
       return { success: false, reason: 'user_exists' };
     }
@@ -58,23 +68,12 @@ export class ReferralService {
       return { success: false, reason: 'inviter_not_found' };
     }
 
-    const invited = await this.remnaClient.createUser({
-      username: invitedTelegramId.toString(),
-      telegramId: invitedTelegramId,
-      description: locale ?? undefined,
-    });
+    await this.createReferralRecord(inviter.telegramId, invitedTelegramId);
 
-    if (!invited?.telegramId) {
-      this.logger.warn(`Failed to create invited user ${invitedTelegramId}.`);
-      return { success: false, reason: 'user_creation_failed' };
-    }
-
-    await this.createReferralRecord(inviter.telegramId, invited.telegramId);
-
-    const bonusDays = Number(process.env.INVITER_START_BONUS_IN_DAYS || '3');
+    const bonusDays = Number(process.env.INVITER_START_BONUS_IN_DAYS || '1');
     await this.rewardUser(inviter.telegramId, bonusDays, true);
 
-    return { success: true };
+    return { success: true, reason: 'new_user' };
   }
 
   /**
@@ -118,12 +117,6 @@ export class ReferralService {
     await this.referralRepository.delete({ invitedId });
   }
 
-  getReferralLink(telegramId: number): string {
-    const code = generateReferralCode(telegramId);
-    const botUsername = process.env.TELEGRAM_BOT_USERNAME;
-    return `https://t.me/${botUsername}?start=ref_${code}`;
-  }
-
   private async rewardUser(inviterId: number, days: number, isNewUser: boolean): Promise<void> {
     const user = await this.remnaClient.getUserByTgId(inviterId);
     if (!user) return;
@@ -135,7 +128,12 @@ export class ReferralService {
       expireAt: newExpireAt,
     });
 
-    this.eventEmitter.emit('user.rewarded', { id: user.telegramId, isNewUser });
+    const payload: ReferralRewardedEvent = {
+      telegramId: user.telegramId,
+      isNewUser,
+    };
+
+    this.eventEmitter.emit('user.rewarded', payload);
     this.logger.log(`Rewarded inviter ${inviterId} with ${days} day(s)`);
   }
 }

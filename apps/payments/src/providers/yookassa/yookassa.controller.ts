@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   Ip,
+  Logger,
   NotFoundException,
   Param,
   Patch,
@@ -18,6 +19,8 @@ import type { CreateYookassaPaymentDto } from './yookassa.types';
 
 @Controller('payments/yookassa')
 export class YookassaController {
+  private readonly logger = new Logger(YookassaController.name);
+
   constructor(
     @InjectRepository(YookassaPayment)
     private readonly yookassaPaymentRepo: Repository<YookassaPayment>,
@@ -71,6 +74,7 @@ export class YookassaController {
     });
     await this.yookassaPaymentRepo.save(record);
 
+    this.logger.log(`Created Yookassa payment session ${session.id} for user`);
     return session;
   }
 

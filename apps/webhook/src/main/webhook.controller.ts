@@ -1,10 +1,19 @@
-import type { RawBodyRequest } from '@nestjs/common';
-import { Body, Controller, Headers, HttpCode, Post, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Headers,
+  HttpCode,
+  Logger,
+  Post,
+  type RawBodyRequest,
+  Req,
+} from '@nestjs/common';
 import type { UserDto, YookassaWebhookPayload } from '@workspace/types';
 import { WebhookService } from './webhook.service';
 
 @Controller('webhook')
 export class WebhookController {
+  readonly logger = new Logger(WebhookService.name);
   constructor(private readonly webhookService: WebhookService) {}
 
   @Post('remnawave')
@@ -43,6 +52,7 @@ export class WebhookController {
     @Headers('x-real-ip') xRealIp: string,
     @Body() payload: YookassaWebhookPayload,
   ) {
+    this.logger.log(`Received Yookassa webhook`);
     await this.webhookService.forwardYookassaWebhook(payload, xForwardedFor || xRealIp || '');
     return { ok: true };
   }

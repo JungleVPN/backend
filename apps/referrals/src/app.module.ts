@@ -6,6 +6,7 @@ import { dataSourceOptions, Referral } from '@workspace/database';
 import { ReferralController } from './main/referral.controller';
 import { ReferralService } from './main/referral.service';
 import { RemnaClient } from './main/remna.client';
+import { ReferralsNotificationModule } from './notifications/referrals-notification.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { RemnaClient } from './main/remna.client';
     TypeOrmModule.forRoot(dataSourceOptions),
     TypeOrmModule.forFeature([Referral]),
     EventEmitterModule.forRoot(),
+    ReferralsNotificationModule,
   ],
   controllers: [ReferralController],
   providers: [ReferralService, RemnaClient],
