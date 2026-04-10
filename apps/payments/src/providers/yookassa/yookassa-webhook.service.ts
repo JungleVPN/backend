@@ -37,41 +37,15 @@ export class YookassaWebhookService {
   async handleWebhook(payload: YookassaWebhookPayload, ip: string) {
     const isProd = process.env.NODE_ENV === 'production';
     if (isProd) {
-      const isIPRangeValid = await this.isIPRangeValid(ip);
-      if (!isIPRangeValid) return;
-
-      if (!this.isValidWebhookPayload(payload)) {
-        this.logger.warn('Invalid webhook payload structure');
-        return;
-      }
+      await this.validateWebhookPayload(payload, ip);
     }
 
-    const {
-      paymentId,
-      status: webhookStatus,
-      event,
-    } = {
-      paymentId: payload.object.id,
-      status: payload.object.status,
-      event: payload.event,
-    };
-
     try {
-      if (isProd) {
-        const status = await this.yooKassaProvider.checkPaymentStatus(paymentId);
-        if (status !== webhookStatus) {
-          this.logger.warn(
-            `Payment ${paymentId} status mismatch! Webhook: ${webhookStatus}, API: ${status}. Possible fake webhook.`,
-          );
-          return;
-        }
-      }
-
-      if (event === PAYMENT_EVENTS.SUCCEEDED) {
+      if (payload.event === PAYMENT_EVENTS.SUCCEEDED) {
         await this.handlePaymentSucceeded(payload);
       }
     } catch (apiError) {
-      this.logger.error(`API verification failed for payment ${paymentId}`, apiError);
+      this.logger.error(`API verification failed for payment ${payload.object.id}`, apiError);
     }
   }
 
@@ -82,7 +56,7 @@ export class YookassaWebhookService {
     const selectedPeriod = Number(metadata.selectedPeriod);
 
     await this.yookassaPaymentRepo.update(id, {
-      status: 'success',
+      status: PAYMENT_EVENTS.SUCCEEDED,
       paidAt: new Date(),
       url: null,
     });
@@ -101,7 +75,7 @@ export class YookassaWebhookService {
       selectedPeriod,
     );
 
-    if (result.userId) {
+    if (result.success) {
       this.eventEmitter.emit(PAYMENT_EVENTS.SUCCEEDED, {
         telegramId,
         provider: 'yookassa',
@@ -223,5 +197,28 @@ export class YookassaWebhookService {
       payload.type === 'notification' &&
       this.isValidNotificationEvent(payload.event)
     );
+  }
+
+  async validateWebhookPayload(payload: YookassaWebhookPayload, ip: string) {
+    const { paymentId, status: webhookStatus } = {
+      paymentId: payload.object.id,
+      status: payload.object.status,
+    };
+
+    const isIPRangeValid = await this.isIPRangeValid(ip);
+    if (!isIPRangeValid) return;
+
+    if (!this.isValidWebhookPayload(payload)) {
+      this.logger.warn('Invalid webhook payload structure');
+      return;
+    }
+
+    const status = await this.yooKassaProvider.checkPaymentStatus(paymentId);
+    if (status !== webhookStatus) {
+      this.logger.warn(
+        `Payment ${paymentId} status mismatch! Webhook: ${webhookStatus}, API: ${status}. Possible fake webhook.`,
+      );
+      return;
+    }
   }
 }

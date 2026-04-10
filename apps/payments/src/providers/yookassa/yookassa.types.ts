@@ -22,9 +22,18 @@ export interface CreateAutopaymentInternalDto {
   readonly description?: string;
 }
 
+export type {
+  YookassaNotificationEvent,
+  YookassaPaymentPayload,
+  YookassaPaymentStatus,
+  YookassaWebhookPayload,
+} from './yookassa.model';
+
+import type { YookassaPaymentStatus } from './yookassa.model';
+
 export interface AutopaymentApiResponse {
   id: string;
-  status: string;
+  status: YookassaPaymentStatus;
   paid: boolean;
   amount: { value: string; currency: string };
   payment_method?: {
@@ -39,10 +48,3 @@ export interface AutopaymentApiResponse {
   };
   metadata: Record<string, any>;
 }
-
-export type {
-  YookassaNotificationEvent,
-  YookassaPaymentPayload,
-  YookassaPaymentStatus,
-  YookassaWebhookPayload,
-} from './yookassa.model';

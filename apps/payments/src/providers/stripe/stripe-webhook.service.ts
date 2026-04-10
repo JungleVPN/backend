@@ -3,8 +3,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import type Stripe from 'stripe';
 import { PAYMENT_EVENTS, PaymentSucceededEvent } from '../../notifications/payment-events';
 import { PaymentStatusService } from '../../payment-status/payment-status.service';
-import type { StripeInvoicePayload } from './stripe.types';
 import { StripeProvider } from './stripe.provider';
+import type { StripeInvoicePayload } from './stripe.types';
 import {
   customerToId,
   mapEURAmountToMonthsNumber,
@@ -46,9 +46,12 @@ export class StripeWebhookService {
       return;
     }
 
-    const result = await this.paymentStatusService.handlePaymentSucceeded(telegramId, selectedPeriod);
+    const result = await this.paymentStatusService.handlePaymentSucceeded(
+      telegramId,
+      selectedPeriod,
+    );
 
-    if (result.userId) {
+    if (result.success) {
       this.eventEmitter.emit(PAYMENT_EVENTS.SUCCEEDED, {
         telegramId,
         provider: 'stripe',

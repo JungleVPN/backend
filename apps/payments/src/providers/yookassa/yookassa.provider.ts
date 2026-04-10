@@ -1,14 +1,13 @@
 import * as process from 'node:process';
 import { Injectable } from '@nestjs/common';
 import axios, { AxiosInstance } from 'axios';
-import type { YookassaPaymentStatus, YookassaWebhookPayload } from './yookassa.model';
+import type { YookassaPaymentStatus } from './yookassa.model';
 import type {
   AutopaymentApiResponse,
   CreateAutopaymentInternalDto,
   CreateYookassaPaymentDto,
   YookassaPaymentSession,
 } from './yookassa.types';
-import { YookassaWebhookService } from './yookassa-webhook.service';
 
 @Injectable()
 export class YooKassaProvider {
@@ -24,8 +23,6 @@ export class YooKassaProvider {
       password: process.env.YOOKASSA_API_KEY || '',
     },
   });
-
-  constructor(readonly yookassaWebhookService: YookassaWebhookService) {}
 
   async createPayment(dto: CreateYookassaPaymentDto): Promise<YookassaPaymentSession> {
     try {
@@ -81,7 +78,6 @@ export class YooKassaProvider {
         metadata: {
           telegramId: dto.userId,
           selectedPeriod: dto.selectedPeriod,
-          isAutopayment: true,
         },
       },
       {
@@ -92,10 +88,6 @@ export class YooKassaProvider {
     );
 
     return data;
-  }
-
-  async handleWebhook(payload: YookassaWebhookPayload, ip: string): Promise<void> {
-    await this.yookassaWebhookService.handleWebhook(payload, ip);
   }
 
   async checkPaymentStatus(paymentId: string): Promise<YookassaPaymentStatus> {

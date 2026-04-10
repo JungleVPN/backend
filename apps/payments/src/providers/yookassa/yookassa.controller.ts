@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
+import { YookassaWebhookService } from '@payments/providers/yookassa/yookassa-webhook.service';
 import { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
 import type { CreateAutopaymentDto } from '@workspace/types';
 import { Repository } from 'typeorm';
@@ -30,6 +31,7 @@ export class YookassaController {
     private readonly yookassaPaymentRepo: Repository<YookassaPayment>,
     @InjectRepository(SavedPaymentMethod)
     private readonly savedMethodRepo: Repository<SavedPaymentMethod>,
+    private readonly yookassaWebhookService: YookassaWebhookService,
     private readonly yookassaProvider: YooKassaProvider,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -130,7 +132,7 @@ export class YookassaController {
   @Post('webhook')
   @HttpCode(200)
   async webhook(@Body() payload: YookassaWebhookPayload, @Ip() ip: string) {
-    await this.yookassaProvider.handleWebhook(payload, ip);
+    await this.yookassaWebhookService.handleWebhook(payload, ip);
     return { received: true };
   }
 
@@ -149,20 +151,17 @@ export class YookassaController {
   @Post('autopayment')
   async createAutopayment(@Body() dto: CreateAutopaymentDto) {
     const savedMethod = await this.savedMethodRepo.findOneBy({
-      paymentMethodId: dto.paymentMethodId,
       userId: dto.userId,
       isActive: true,
     });
 
     if (!savedMethod) {
-      throw new NotFoundException(
-        `No active saved payment method ${dto.paymentMethodId} for user ${dto.userId}`,
-      );
+      throw new NotFoundException(`No active saved payment method for user ${dto.userId}`);
     }
 
     const result = await this.yookassaProvider.createAutopayment({
-      userId: dto.userId,
-      paymentMethodId: dto.paymentMethodId,
+      userId: savedMethod.userId,
+      paymentMethodId: savedMethod.paymentMethodId,
       amount: dto.amount,
       selectedPeriod: dto.selectedPeriod,
       description: dto.description,
@@ -171,24 +170,20 @@ export class YookassaController {
     // Store the payment record regardless of outcome
     const record = this.yookassaPaymentRepo.create({
       id: result.id,
-      url: null,
       status: result.status,
-      amount: +dto.amount,
-      currency: 'RUB',
-      userId: dto.userId,
-      description: dto.description ?? 'Autopayment for VPN subscription',
+      amount: dto.amount,
+      userId: savedMethod.userId,
+      description: dto.description ?? 'Autopayment for JungleVPN subscription',
       metadata: {
-        telegramId: dto.userId,
+        telegramId: savedMethod.userId,
         selectedPeriod: dto.selectedPeriod,
-        isAutopayment: true,
-        paymentMethodId: dto.paymentMethodId,
       },
-      paidAt: result.status === 'succeeded' ? new Date() : null,
+      paidAt: result.status === 'payment.succeeded' ? new Date() : null,
     });
     await this.yookassaPaymentRepo.save(record);
 
     // If the autopayment was immediately canceled, emit failure event
-    if (result.status === 'canceled' && result.cancellation_details) {
+    if (result.status === 'payment.canceled' && result.cancellation_details) {
       this.eventEmitter.emit(PAYMENT_EVENTS.AUTOPAYMENT_FAILED, {
         telegramId: Number(dto.userId),
         provider: 'yookassa',

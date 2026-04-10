@@ -29,7 +29,7 @@ export class PaymentStatusService {
   async handlePaymentSucceeded(
     telegramId: number,
     selectedPeriod: number,
-  ): Promise<{ userId: string | null; referralRewarded: boolean }> {
+  ): Promise<{ success: boolean }> {
     // 1. Get user from remnawave
     const user = await this.getUser(telegramId);
     if (!user) {
@@ -43,16 +43,13 @@ export class PaymentStatusService {
     await this.updateUserExpiry(user.uuid, newExpiry);
 
     // 3. Trigger referral reward (best-effort)
-    let referralRewarded = false;
     if (user.telegramId) {
-      referralRewarded = await this.triggerReferralReward(user.telegramId);
+      await this.triggerReferralReward(user.telegramId);
     }
 
-    this.logger.log(
-      `Payment processed for ${telegramId}: +${selectedPeriod} month(s), referral: ${referralRewarded}`,
-    );
+    this.logger.log(`Payment processed for ${telegramId}: +${selectedPeriod} month(s)`);
 
-    return { userId: user.uuid, referralRewarded };
+    return { success: true };
   }
 
   private async getUser(
