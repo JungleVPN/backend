@@ -193,7 +193,7 @@ export class YookassaWebhookService {
 
   isValidWebhookPayload(payload: YookassaWebhookPayload): boolean {
     return (
-      payload?.object &&
+      !!payload.object &&
       payload.type === 'notification' &&
       this.isValidNotificationEvent(payload.event)
     );
