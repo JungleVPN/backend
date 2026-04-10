@@ -26,9 +26,9 @@
     "dev": "tsc -w",
     "lint": "biome lint ./src",
     "clean": "rm -rf dist",
-    "migration:generate": "tsc && typeorm migration:generate -d ./dist/datasource.js",
-    "migration:run": "tsc && typeorm migration:run -d ./dist/datasource.js",
-    "migration:revert": "tsc && typeorm migration:revert -d ./dist/datasource.js"
+    "migration:generate": "rm -rf dist && tsc && typeorm migration:generate -d ./dist/datasource.js",
+    "migration:run": "rm -rf dist && tsc && typeorm migration:run -d ./dist/datasource.js",
+    "migration:revert": "rm -rf dist && tsc && typeorm migration:revert -d ./dist/datasource.js"
   },
   "dependencies": {
     "@workspace/types": "workspace:*",

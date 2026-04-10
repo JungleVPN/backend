@@ -39,7 +39,7 @@ export interface UserDto {
  */
 // ── Yookassa webhook types (shared between payments and webhook apps) ─
 
-export type YookassaPaymentStatus = 'pending' | 'succeeded';
+export type YookassaPaymentStatus = 'pending' | 'succeeded' | 'canceled';
 
 export type YookassaNotificationEvent =
   | 'payment.succeeded'
@@ -88,4 +88,44 @@ export interface YookassaWebhookPayload {
   type: 'notification';
   event: YookassaNotificationEvent;
   object: YookassaPaymentPayload;
+}
+
+// ── Autopayment types ──────────────────────────────────────────────────
+
+export interface CreateAutopaymentDto {
+  /** Telegram ID */
+  userId: string;
+  /** saved_payment_methods.paymentMethodId (YooKassa's payment_method.id) */
+  paymentMethodId: string;
+  amount: number | string;
+  /** Subscription period in months — forwarded to metadata for webhook handler */
+  selectedPeriod: number;
+  description?: string;
+}
+
+export interface AutopaymentResult {
+  paymentId: string;
+  status: YookassaPaymentStatus;
+  /** Present when status === 'canceled' */
+  cancellationDetails?: {
+    party: string;
+    reason: string;
+  };
+}
+
+export interface SavedPaymentMethodDto {
+  id: string;
+  userId: string;
+  provider: string;
+  paymentMethodId: string;
+  paymentMethodType: string;
+  title: string | null;
+  card: {
+    last4?: string;
+    expiryMonth?: string;
+    expiryYear?: string;
+    cardType?: string;
+  } | null;
+  isActive: boolean;
+  createdAt: string;
 }

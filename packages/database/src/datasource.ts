@@ -6,6 +6,7 @@ import { Broadcast } from './entities/broadcast.entity';
 import { BroadcastMessage } from './entities/broadcast-message.entity';
 import { Referral } from './entities/referral.entity';
 import { StripePayment } from './entities/stripe-payment.entity';
+import { SavedPaymentMethod } from './entities/saved-payment-method.entity';
 import { YookassaPayment } from './entities/yookassa-payment.entity';
 
 // Load .env from multiple possible locations.
@@ -22,7 +23,7 @@ export const dataSourceOptions: DataSourceOptions = {
   username: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DB,
-  entities: [Referral, StripePayment, YookassaPayment, Broadcast, BroadcastMessage],
+  entities: [Referral, SavedPaymentMethod, StripePayment, YookassaPayment, Broadcast, BroadcastMessage],
   migrations: [migrationsDir],
   migrationsRun: false,
   synchronize: false,

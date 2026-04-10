@@ -2,7 +2,11 @@ import * as process from 'node:process';
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import axios from 'axios';
-import type { PaymentSucceededEvent } from './payment-events';
+import type {
+  AutopaymentFailedEvent,
+  PaymentMethodSavedEvent,
+  PaymentSucceededEvent,
+} from './payment-events';
 import { PAYMENT_EVENTS } from './payment-events';
 
 /**
@@ -26,24 +30,33 @@ export class PaymentNotificationService {
 
   @OnEvent(PAYMENT_EVENTS.SUCCEEDED)
   async onPaymentSucceeded(event: PaymentSucceededEvent): Promise<void> {
-    await this.notifyBot(event);
-    // Future: await this.notifyEmail(event);
+    await this.notifyBot(PAYMENT_EVENTS.SUCCEEDED, event);
+  }
+
+  @OnEvent(PAYMENT_EVENTS.METHOD_SAVED)
+  async onMethodSaved(event: PaymentMethodSavedEvent): Promise<void> {
+    await this.notifyBot(PAYMENT_EVENTS.METHOD_SAVED, event);
+  }
+
+  @OnEvent(PAYMENT_EVENTS.AUTOPAYMENT_FAILED)
+  async onAutopaymentFailed(event: AutopaymentFailedEvent): Promise<void> {
+    await this.notifyBot(PAYMENT_EVENTS.AUTOPAYMENT_FAILED, event);
   }
 
   /**
    * Sends payment notification to the bot's /notify/payment endpoint.
    * Best-effort: failures are logged but do not affect payment processing.
    */
-  private async notifyBot(event: PaymentSucceededEvent): Promise<void> {
+  private async notifyBot(
+    eventType: string,
+    payload: PaymentSucceededEvent | PaymentMethodSavedEvent | AutopaymentFailedEvent,
+  ): Promise<void> {
     try {
       await axios.post(
         `${this.botBaseUrl}/notify/payment`,
         {
-          event: PAYMENT_EVENTS.SUCCEEDED,
-          telegramId: event.telegramId,
-          provider: event.provider,
-          expireAt: event.expireAt,
-          invoiceUrl: event.invoiceUrl,
+          event: eventType,
+          ...payload,
         },
         {
           headers: {
@@ -54,10 +67,10 @@ export class PaymentNotificationService {
         },
       );
 
-      this.logger.log(`Bot notified: payment.succeeded for telegramId=${event.telegramId}`);
+      this.logger.log(`Bot notified: ${eventType} for telegramId=${payload.telegramId}`);
     } catch (err: any) {
       this.logger.warn(
-        `Failed to notify bot about payment for telegramId=${event.telegramId}: ${err.message}`,
+        `Failed to notify bot about ${eventType} for telegramId=${payload.telegramId}: ${err.message}`,
       );
     }
   }

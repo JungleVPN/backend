@@ -10,5 +10,5 @@ pgdata
 postgres-data
 DOCS.md
 credentials.json
-
+*.tsbuildinfo
 _tmp*
