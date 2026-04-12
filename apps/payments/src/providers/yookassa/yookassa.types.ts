@@ -6,7 +6,7 @@ export interface CreateYookassaPaymentDto {
   };
   readonly metadata?: Record<string, any>;
   /** When true, YooKassa saves the payment method for future autopayments */
-  readonly savePaymentMethod?: boolean;
+  readonly savePaymentMethod: boolean;
 }
 
 export interface YookassaPaymentSession {

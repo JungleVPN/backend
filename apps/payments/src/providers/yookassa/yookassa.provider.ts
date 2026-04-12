@@ -78,6 +78,7 @@ export class YooKassaProvider {
         metadata: {
           telegramId: dto.userId,
           selectedPeriod: dto.selectedPeriod,
+          isAutopayment: true,
         },
       },
       {

@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   HttpCode,
   Ip,
@@ -48,18 +47,31 @@ export class YookassaController {
   }
 
   /** Disable a saved payment method (soft-delete) */
-  @Delete('saved-methods/:id')
-  async disableSavedMethod(@Param('id') id: string) {
-    const method = await this.savedMethodRepo.findOneBy({ id });
+  @Post('saved-methods/:paymentId')
+  async toggleSavedMethod(
+    @Param('paymentId') paymentId: string,
+    @Body() body: { userId: string; isActive: boolean },
+  ) {
+    const method = await this.savedMethodRepo.findOneBy({ id: paymentId });
     if (!method) {
-      throw new NotFoundException(`Saved payment method ${id} not found`);
+      throw new NotFoundException(`Saved payment method ${method} not found`);
     }
 
-    method.isActive = false;
+    const activeMethod = await this.savedMethodRepo.findOneBy({
+      userId: method.userId,
+      isActive: true,
+    });
+
+    if (activeMethod && body.isActive) {
+      activeMethod.isActive = false;
+      await this.savedMethodRepo.save(activeMethod);
+    }
+
+    method.isActive = body.isActive;
     await this.savedMethodRepo.save(method);
 
-    this.logger.log(`Disabled saved payment method ${id} for user ${method.userId}`);
-    return { disabled: true };
+    this.logger.log(`Toggled saved payment method ${paymentId} for user ${method.userId}`);
+    return { isActive: body.isActive };
   }
 
   // ── Payments ───────────────────────────────────────────────────────
@@ -100,10 +112,15 @@ export class YookassaController {
    */
   @Post('create-session')
   async createSession(@Body() dto: CreateYookassaPaymentDto) {
-    let savePaymentMethod = dto.savePaymentMethod;
-    // If caller didn't explicitly set savePaymentMethod, decide based on opt-out status
-    if (savePaymentMethod === undefined) {
-      savePaymentMethod = !(await this.hasUserOptedOutOfAutopayments(dto.userId));
+    const savePaymentMethod = dto.savePaymentMethod;
+
+    const savedMethod = await this.savedMethodRepo.findOneBy({
+      userId: dto.userId,
+      isActive: true,
+    });
+
+    if (savedMethod) {
+      await this.toggleSavedMethod(savedMethod.id, { userId: dto.userId, isActive: false });
     }
 
     const session = await this.yookassaProvider.createPayment({
@@ -149,7 +166,7 @@ export class YookassaController {
    * 4. If failed — emit AUTOPAYMENT_FAILED so the bot can fall back to manual payment
    */
   @Post('autopayment')
-  async createAutopayment(@Body() dto: CreateAutopaymentDto) {
+  async makeAutopayment(@Body() dto: CreateAutopaymentDto) {
     const savedMethod = await this.savedMethodRepo.findOneBy({
       userId: dto.userId,
       isActive: true,

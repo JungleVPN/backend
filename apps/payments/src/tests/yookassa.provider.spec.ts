@@ -48,6 +48,7 @@ describe('YooKassaProvider', () => {
         userId: 'user-1',
         payment: { amount: 100, description: 'desc' },
         metadata: { telegramId: 1, selectedPeriod: 1 },
+        savePaymentMethod: false,
       });
 
       expect(mockPost).toHaveBeenCalledTimes(1);
@@ -106,7 +107,7 @@ describe('YooKassaProvider', () => {
       mockPost.mockRejectedValue(new Error('network'));
 
       await expect(
-        provider.createPayment({ userId: 'u', payment: { amount: 1 } }),
+        provider.createPayment({ userId: 'u', payment: { amount: 1 }, savePaymentMethod: false }),
       ).rejects.toThrow('network');
     });
   });

@@ -113,24 +113,39 @@ describe('YookassaController', () => {
     });
   });
 
-  describe('disableSavedMethod', () => {
-    it('soft-deletes the method when it exists', async () => {
+  describe('toggleSavedMethod', () => {
+    it('disable the method if isActive is false', async () => {
       const method = { id: 'm1', userId: 'u1', isActive: true };
       mockSmFindOneBy.mockResolvedValue(method);
 
-      const result = await controller.disableSavedMethod('m1');
+      const result = await controller.toggleSavedMethod('m1', { userId: 'u1', isActive: false });
 
       expect(method.isActive).toBe(false);
       expect(mockSmSave).toHaveBeenCalledWith(method);
-      expect(result).toEqual({ disabled: true });
+      expect(result).toEqual({ isActive: false });
+    });
+
+    it('disables previous active method if it existst and isActive for different method is true', async () => {
+      const method = { id: 'm1', userId: 'u1', isActive: true };
+      const activeMethod = { id: 'm2', userId: 'u1', isActive: true };
+      mockSmFindOneBy.mockResolvedValueOnce(method);
+      mockSmFindOneBy.mockResolvedValueOnce(activeMethod);
+
+      const result = await controller.toggleSavedMethod('m1', { userId: 'u1', isActive: true });
+
+      expect(activeMethod.isActive).toBe(false);
+      expect(mockSmSave).toHaveBeenCalledWith(activeMethod);
+      expect(method.isActive).toBe(true);
+      expect(mockSmSave).toHaveBeenCalledWith(method);
+      expect(result).toEqual({ isActive: true });
     });
 
     it('throws NotFoundException when method does not exist', async () => {
       mockSmFindOneBy.mockResolvedValue(null);
 
-      await expect(controller.disableSavedMethod('missing')).rejects.toBeInstanceOf(
-        NotFoundException,
-      );
+      await expect(
+        controller.toggleSavedMethod('missing', { userId: 'u1', isActive: false }),
+      ).rejects.toBeInstanceOf(NotFoundException);
       expect(mockSmSave).not.toHaveBeenCalled();
     });
   });
@@ -204,6 +219,7 @@ describe('YookassaController', () => {
     const baseDto = {
       userId: 'user-1',
       payment: { amount: 100, description: 'test' },
+      savePaymentMethod: false,
     };
 
     beforeEach(() => {
@@ -300,9 +316,9 @@ describe('YookassaController', () => {
   });
 
   // ─────────────────────────────────────────────────────────
-  // createAutopayment
+  // makeAutopayment
   // ─────────────────────────────────────────────────────────
-  describe('createAutopayment', () => {
+  describe('makeAutopayment', () => {
     const dto = {
       userId: 'user-1',
       amount: 500,
@@ -313,7 +329,7 @@ describe('YookassaController', () => {
     it('throws when no active saved method exists', async () => {
       mockSmFindOneBy.mockResolvedValue(null);
 
-      await expect(controller.createAutopayment(dto)).rejects.toBeInstanceOf(NotFoundException);
+      await expect(controller.makeAutopayment(dto)).rejects.toBeInstanceOf(NotFoundException);
       expect(mockCreateAutopayment).not.toHaveBeenCalled();
     });
 
@@ -328,7 +344,7 @@ describe('YookassaController', () => {
         status: 'payment.succeeded',
       });
 
-      const result = await controller.createAutopayment(dto);
+      const result = await controller.makeAutopayment(dto);
 
       expect(mockCreateAutopayment).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -372,7 +388,7 @@ describe('YookassaController', () => {
         },
       });
 
-      const result = await controller.createAutopayment(dto);
+      const result = await controller.makeAutopayment(dto);
 
       expect(mockYkCreate).toHaveBeenCalledWith(
         expect.objectContaining({
