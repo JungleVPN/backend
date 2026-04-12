@@ -164,7 +164,7 @@ describe('YooKassaProvider', () => {
       });
 
       const [, body] = mockPost.mock.calls[0];
-      expect(body.description).toBe('Autopayment for VPN subscription');
+      expect(body.description).toBe('Happy to see you in the JUNGLE 🌴');
     });
   });
 

@@ -25,7 +25,7 @@ export class WebhookController {
       timestamp: string;
     },
   ) {
-    this.webhookService.validateAndProcessRemna(signature, payload);
+    await this.webhookService.validateAndProcessRemna(signature, payload);
     return { ok: true };
   }
 

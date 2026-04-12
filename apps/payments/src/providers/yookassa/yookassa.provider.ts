@@ -74,7 +74,8 @@ export class YooKassaProvider {
         },
         capture: true,
         payment_method_id: dto.paymentMethodId,
-        description: dto.description || 'Autopayment for VPN subscription',
+        description:
+          dto.description || process.env.PAYMENT_DESCRIPTION || 'Happy to see you in the JUNGLE 🌴',
         metadata: {
           telegramId: dto.userId,
           selectedPeriod: dto.selectedPeriod,

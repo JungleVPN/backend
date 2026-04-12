@@ -39,7 +39,7 @@ export interface UserDto {
  */
 // ── Yookassa webhook types (shared between payments and webhook apps) ─
 
-export type YookassaPaymentStatus = YookassaNotificationEvent;
+export type YookassaPaymentStatus = 'pending' | 'succeeded' | 'canceled' | 'waiting_for_capture';
 
 export type YookassaNotificationEvent =
   | 'payment.succeeded'
@@ -92,7 +92,7 @@ export interface YookassaWebhookPayload {
 
 // ── Autopayment types ──────────────────────────────────────────────────
 
-export interface CreateAutopaymentDto {
+export interface MakeAutopaymentDto {
   /** Telegram ID */
   userId: string;
   amount: number;
@@ -108,6 +108,18 @@ export interface AutopaymentResult {
     party: string;
     reason: string;
   };
+}
+
+// ── Remnawave panel events ────────────────────────────────────────────
+
+export const REMNAWAVE_EVENTS = {
+  USER_EXPIRES_IN_24H: 'user.expires_in_24_hours',
+} as const;
+
+export interface RemnawebhookPayload {
+  event: string;
+  data: UserDto;
+  timestamp: string;
 }
 
 export interface SavedPaymentMethodDto {

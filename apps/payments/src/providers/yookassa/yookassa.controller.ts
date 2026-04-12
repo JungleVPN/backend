@@ -14,7 +14,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { YookassaWebhookService } from '@payments/providers/yookassa/yookassa-webhook.service';
 import { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
-import type { CreateAutopaymentDto } from '@workspace/types';
+import type { AutopaymentResult, MakeAutopaymentDto } from '@workspace/types';
 import { Repository } from 'typeorm';
 import { type AutopaymentFailedEvent, PAYMENT_EVENTS } from '../../notifications/payment-events';
 import type { YookassaWebhookPayload } from './yookassa.model';
@@ -165,8 +165,8 @@ export class YookassaController {
    * 3. Store the payment record
    * 4. If failed — emit AUTOPAYMENT_FAILED so the bot can fall back to manual payment
    */
-  @Post('autopayment')
-  async makeAutopayment(@Body() dto: CreateAutopaymentDto) {
+  @Post('make-autopayment')
+  async makeAutopayment(@Body() dto: MakeAutopaymentDto): Promise<AutopaymentResult> {
     const savedMethod = await this.savedMethodRepo.findOneBy({
       userId: dto.userId,
       isActive: true,
@@ -195,12 +195,12 @@ export class YookassaController {
         telegramId: savedMethod.userId,
         selectedPeriod: dto.selectedPeriod,
       },
-      paidAt: result.status === 'payment.succeeded' ? new Date() : null,
+      paidAt: result.status === 'succeeded' ? new Date() : null,
     });
     await this.yookassaPaymentRepo.save(record);
 
     // If the autopayment was immediately canceled, emit failure event
-    if (result.status === 'payment.canceled' && result.cancellation_details) {
+    if (result.status === 'canceled' && result.cancellation_details) {
       this.eventEmitter.emit(PAYMENT_EVENTS.AUTOPAYMENT_FAILED, {
         telegramId: Number(dto.userId),
         provider: 'yookassa',
@@ -219,29 +219,5 @@ export class YookassaController {
       status: result.status,
       cancellationDetails: result.cancellation_details,
     };
-  }
-
-  // ── Helpers ────────────────────────────────────────────────────────
-
-  /**
-   * A user has opted out of autopayments if they have at least one saved
-   * payment method record (active or not) but ZERO active ones.
-   *
-   * - No records at all → new user, NOT opted out (autopayments enabled by default)
-   * - Some records, all inactive → explicitly opted out
-   * - At least one active record → NOT opted out
-   */
-  private async hasUserOptedOutOfAutopayments(userId: string): Promise<boolean> {
-    const totalCount = await this.savedMethodRepo.count({
-      where: { userId, provider: 'yookassa' },
-    });
-
-    if (totalCount === 0) return false;
-
-    const activeCount = await this.savedMethodRepo.count({
-      where: { userId, provider: 'yookassa', isActive: true },
-    });
-
-    return activeCount === 0;
   }
 }

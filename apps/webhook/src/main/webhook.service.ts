@@ -3,7 +3,11 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UserDto, YookassaWebhookPayload } from '@workspace/types';
+import { REMNAWAVE_EVENTS } from '@workspace/types';
 import axios from 'axios';
+
+/** Events that should be forwarded to the payments service for processing. */
+const PAYMENT_FORWARDED_EVENTS = new Set<string>([REMNAWAVE_EVENTS.USER_EXPIRES_IN_24H]);
 
 @Injectable()
 export class WebhookService {
@@ -18,7 +22,7 @@ export class WebhookService {
     return this.configService.get<string>('PAYMENTS_URL', 'http://localhost:3001');
   }
 
-  validateAndProcessRemna(
+  async validateAndProcessRemna(
     signature: string,
     payload: { event: string; data: UserDto; timestamp: string },
   ) {
@@ -36,7 +40,25 @@ export class WebhookService {
       }
     }
 
-    this.eventEmitter.emit(payload.event, payload);
+    if (PAYMENT_FORWARDED_EVENTS.has(payload.event)) {
+      await this.forwardRemnaEventToPayments(payload);
+    }
+  }
+
+  private async forwardRemnaEventToPayments(payload: {
+    event: string;
+    data: UserDto;
+    timestamp: string;
+  }): Promise<void> {
+    try {
+      await axios.post(`${this.paymentsBaseUrl}/payments/remnawave-event`, payload, {
+        timeout: 10_000,
+      });
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to forward remnawave event ${payload.event} to payments: ${error.message}`,
+      );
+    }
   }
 
   validateAndProcessTorrent(

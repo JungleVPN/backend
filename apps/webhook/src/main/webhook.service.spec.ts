@@ -4,9 +4,11 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WebhookService } from './webhook.service';
 
+const mockAxiosPost = vi.fn().mockResolvedValue({ status: 200 });
+
 vi.mock('axios', () => ({
   default: {
-    post: vi.fn().mockResolvedValue({ status: 200 }),
+    post: (...args: any[]) => mockAxiosPost(...args),
   },
 }));
 
@@ -17,15 +19,20 @@ describe('WebhookService', () => {
     emit: vi.fn(),
   };
 
-  const mockEventConfigService = {
-    emit: vi.fn(),
+  const mockConfigService = {
+    get: vi.fn((key: string, fallback?: string): string => {
+      const map: Record<string, string> = {
+        PAYMENTS_URL: 'http://payments:3001',
+      };
+      return map[key] ?? fallback ?? '';
+    }),
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
     service = new WebhookService(
       mockEventEmitter as unknown as EventEmitter2,
-      mockEventConfigService as any,
+      mockConfigService as any,
     );
   });
 
@@ -33,48 +40,103 @@ describe('WebhookService', () => {
     expect(service).toBeDefined();
   });
 
+  // ── validateAndProcessRemna ────────────────────────────────────────
+
   describe('validateAndProcessRemna', () => {
-    it('should throw BadRequestException for invalid signature in production', () => {
-      process.env.NODE_ENV = 'production';
-      process.env.REMNAWAVE_WEBHOOK_SECRET = 'secret';
+    it('throws BadRequestException for invalid signature in production', async () => {
+      mockConfigService.get.mockImplementation((key: string, fallback?: string): string => {
+        if (key === 'NODE_ENV') return 'production';
+        if (key === 'REMNAWAVE_WEBHOOK_SECRET') return 'secret';
+        return fallback ?? '';
+      });
+      service = new WebhookService(
+        mockEventEmitter as unknown as EventEmitter2,
+        mockConfigService as any,
+      );
+
       const payload = { event: 'test', data: {}, timestamp: '123' } as any;
-      expect(() => service.validateAndProcessRemna('invalid', payload)).toThrow(
+      await expect(service.validateAndProcessRemna('invalid', payload)).rejects.toThrow(
         BadRequestException,
       );
     });
 
-    it('should emit event in non-production without signature check', () => {
-      process.env.NODE_ENV = 'development';
-      const payload = { event: 'user.created', data: { uuid: '1' }, timestamp: '123' } as any;
-      service.validateAndProcessRemna('any', payload);
-      expect(mockEventEmitter.emit).toHaveBeenCalledWith('user.created', payload);
+    it('forwards user.expires_in_24_hours to payments service via HTTP', async () => {
+      const payload = {
+        event: 'user.expires_in_24_hours',
+        data: { uuid: '1', telegramId: 42 },
+        timestamp: '123',
+      } as any;
+
+      await service.validateAndProcessRemna('any', payload);
+
+      expect(mockAxiosPost).toHaveBeenCalledWith(
+        'http://payments:3001/payments/remnawave-event',
+        payload,
+        expect.objectContaining({ timeout: 10_000 }),
+      );
+    });
+
+    it('does NOT forward non-payment events to payments service', async () => {
+      const payload = {
+        event: 'user.created',
+        data: { uuid: '1' },
+        timestamp: '123',
+      } as any;
+
+      await service.validateAndProcessRemna('any', payload);
+
+      expect(mockAxiosPost).not.toHaveBeenCalled();
+    });
+
+    it('does not throw when forwarding fails', async () => {
+      mockAxiosPost.mockRejectedValueOnce(new Error('payments down'));
+      const payload = {
+        event: 'user.expires_in_24_hours',
+        data: { uuid: '1', telegramId: 42 },
+        timestamp: '123',
+      } as any;
+
+      // Should not throw — failure is logged but swallowed
+      await expect(service.validateAndProcessRemna('any', payload)).resolves.toBeUndefined();
     });
   });
 
+  // ── validateAndProcessTorrent ──────────────────────────────────────
+
   describe('validateAndProcessTorrent', () => {
-    it('should throw BadRequestException for invalid token', () => {
-      process.env.REMNAWAVE_TORRENT_WEBHOOK_TOKEN = 'token';
+    beforeEach(() => {
+      mockConfigService.get.mockImplementation((key: string, fallback?: string): string => {
+        if (key === 'REMNAWAVE_TORRENT_WEBHOOK_TOKEN') return 'token';
+        return fallback ?? '';
+      });
+      service = new WebhookService(
+        mockEventEmitter as unknown as EventEmitter2,
+        mockConfigService as any,
+      );
+    });
+
+    it('throws BadRequestException for invalid token', () => {
       const payload = {} as any;
       expect(() => service.validateAndProcessTorrent('invalid', payload)).toThrow(
         BadRequestException,
       );
     });
 
-    it('should emit event for valid token', () => {
-      process.env.REMNAWAVE_TORRENT_WEBHOOK_TOKEN = 'token';
+    it('emits event for valid token', () => {
       const payload = { username: 'test' } as any;
       service.validateAndProcessTorrent('token', payload);
       expect(mockEventEmitter.emit).toHaveBeenCalledWith('torrent.event', payload);
     });
   });
 
+  // ── forwardStripeWebhook ───────────────────────────────────────────
+
   describe('forwardStripeWebhook', () => {
-    it('should forward raw body and signature to payments service', async () => {
-      const axios = (await import('axios')).default;
+    it('forwards raw body and signature to payments service', async () => {
       const rawBody = Buffer.from('{"test": true}');
       await service.forwardStripeWebhook(rawBody, 'sig_123');
 
-      expect(axios.post).toHaveBeenCalledWith(
+      expect(mockAxiosPost).toHaveBeenCalledWith(
         expect.stringContaining('/payments/stripe/webhook'),
         rawBody,
         expect.objectContaining({
@@ -86,13 +148,14 @@ describe('WebhookService', () => {
     });
   });
 
+  // ── forwardYookassaWebhook ─────────────────────────────────────────
+
   describe('forwardYookassaWebhook', () => {
-    it('should forward payload and IP to payments service', async () => {
-      const axios = (await import('axios')).default;
+    it('forwards payload and IP to payments service', async () => {
       const payload = { type: 'notification', event: 'payment.succeeded', object: {} } as any;
       await service.forwardYookassaWebhook(payload, '1.2.3.4');
 
-      expect(axios.post).toHaveBeenCalledWith(
+      expect(mockAxiosPost).toHaveBeenCalledWith(
         expect.stringContaining('/payments/yookassa/webhook'),
         payload,
         expect.objectContaining({

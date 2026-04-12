@@ -1,13 +1,13 @@
 import 'reflect-metadata';
 import * as process from 'node:process';
+import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
 import { YookassaWebhookService } from '@payments/providers/yookassa/yookassa-webhook.service';
-import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { PaymentStatusService } from '../payment-status/payment-status.service';
 import { PAYMENT_EVENTS } from '../notifications/payment-events';
+import type { PaymentStatusService } from '../payment-status/payment-status.service';
 
 vi.mock('@workspace/database', () => {
   return {
@@ -21,7 +21,7 @@ const makeSucceededPayload = (overrides: Partial<any> = {}) => ({
   event: 'payment.succeeded' as const,
   object: {
     id: 'pay_1',
-    status: 'payment.succeeded' as const,
+    status: 'succeeded' as const,
     paid: true,
     amount: { value: '100', currency: 'RUB' },
     metadata: { telegramId: 42, selectedPeriod: 1 },
@@ -158,10 +158,7 @@ describe('YookassaWebhookService', () => {
       await service.handleWebhook(makeSucceededPayload(), '127.0.0.1');
 
       expect(mockYkUpdate).toHaveBeenCalled();
-      expect(mockEmit).not.toHaveBeenCalledWith(
-        PAYMENT_EVENTS.SUCCEEDED,
-        expect.anything(),
-      );
+      expect(mockEmit).not.toHaveBeenCalledWith(PAYMENT_EVENTS.SUCCEEDED, expect.anything());
     });
   });
 
@@ -210,10 +207,7 @@ describe('YookassaWebhookService', () => {
 
       expect(mockSmCreate).not.toHaveBeenCalled();
       expect(mockSmSave).not.toHaveBeenCalled();
-      expect(mockEmit).not.toHaveBeenCalledWith(
-        PAYMENT_EVENTS.METHOD_SAVED,
-        expect.anything(),
-      );
+      expect(mockEmit).not.toHaveBeenCalledWith(PAYMENT_EVENTS.METHOD_SAVED, expect.anything());
     });
 
     it('does NOT save when user has opted out (records exist but zero active)', async () => {
