@@ -4,7 +4,7 @@ import {
   GetUserByTelegramIdCommand,
   GetUserByUuidCommand,
   UpdateUserCommand,
-} from '@remnawave/backend-contract';
+} from '@workspace/types';
 
 export type CreateUserRequestDto = CreateUserCommand.Request;
 export type UpdateUserRequestDto = UpdateUserCommand.Request;

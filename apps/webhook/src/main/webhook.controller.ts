@@ -8,7 +8,7 @@ import {
   type RawBodyRequest,
   Req,
 } from '@nestjs/common';
-import type { UserDto, YookassaWebhookPayload } from '@workspace/types';
+import type { TRemnawaveWebhookEvent, YookassaWebhookPayload } from '@workspace/types';
 import { WebhookService } from './webhook.service';
 
 @Controller('webhook')
@@ -19,11 +19,7 @@ export class WebhookController {
   @Post('remnawave')
   async handleRemnaEvents(
     @Headers('x-remnawave-signature') signature: string,
-    @Body() payload: {
-      event: string;
-      data: UserDto;
-      timestamp: string;
-    },
+    @Body() payload: TRemnawaveWebhookEvent,
   ) {
     await this.webhookService.validateAndProcessRemna(signature, payload);
     return { ok: true };

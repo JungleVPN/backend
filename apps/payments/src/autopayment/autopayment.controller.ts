@@ -1,6 +1,9 @@
 import { Body, Controller, HttpCode, Logger, Post } from '@nestjs/common';
 import type { RemnawebhookPayload } from '@workspace/types';
 import { REMNAWAVE_EVENTS } from '@workspace/types';
+
+const EXPIRES_IN_24H = REMNAWAVE_EVENTS.USER.EXPIRE_NOTIFY_EXPIRES_IN_24_HOURS;
+
 import { AutopaymentService } from './autopayment.service';
 
 /**
@@ -19,7 +22,7 @@ export class AutopaymentController {
     this.logger.log(`Received remnawave event: ${payload.event}`);
 
     switch (payload.event) {
-      case REMNAWAVE_EVENTS.USER_EXPIRES_IN_24H:
+      case EXPIRES_IN_24H:
         // Fire-and-forget: retries happen internally, don't block the webhook response
         this.autopaymentService.handleUserExpiresIn24h(payload).catch((err) => {
           this.logger.error(`Unhandled error in autopayment flow: ${err.message}`);

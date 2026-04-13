@@ -21,17 +21,19 @@ vi.mock('axios', () => ({
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
-const makePayload = (telegramId?: number): RemnawebhookPayload => ({
-  event: 'user.expires_in_24_hours',
-  data: {
-    uuid: 'u-1',
-    username: 'test',
-    status: 'active',
-    subscriptionUrl: '',
-    ...(telegramId !== undefined ? { telegramId } : {}),
-  },
-  timestamp: new Date().toISOString(),
-});
+const makePayload = (telegramId?: number | null) =>
+  ({
+    scope: 'user',
+    event: 'user.expires_in_24_hours',
+    data: {
+      uuid: 'u-1',
+      username: 'test',
+      status: 'ACTIVE',
+      telegramId: telegramId === undefined ? null : telegramId,
+    },
+    timestamp: new Date(),
+    meta: null,
+  }) as unknown as RemnawebhookPayload;
 
 describe('AutopaymentService', () => {
   let service: AutopaymentService;

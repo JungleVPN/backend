@@ -17,7 +17,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@remnawave/backend-contract": "*"
+    "@remnawave/backend-contract": "^2.7.2"
   },
   "devDependencies": {
     "@workspace/shared-config": "workspace:*",

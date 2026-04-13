@@ -2,12 +2,14 @@ import * as crypto from 'node:crypto';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import type { UserDto, YookassaWebhookPayload } from '@workspace/types';
+import type { TRemnawaveWebhookEvent, YookassaWebhookPayload } from '@workspace/types';
 import { REMNAWAVE_EVENTS } from '@workspace/types';
 import axios from 'axios';
 
 /** Events that should be forwarded to the payments service for processing. */
-const PAYMENT_FORWARDED_EVENTS = new Set<string>([REMNAWAVE_EVENTS.USER_EXPIRES_IN_24H]);
+const PAYMENT_FORWARDED_EVENTS = new Set<string>([
+  REMNAWAVE_EVENTS.USER.EXPIRE_NOTIFY_EXPIRES_IN_24_HOURS,
+]);
 
 @Injectable()
 export class WebhookService {
@@ -22,10 +24,7 @@ export class WebhookService {
     return this.configService.get<string>('PAYMENTS_URL', 'http://localhost:3001');
   }
 
-  async validateAndProcessRemna(
-    signature: string,
-    payload: { event: string; data: UserDto; timestamp: string },
-  ) {
+  async validateAndProcessRemna(signature: string, payload: TRemnawaveWebhookEvent) {
     const isProd = this.configService.get<string>('NODE_ENV') === 'production';
 
     if (isProd) {
@@ -45,11 +44,7 @@ export class WebhookService {
     }
   }
 
-  private async forwardRemnaEventToPayments(payload: {
-    event: string;
-    data: UserDto;
-    timestamp: string;
-  }): Promise<void> {
+  private async forwardRemnaEventToPayments(payload: TRemnawaveWebhookEvent): Promise<void> {
     try {
       await axios.post(`${this.paymentsBaseUrl}/payments/remnawave-event`, payload, {
         timeout: 10_000,

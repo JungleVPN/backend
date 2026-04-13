@@ -7,7 +7,7 @@ import {
   GetUserByTelegramIdCommand,
   RevokeUserSubscriptionCommand,
   UpdateUserCommand,
-} from '@remnawave/backend-contract';
+} from '@workspace/types';
 import { addDays } from 'date-fns';
 import { RemnaPanelClient } from '../common/remna-panel.client';
 import {
