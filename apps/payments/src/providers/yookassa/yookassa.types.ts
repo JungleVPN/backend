@@ -1,50 +1,21 @@
-export interface CreateYookassaPaymentDto {
+/**
+ * HTTP transport DTOs for YooKassa endpoints exposed by this service.
+ * These describe what the bot sends us — NOT the YooKassa API surface.
+ * YooKassa API types live in `@workspace/types` (Payments namespace).
+ */
+
+/** Body of `POST /payments/yookassa/create-session`. */
+export interface CreateYookassaSessionDto {
   readonly userId: string;
-  readonly payment: {
-    readonly amount: number | string;
-    readonly description?: string;
-  };
-  readonly metadata?: Record<string, any>;
-  /** When true, YooKassa saves the payment method for future autopayments */
+  readonly amount: number | string;
+  readonly description?: string;
+  readonly metadata?: Record<string, string | number | boolean | null>;
+  /** When true (and the user hasn't opted out), YooKassa saves the method for future autopayments. */
   readonly savePaymentMethod: boolean;
 }
 
-export interface YookassaPaymentSession {
-  id: string;
-  url: string;
-}
-
-export interface CreateAutopaymentInternalDto {
-  readonly userId: string;
-  readonly paymentMethodId: string;
-  readonly amount: number | string;
-  readonly selectedPeriod: number;
-  readonly description?: string;
-}
-
-export type {
-  YookassaNotificationEvent,
-  YookassaPaymentPayload,
-  YookassaPaymentStatus,
-  YookassaWebhookPayload,
-} from './yookassa.model';
-
-import type { YookassaPaymentStatus } from './yookassa.model';
-
-export interface AutopaymentApiResponse {
-  id: string;
-  status: YookassaPaymentStatus;
-  paid: boolean;
-  amount: { value: string; currency: string };
-  payment_method?: {
-    type: string;
-    id: string;
-    saved: boolean;
-    title?: string;
-  };
-  cancellation_details?: {
-    party: string;
-    reason: string;
-  };
-  metadata: Record<string, any>;
+/** Response of `POST /payments/yookassa/create-session`. */
+export interface YookassaSessionResponse {
+  readonly id: string;
+  readonly url: string;
 }

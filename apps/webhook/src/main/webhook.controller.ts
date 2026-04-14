@@ -8,7 +8,7 @@ import {
   type RawBodyRequest,
   Req,
 } from '@nestjs/common';
-import type { TRemnawaveWebhookEvent, YookassaWebhookPayload } from '@workspace/types';
+import type { PaymentWebhookNotification, TRemnawaveWebhookEvent } from '@workspace/types';
 import { WebhookService } from './webhook.service';
 
 @Controller('webhook')
@@ -46,7 +46,7 @@ export class WebhookController {
   async handleYookassaEvents(
     @Headers('x-forwarded-for') xForwardedFor: string,
     @Headers('x-real-ip') xRealIp: string,
-    @Body() payload: YookassaWebhookPayload,
+    @Body() payload: PaymentWebhookNotification,
   ) {
     this.logger.log(`Received Yookassa webhook`);
     await this.webhookService.forwardYookassaWebhook(payload, xForwardedFor || xRealIp || '');

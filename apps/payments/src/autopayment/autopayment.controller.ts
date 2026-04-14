@@ -24,7 +24,7 @@ export class AutopaymentController {
     switch (payload.event) {
       case EXPIRES_IN_24H:
         // Fire-and-forget: retries happen internally, don't block the webhook response
-        this.autopaymentService.handleUserExpiresIn24h(payload).catch((err) => {
+        this.autopaymentService.init(payload).catch((err) => {
           this.logger.error(`Unhandled error in autopayment flow: ${err.message}`);
         });
         break;
@@ -32,6 +32,6 @@ export class AutopaymentController {
         this.logger.warn(`Unhandled remnawave event: ${payload.event}`);
     }
 
-    return { received: true };
+    return { ok: true };
   }
 }

@@ -1,104 +1,45 @@
-import * as process from 'node:process';
 import { Injectable } from '@nestjs/common';
-import axios, { AxiosInstance } from 'axios';
-import type { YookassaPaymentStatus } from './yookassa.model';
-import type {
-  AutopaymentApiResponse,
-  CreateAutopaymentInternalDto,
-  CreateYookassaPaymentDto,
-  YookassaPaymentSession,
-} from './yookassa.types';
+import type { Payments } from '@workspace/types';
+import { YooKassaConnector } from './helpers/yookassa.connector';
 
+/**
+ * Thin, well-typed client for the YooKassa payments API.
+ *
+ * Single `create()` method handles both one-shot (redirect confirmation) and
+ * autopayment (payment_method_id) scenarios — the caller builds the request.
+ *
+ * Transport concerns (auth, retries, idempotency) live in `YooKassaConnector`.
+ */
 @Injectable()
 export class YooKassaProvider {
-  private yookassaApi: AxiosInstance = axios.create({
-    baseURL: process.env.YOOKASSA_URL,
-    withCredentials: true,
-    validateStatus: () => true,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    auth: {
-      username: process.env.YOOKASSA_SHOP_ID || '',
-      password: process.env.YOOKASSA_API_KEY || '',
-    },
-  });
-
-  async createPayment(dto: CreateYookassaPaymentDto): Promise<YookassaPaymentSession> {
-    try {
-      const body: Record<string, unknown> = {
-        amount: {
-          value: dto.payment.amount,
-          currency: 'RUB',
-        },
-        capture: true,
-        confirmation: {
-          type: 'redirect',
-          return_url: process.env.RETURN_URL,
-        },
-        description: dto.payment.description,
-        metadata: dto.metadata,
-      };
-
-      if (dto.savePaymentMethod) {
-        body.save_payment_method = true;
-      }
-
-      const { data } = await this.yookassaApi.post('/', body, {
-        headers: {
-          'Idempotence-Key': crypto.randomUUID(),
-        },
-      });
-
-      return {
-        id: data.id,
-        url: data.confirmation.confirmation_url,
-      };
-    } catch (error) {
-      console.error('Error creating payment:', error);
-      throw error;
-    }
-  }
+  constructor(private readonly connector: YooKassaConnector) {}
 
   /**
-   * Creates an autopayment using a previously saved payment method.
-   * No confirmation/redirect needed — the charge is processed immediately.
+   * Create a payment.
+   *
+   * One-shot payment: pass `confirmation` (usually redirect) and optionally
+   * `save_payment_method: true` to persist the method for future autopayments.
+   *
+   * Autopayment: pass `payment_method_id` with `capture: true` and omit
+   * `confirmation` — the charge is processed immediately without user action.
+   *
+   * @param request        Full YooKassa create-payment request
+   * @param idempotenceKey Optional — auto-generated (uuid v4) if omitted
    */
-  async createAutopayment(dto: CreateAutopaymentInternalDto): Promise<AutopaymentApiResponse> {
-    const { data } = await this.yookassaApi.post(
+  create(
+    request: Payments.CreatePaymentRequest,
+    idempotenceKey?: string,
+  ): Promise<Payments.IPayment> {
+    return this.connector.request<Payments.IPayment, Payments.CreatePaymentRequest>(
+      'POST',
       '/',
-      {
-        amount: {
-          value: String(dto.amount),
-          currency: 'RUB',
-        },
-        capture: true,
-        payment_method_id: dto.paymentMethodId,
-        description:
-          dto.description || process.env.PAYMENT_DESCRIPTION || 'Happy to see you in the JUNGLE 🌴',
-        metadata: {
-          telegramId: dto.userId,
-          selectedPeriod: dto.selectedPeriod,
-          isAutopayment: true,
-        },
-      },
-      {
-        headers: {
-          'Idempotence-Key': crypto.randomUUID(),
-        },
-      },
+      request,
+      idempotenceKey,
     );
-
-    return data;
   }
 
-  async checkPaymentStatus(paymentId: string): Promise<YookassaPaymentStatus> {
-    try {
-      const { data } = await this.yookassaApi.get(`/${paymentId}`);
-      return data.status;
-    } catch (error) {
-      console.error('Error fetching payment status:', error);
-      throw error;
-    }
+  /** Fetch the current state of a payment by id. */
+  getPayment(paymentId: string): Promise<Payments.IPayment> {
+    return this.connector.request<Payments.IPayment>('GET', `/${paymentId}`);
   }
 }

@@ -2,12 +2,12 @@ import * as crypto from 'node:crypto';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import type { TRemnawaveWebhookEvent, YookassaWebhookPayload } from '@workspace/types';
+import type { PaymentWebhookNotification, TRemnawaveWebhookEvent } from '@workspace/types';
 import { REMNAWAVE_EVENTS } from '@workspace/types';
 import axios from 'axios';
 
 /** Events that should be forwarded to the payments service for processing. */
-const PAYMENT_FORWARDED_EVENTS = new Set<string>([
+const PAYMENT_FORWARDED_EVENTS = new Set<TRemnawaveWebhookEvent['event']>([
   REMNAWAVE_EVENTS.USER.EXPIRE_NOTIFY_EXPIRES_IN_24_HOURS,
 ]);
 
@@ -50,9 +50,7 @@ export class WebhookService {
         timeout: 10_000,
       });
     } catch (error: any) {
-      this.logger.error(
-        `Failed to forward remnawave event ${payload.event} to payments: ${error.message}`,
-      );
+      this.logger.error(`Failed to forward remnawave event ${payload.event} to payments: ${error}`);
     }
   }
 
@@ -91,7 +89,7 @@ export class WebhookService {
     }
   }
 
-  async forwardYookassaWebhook(payload: YookassaWebhookPayload, ip: string): Promise<void> {
+  async forwardYookassaWebhook(payload: PaymentWebhookNotification, ip: string): Promise<void> {
     try {
       await axios.post(`${this.paymentsBaseUrl}/payments/yookassa/webhook`, payload, {
         headers: {

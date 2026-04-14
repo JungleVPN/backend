@@ -1,13 +1,8 @@
 import * as process from 'node:process';
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
+import { Payments, WebhookEvent, WebhookEventEnum } from '@workspace/types';
 import axios from 'axios';
-import type {
-  AutopaymentFailedEvent,
-  PaymentMethodSavedEvent,
-  PaymentSucceededEvent,
-} from './payment-events';
-import { PAYMENT_EVENTS } from './payment-events';
 
 /**
  * Listens for payment events and dispatches notifications to external receivers.
@@ -17,8 +12,8 @@ import { PAYMENT_EVENTS } from './payment-events';
  * without touching the webhook services that emit events.
  */
 @Injectable()
-export class PaymentNotificationService {
-  private readonly logger = new Logger(PaymentNotificationService.name);
+export class BotNotificationService {
+  private readonly logger = new Logger(BotNotificationService.name);
 
   private get botBaseUrl(): string {
     return process.env.BOT_URL || 'http://localhost:7080';
@@ -28,28 +23,23 @@ export class PaymentNotificationService {
     return process.env.BOT_NOTIFY_SECRET || '';
   }
 
-  @OnEvent(PAYMENT_EVENTS.SUCCEEDED)
-  async onPaymentSucceeded(event: PaymentSucceededEvent): Promise<void> {
-    await this.notifyBot(PAYMENT_EVENTS.SUCCEEDED, event);
+  @OnEvent(WebhookEventEnum['payment.succeeded'])
+  async onPaymentSucceeded(event: Payments.PaymentSucceededEventPayload): Promise<void> {
+    await this.notify('payment.succeeded', event);
   }
 
-  @OnEvent(PAYMENT_EVENTS.METHOD_SAVED)
-  async onMethodSaved(event: PaymentMethodSavedEvent): Promise<void> {
-    await this.notifyBot(PAYMENT_EVENTS.METHOD_SAVED, event);
-  }
-
-  @OnEvent(PAYMENT_EVENTS.AUTOPAYMENT_FAILED)
-  async onAutopaymentFailed(event: AutopaymentFailedEvent): Promise<void> {
-    await this.notifyBot(PAYMENT_EVENTS.AUTOPAYMENT_FAILED, event);
+  @OnEvent(WebhookEventEnum['payment.autopayment_failed'])
+  async onAutopaymentFailed(event: Payments.PaymentSucceededEventPayload): Promise<void> {
+    await this.notify('payment.autopayment_failed', event);
   }
 
   /**
    * Sends payment notification to the bot's /notify/payment endpoint.
    * Best-effort: failures are logged but do not affect payment processing.
    */
-  private async notifyBot(
-    eventType: string,
-    payload: PaymentSucceededEvent | PaymentMethodSavedEvent | AutopaymentFailedEvent,
+  public async notify(
+    eventType: WebhookEvent,
+    payload: Payments.PaymentSucceededEventPayload | Payments.PaymentFailedEventPayload,
   ): Promise<void> {
     try {
       await axios.post(

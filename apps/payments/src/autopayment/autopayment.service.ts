@@ -2,12 +2,11 @@ import * as process from 'node:process';
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
+import { BotNotificationService } from '@payments/notifications/bot-notification.service';
 import { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
 import { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
-import type { AutopaymentResult, RemnawebhookPayload } from '@workspace/types';
-import axios from 'axios';
+import { Payments, RemnawebhookPayload, WebhookEventEnum } from '@workspace/types';
 import { Repository } from 'typeorm';
-import { type AutopaymentFailedEvent, PAYMENT_EVENTS } from '../notifications/payment-events';
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 5_000;
@@ -23,15 +22,8 @@ export class AutopaymentService {
     private readonly yookassaPaymentRepo: Repository<YookassaPayment>,
     private readonly yookassaProvider: YooKassaProvider,
     private readonly eventEmitter: EventEmitter2,
+    private readonly botNotificationService: BotNotificationService,
   ) {}
-
-  private get botBaseUrl(): string {
-    return process.env.BOT_URL || 'http://localhost:7080';
-  }
-
-  private get botNotifySecret(): string {
-    return process.env.BOT_NOTIFY_SECRET || '';
-  }
 
   private get autopaymentAmount(): number {
     return Number(process.env.AUTOPAYMENT_AMOUNT || '200');
@@ -41,7 +33,7 @@ export class AutopaymentService {
     return Number(process.env.AUTOPAYMENT_PERIOD || '1');
   }
 
-  async handleUserExpiresIn24h(payload: RemnawebhookPayload): Promise<void> {
+  async init(payload: RemnawebhookPayload): Promise<void> {
     const telegramId = payload.data.telegramId;
 
     if (!telegramId) {
@@ -60,7 +52,11 @@ export class AutopaymentService {
       this.logger.log(
         `No active saved payment method for user ${telegramId} — notifying bot for manual payment`,
       );
-      await this.notifyBotManualPayment(telegramId);
+      await this.botNotificationService.notify('payment.no_active_method', {
+        telegramId,
+        provider: 'yookassa',
+        reason: 'no_active_method',
+      });
       return;
     }
 
@@ -85,7 +81,7 @@ export class AutopaymentService {
         // Payment processed but failed (e.g. canceled by bank)
         this.logger.warn(
           `Autopayment attempt ${attempt} for user ${telegramId}: status=${result.status}` +
-            (result.cancellationDetails ? ` reason=${result.cancellationDetails.reason}` : ''),
+            (result.cancellation_details ? ` reason=${result.cancellation_details.reason}` : ''),
         );
       } catch (err: any) {
         this.logger.error(
@@ -101,7 +97,11 @@ export class AutopaymentService {
     this.logger.warn(
       `All ${MAX_RETRIES} autopayment attempts failed for user ${telegramId} — falling back to manual payment`,
     );
-    await this.notifyBotManualPayment(telegramId);
+    await this.botNotificationService.notify('payment.autopayment_exhausted', {
+      telegramId,
+      provider: 'yookassa',
+      reason: 'autopayment_exhausted',
+    });
   }
 
   /**
@@ -111,74 +111,60 @@ export class AutopaymentService {
   private async executeAutopayment(
     telegramId: number,
     paymentMethodId: string,
-  ): Promise<AutopaymentResult> {
+  ): Promise<Payments.IPayment> {
     const userId = String(telegramId);
     const amount = this.autopaymentAmount;
     const selectedPeriod = this.autopaymentPeriod;
+    const description = process.env.PAYMENT_DESCRIPTION || 'Happy to see you in the JUNGLE 🌴';
 
-    const apiResult = await this.yookassaProvider.createAutopayment({
-      userId,
-      paymentMethodId,
-      amount,
+    const metadata = {
+      telegramId: userId,
       selectedPeriod,
-      description: process.env.PAYMENT_DESCRIPTION || 'Happy to see you in the JUNGLE 🌴',
-    });
+    };
+
+    const request: Payments.CreatePaymentRequest = {
+      amount: { value: String(amount), currency: 'RUB' },
+      capture: true,
+      payment_method_id: paymentMethodId,
+      description,
+      metadata,
+    };
+
+    const payment = await this.yookassaProvider.create(request);
 
     const record = this.yookassaPaymentRepo.create({
-      id: apiResult.id,
-      status: apiResult.status,
+      id: payment.id,
+      status: payment.status,
       amount,
       userId,
-      description: process.env.PAYMENT_DESCRIPTION || 'Happy to see you in the JUNGLE 🌴',
-      metadata: { telegramId: userId, selectedPeriod, isAutopayment: true },
-      paidAt: apiResult.status === 'succeeded' ? new Date() : null,
+      description,
+      metadata,
+      paidAt: payment.status === 'succeeded' ? new Date() : null,
     });
     await this.yookassaPaymentRepo.save(record);
 
-    if (apiResult.status === 'canceled' && apiResult.cancellation_details) {
-      this.eventEmitter.emit(PAYMENT_EVENTS.AUTOPAYMENT_FAILED, {
+    if (payment.status === 'canceled' && payment.cancellation_details) {
+      this.eventEmitter.emit(WebhookEventEnum['payment.autopayment_failed'], {
         telegramId,
         provider: 'yookassa',
-        selectedPeriod,
-        reason: apiResult.cancellation_details.reason,
-        party: apiResult.cancellation_details.party,
-      } satisfies AutopaymentFailedEvent);
+        reason: payment.cancellation_details.reason,
+      } satisfies Payments.PaymentFailedEventPayload);
     }
 
-    return {
-      paymentId: apiResult.id,
-      status: apiResult.status,
-      cancellationDetails: apiResult.cancellation_details,
-    };
+    return payment;
   }
 
-  /**
-   * Notify the bot that autopayment is not available for this user,
-   * so the bot can prompt them with a manual payment link.
-   */
-  private async notifyBotManualPayment(telegramId: number): Promise<void> {
-    try {
-      await axios.post(
-        `${this.botBaseUrl}/notify/payment`,
-        {
-          event: 'payment.autopayment_exhausted',
-          telegramId,
-          provider: 'yookassa',
-          selectedPeriod: this.autopaymentPeriod,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'x-bot-secret': this.botNotifySecret,
-          },
-          timeout: 5_000,
-        },
-      );
-      this.logger.log(`Bot notified: manual payment needed for user ${telegramId}`);
-    } catch (err: any) {
-      this.logger.warn(
-        `Failed to notify bot about manual payment for user ${telegramId}: ${err.message}`,
-      );
+  async disableActiveMethodIfExists(userId: string) {
+    const savedMethod = await this.savedMethodRepo.findOneBy({
+      userId,
+      isActive: true,
+    });
+
+    // If the user still has an active saved method, disable it. A new session
+    // creates a new card, and we want only one active method per user.
+    if (savedMethod) {
+      savedMethod.isActive = false;
+      await this.savedMethodRepo.save(savedMethod);
     }
   }
 

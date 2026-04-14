@@ -2,11 +2,11 @@ import 'reflect-metadata';
 import * as process from 'node:process';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
-import { YookassaWebhookService } from '@payments/providers/yookassa/yookassa-webhook.service';
+import { YookassaService } from '@payments/providers/yookassa/yookassa.service';
 import type { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
+import { PaymentWebhookNotification, WebhookEventEnum } from '@workspace/types';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { PAYMENT_EVENTS } from '../notifications/payment-events';
 import type { PaymentStatusService } from '../payment-status/payment-status.service';
 
 vi.mock('@workspace/database', () => {
@@ -16,38 +16,41 @@ vi.mock('@workspace/database', () => {
   };
 });
 
-const makeSucceededPayload = (overrides: Partial<any> = {}) => ({
-  type: 'notification' as const,
-  event: 'payment.succeeded' as const,
-  object: {
-    id: 'pay_1',
-    status: 'succeeded' as const,
-    paid: true,
-    amount: { value: '100', currency: 'RUB' },
-    metadata: { telegramId: 42, selectedPeriod: 1 },
-    payment_method: {
-      type: 'bank_card',
-      id: 'pm_1',
-      saved: true,
-      title: 'Visa 1234',
-      card: {
-        last4: '1234',
-        first6: '400000',
-        expiry_month: '12',
-        expiry_year: '2030',
-        card_type: 'Visa',
-        issuer_country: 'RU',
+// Cast via `unknown` because the fixture uses plain string literals
+// instead of PaymentMethodsEnum / BankCardTypeEnum — matches real webhook JSON.
+const makeSucceededPayload = (overrides: Partial<any> = {}): PaymentWebhookNotification =>
+  ({
+    type: 'notification' as const,
+    event: 'payment.succeeded' as const,
+    object: {
+      id: 'pay_1',
+      status: 'succeeded' as const,
+      paid: true,
+      amount: { value: '100', currency: 'RUB' },
+      metadata: { telegramId: 42, selectedPeriod: 1 },
+      payment_method: {
+        type: 'bank_card',
+        id: 'pm_1',
+        saved: true,
+        title: 'Visa 1234',
+        card: {
+          last4: '1234',
+          first6: '400000',
+          expiry_month: '12',
+          expiry_year: '2030',
+          card_type: 'Visa',
+          issuer_country: 'RU',
+        },
       },
+      created_at: '2026-01-01T00:00:00Z',
+      refundable: true,
+      test: false,
+      ...overrides,
     },
-    created_at: '2026-01-01T00:00:00Z',
-    refundable: true,
-    test: false,
-    ...overrides,
-  },
-});
+  }) as unknown as PaymentWebhookNotification;
 
-describe('YookassaWebhookService', () => {
-  let service: YookassaWebhookService;
+describe('YookassaService', () => {
+  let service: YookassaService;
 
   let yookassaPaymentRepo: Repository<YookassaPayment>;
   let savedMethodRepo: Repository<SavedPaymentMethod>;
@@ -63,7 +66,7 @@ describe('YookassaWebhookService', () => {
   let mockSmCount: any;
 
   let mockHandlePaymentSucceeded: any;
-  let mockCheckPaymentStatus: any;
+  let mockGetPayment: any;
   let mockEmit: any;
 
   beforeEach(() => {
@@ -86,9 +89,9 @@ describe('YookassaWebhookService', () => {
       count: mockSmCount,
     } as unknown as Repository<SavedPaymentMethod>;
 
-    mockCheckPaymentStatus = vi.fn();
+    mockGetPayment = vi.fn();
     yooKassaProvider = {
-      checkPaymentStatus: mockCheckPaymentStatus,
+      getPayment: mockGetPayment,
     } as unknown as YooKassaProvider;
 
     mockHandlePaymentSucceeded = vi.fn().mockResolvedValue({ success: true });
@@ -101,12 +104,12 @@ describe('YookassaWebhookService', () => {
       emit: mockEmit,
     } as unknown as EventEmitter2;
 
-    service = new YookassaWebhookService(
+    service = new YookassaService(
       yooKassaProvider,
       yookassaPaymentRepo,
+      savedMethodRepo,
       paymentStatusService,
       eventEmitter,
-      savedMethodRepo,
     );
   });
 
@@ -124,14 +127,14 @@ describe('YookassaWebhookService', () => {
       expect(mockYkUpdate).toHaveBeenCalledWith(
         'pay_1',
         expect.objectContaining({
-          status: PAYMENT_EVENTS.SUCCEEDED,
+          status: 'succeeded',
           url: null,
           paidAt: expect.any(Date),
         }),
       );
       expect(mockHandlePaymentSucceeded).toHaveBeenCalledWith(42, 1);
       expect(mockEmit).toHaveBeenCalledWith(
-        PAYMENT_EVENTS.SUCCEEDED,
+        WebhookEventEnum['payment.succeeded'],
         expect.objectContaining({ telegramId: 42, provider: 'yookassa', selectedPeriod: 1 }),
       );
     });
@@ -158,7 +161,10 @@ describe('YookassaWebhookService', () => {
       await service.handleWebhook(makeSucceededPayload(), '127.0.0.1');
 
       expect(mockYkUpdate).toHaveBeenCalled();
-      expect(mockEmit).not.toHaveBeenCalledWith(PAYMENT_EVENTS.SUCCEEDED, expect.anything());
+      expect(mockEmit).not.toHaveBeenCalledWith(
+        WebhookEventEnum['payment.succeeded'],
+        expect.anything(),
+      );
     });
   });
 
@@ -190,7 +196,7 @@ describe('YookassaWebhookService', () => {
       );
       expect(mockSmSave).toHaveBeenCalled();
       expect(mockEmit).toHaveBeenCalledWith(
-        PAYMENT_EVENTS.METHOD_SAVED,
+        WebhookEventEnum['payment.method_saved'],
         expect.objectContaining({
           telegramId: 42,
           provider: 'yookassa',
@@ -207,7 +213,10 @@ describe('YookassaWebhookService', () => {
 
       expect(mockSmCreate).not.toHaveBeenCalled();
       expect(mockSmSave).not.toHaveBeenCalled();
-      expect(mockEmit).not.toHaveBeenCalledWith(PAYMENT_EVENTS.METHOD_SAVED, expect.anything());
+      expect(mockEmit).not.toHaveBeenCalledWith(
+        WebhookEventEnum['payment.method_saved'],
+        expect.anything(),
+      );
     });
 
     it('does NOT save when user has opted out (records exist but zero active)', async () => {
@@ -244,7 +253,7 @@ describe('YookassaWebhookService', () => {
       mockSmCount.mockResolvedValue(0);
 
       const payload = makeSucceededPayload();
-      payload.object.payment_method.saved = false;
+      (payload.object.payment_method as { saved: boolean }).saved = false;
 
       await service.handleWebhook(payload, '127.0.0.1');
 
@@ -306,12 +315,12 @@ describe('YookassaWebhookService', () => {
         '185.71.76.0/27',
         '185.71.77.0/27',
       ]);
-      service = new YookassaWebhookService(
+      service = new YookassaService(
         yooKassaProvider,
         yookassaPaymentRepo,
+        savedMethodRepo,
         paymentStatusService,
         eventEmitter,
-        savedMethodRepo,
       );
     });
 

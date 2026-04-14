@@ -1,3 +1,4 @@
+import { Payments } from '@workspace/types';
 import { Column, CreateDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity('yookassa_payments')
@@ -15,7 +16,7 @@ export class YookassaPayment {
   currency: string;
 
   @Column({ type: 'varchar', default: 'pending' })
-  status: string;
+  status: Payments.PaymentStatus;
 
   @Column({ type: 'varchar', nullable: true })
   url: string | null;

@@ -1,47 +1,50 @@
 import * as process from 'node:process';
-import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
-import type {
-  YookassaNotificationEvent,
-  YookassaPaymentPayload,
-  YookassaWebhookPayload,
-} from '@payments/providers/yookassa/yookassa.model';
 import { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
 import { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
+import {
+  type IGeneralPayMethod,
+  type IPaymentMethod,
+  isBankCardPaymentMethod,
+  isSavablePaymentMethod,
+  Payments,
+  type PaymentWebhookNotification,
+  WebhookEvent,
+  WebhookEventEnum,
+} from '@workspace/types';
 import { Repository } from 'typeorm';
-import { PAYMENT_EVENTS, PaymentSucceededEvent } from '../../notifications/payment-events';
 import { PaymentStatusService } from '../../payment-status/payment-status.service';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const CIDRMatcher = require('cidr-matcher');
 
 @Injectable()
-export class YookassaWebhookService {
-  private readonly logger = new Logger(YookassaWebhookService.name);
+export class YookassaService {
+  private readonly logger = new Logger(YookassaService.name);
   private readonly validIpAddresses: string[] = JSON.parse(
     process.env.YOOKASSA_PAYMENT_VALID_IP_ADDRESS || '[]',
   );
 
   constructor(
-    @Inject(forwardRef(() => YooKassaProvider))
-    readonly yooKassaProvider: YooKassaProvider,
+    private readonly yooKassaProvider: YooKassaProvider,
     @InjectRepository(YookassaPayment)
     private readonly yookassaPaymentRepo: Repository<YookassaPayment>,
-    private readonly paymentStatusService: PaymentStatusService,
-    private readonly eventEmitter: EventEmitter2,
     @InjectRepository(SavedPaymentMethod)
     private readonly savedMethodRepo: Repository<SavedPaymentMethod>,
+    private readonly paymentStatusService: PaymentStatusService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async handleWebhook(payload: YookassaWebhookPayload, ip: string) {
+  async handleWebhook(payload: PaymentWebhookNotification, ip: string) {
     const isProd = process.env.NODE_ENV === 'production';
     if (isProd) {
       await this.validateWebhookPayload(payload, ip);
     }
 
     try {
-      if (payload.event === PAYMENT_EVENTS.SUCCEEDED) {
+      if (payload.event === WebhookEventEnum['payment.succeeded']) {
         await this.handlePaymentSucceeded(payload);
       }
     } catch (apiError) {
@@ -49,15 +52,15 @@ export class YookassaWebhookService {
     }
   }
 
-  private async handlePaymentSucceeded(payload: YookassaWebhookPayload): Promise<void> {
-    const { metadata, payment_method, id } = payload.object;
+  async handlePaymentSucceeded(payload: PaymentWebhookNotification): Promise<void> {
+    const { metadata, payment_method, id, status, captured_at } = payload.object;
 
-    const telegramId = Number(metadata.telegramId);
-    const selectedPeriod = Number(metadata.selectedPeriod);
+    const telegramId = Number(metadata?.telegramId);
+    const selectedPeriod = Number(metadata?.selectedPeriod);
 
     await this.yookassaPaymentRepo.update(id, {
-      status: PAYMENT_EVENTS.SUCCEEDED,
-      paidAt: new Date(),
+      status,
+      paidAt: captured_at ? new Date(captured_at) : new Date(),
       url: null,
     });
 
@@ -65,8 +68,8 @@ export class YookassaWebhookService {
       this.logger.warn('Invalid telegramId in Yookassa metadata');
     }
 
-    // Save payment method if YooKassa reports it as saved
-    if (payment_method?.saved && payment_method.id) {
+    // Persist payment method if YooKassa reports it as saved
+    if (payment_method && isSavablePaymentMethod(payment_method) && payment_method.saved) {
       await this.trySavePaymentMethod(String(telegramId), payment_method);
     }
 
@@ -76,27 +79,27 @@ export class YookassaWebhookService {
     );
 
     if (result.success) {
-      this.eventEmitter.emit(PAYMENT_EVENTS.SUCCEEDED, {
+      this.eventEmitter.emit(WebhookEventEnum['payment.succeeded'], {
         telegramId,
         provider: 'yookassa',
         selectedPeriod,
-      } satisfies PaymentSucceededEvent);
+      } satisfies Payments.PaymentSucceededEventPayload);
     }
   }
 
   /**
-   * Persists a saved payment method from YooKassa's webhook response.
-   * Idempotent: if paymentMethodId already exists, it's left as-is.
+   * Persists a saved payment method from YooKassa's webhook payload.
    *
-   * Respects user opt-out: if the user has previously disabled all their saved
-   * methods (opted out of autopayments), we do NOT save or reactivate anything.
+   * Idempotent: if `paymentMethodId` already exists, nothing is written.
+   * Respects user opt-out: if the user has previously disabled all saved
+   * methods, we do NOT re-save. Errors are swallowed — saving is best-effort
+   * and must not block webhook processing.
    */
   private async trySavePaymentMethod(
     userId: string,
-    paymentMethod: NonNullable<YookassaPaymentPayload['payment_method']>,
+    paymentMethod: IPaymentMethod & IGeneralPayMethod,
   ): Promise<void> {
     try {
-      // Check if user has opted out (has records but none active)
       if (await this.hasUserOptedOutOfAutopayments(userId)) {
         this.logger.log(
           `Skipping payment method save for user ${userId} — user opted out of autopayments`,
@@ -107,11 +110,9 @@ export class YookassaWebhookService {
       const existing = await this.savedMethodRepo.findOneBy({
         paymentMethodId: paymentMethod.id,
       });
+      if (existing) return;
 
-      if (existing) {
-        // Method already tracked — do not reactivate if user disabled it
-        return;
-      }
+      const card = isBankCardPaymentMethod(paymentMethod) ? paymentMethod.card : undefined;
 
       const method = this.savedMethodRepo.create({
         userId,
@@ -119,14 +120,14 @@ export class YookassaWebhookService {
         paymentMethodId: paymentMethod.id,
         paymentMethodType: paymentMethod.type,
         title: paymentMethod.title ?? null,
-        card: paymentMethod.card
+        card: card
           ? {
-              last4: paymentMethod.card.last4,
-              expiryMonth: paymentMethod.card.expiry_month,
-              expiryYear: paymentMethod.card.expiry_year,
-              cardType: paymentMethod.card.card_type,
-              first6: paymentMethod.card.first6,
-              issuerCountry: paymentMethod.card.issuer_country,
+              last4: card.last4,
+              expiryMonth: card.expiry_month,
+              expiryYear: card.expiry_year,
+              cardType: card.card_type,
+              first6: card.first6,
+              issuerCountry: card.issuer_country,
             }
           : null,
         isActive: true,
@@ -134,7 +135,7 @@ export class YookassaWebhookService {
 
       await this.savedMethodRepo.save(method);
 
-      this.eventEmitter.emit(PAYMENT_EVENTS.METHOD_SAVED, {
+      this.eventEmitter.emit(WebhookEventEnum['payment.method_saved'], {
         telegramId: Number(userId),
         provider: 'yookassa',
         paymentMethodType: paymentMethod.type,
@@ -150,20 +151,18 @@ export class YookassaWebhookService {
   }
 
   /**
-   * User has opted out if they have saved method records but all are inactive.
-   * No records at all = new user = NOT opted out.
+   * User has opted out if they have saved-method records but all are inactive.
+   * Zero records at all → new user → NOT opted out.
    */
   private async hasUserOptedOutOfAutopayments(userId: string): Promise<boolean> {
     const totalCount = await this.savedMethodRepo.count({
       where: { userId, provider: 'yookassa' },
     });
-
     if (totalCount === 0) return false;
 
     const activeCount = await this.savedMethodRepo.count({
       where: { userId, provider: 'yookassa', isActive: true },
     });
-
     return activeCount === 0;
   }
 
@@ -187,11 +186,11 @@ export class YookassaWebhookService {
     });
   }
 
-  isValidNotificationEvent(event: string): event is YookassaNotificationEvent {
+  isValidNotificationEvent(event: string): event is WebhookEvent {
     return ['payment.succeeded', 'payment.canceled', 'payment.waiting_for_capture'].includes(event);
   }
 
-  isValidWebhookPayload(payload: YookassaWebhookPayload): boolean {
+  isValidWebhookPayload(payload: PaymentWebhookNotification): boolean {
     return (
       !!payload.object &&
       payload.type === 'notification' &&
@@ -199,7 +198,7 @@ export class YookassaWebhookService {
     );
   }
 
-  async validateWebhookPayload(payload: YookassaWebhookPayload, ip: string) {
+  async validateWebhookPayload(payload: PaymentWebhookNotification, ip: string) {
     const { paymentId, status: webhookStatus } = {
       paymentId: payload.object.id,
       status: payload.object.status,
@@ -213,7 +212,7 @@ export class YookassaWebhookService {
       return;
     }
 
-    const status = await this.yooKassaProvider.checkPaymentStatus(paymentId);
+    const { status } = await this.yooKassaProvider.getPayment(paymentId);
     if (status !== webhookStatus) {
       this.logger.warn(
         `Payment ${paymentId} status mismatch! Webhook: ${webhookStatus}, API: ${status}. Possible fake webhook.`,

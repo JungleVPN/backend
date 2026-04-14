@@ -9,14 +9,14 @@ const EXPIRES_IN_24H = REMNAWAVE_EVENTS.USER.EXPIRE_NOTIFY_EXPIRES_IN_24_HOURS;
 
 describe('AutopaymentController', () => {
   let controller: AutopaymentController;
-  let mockHandleUserExpiresIn24h: ReturnType<typeof vi.fn>;
+  let mockInit: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockHandleUserExpiresIn24h = vi.fn().mockResolvedValue(undefined);
+    mockInit = vi.fn().mockResolvedValue(undefined);
 
     const autopaymentService = {
-      handleUserExpiresIn24h: mockHandleUserExpiresIn24h,
+      init: mockInit,
     } as unknown as AutopaymentService;
 
     controller = new AutopaymentController(autopaymentService);
@@ -31,32 +31,30 @@ describe('AutopaymentController', () => {
       meta: null,
     }) as unknown as RemnawebhookPayload;
 
-  it('returns { received: true } for known events', async () => {
+  it('returns { ok: true } for known events', async () => {
     const result = await controller.handleRemnaEvent(makePayload(EXPIRES_IN_24H));
-    expect(result).toEqual({ received: true });
+    expect(result).toEqual({ ok: true });
   });
 
   it('delegates user.expires_in_24_hours to autopayment service (fire-and-forget)', async () => {
     const payload = makePayload(EXPIRES_IN_24H);
     await controller.handleRemnaEvent(payload);
 
-    expect(mockHandleUserExpiresIn24h).toHaveBeenCalledWith(payload);
+    expect(mockInit).toHaveBeenCalledWith(payload);
   });
 
-  it('returns { received: true } for unknown events without calling service', async () => {
-    const result = await controller.handleRemnaEvent(
-      makePayload('user.created'),
-    );
+  it('returns { ok: true } for unknown events without calling service', async () => {
+    const result = await controller.handleRemnaEvent(makePayload('user.created'));
 
-    expect(result).toEqual({ received: true });
-    expect(mockHandleUserExpiresIn24h).not.toHaveBeenCalled();
+    expect(result).toEqual({ ok: true });
+    expect(mockInit).not.toHaveBeenCalled();
   });
 
   it('does not throw when the async handler rejects', async () => {
-    mockHandleUserExpiresIn24h.mockRejectedValue(new Error('boom'));
+    mockInit.mockRejectedValue(new Error('boom'));
 
     // Fire-and-forget — the controller catches the rejection internally
     const result = await controller.handleRemnaEvent(makePayload(EXPIRES_IN_24H));
-    expect(result).toEqual({ received: true });
+    expect(result).toEqual({ ok: true });
   });
 });

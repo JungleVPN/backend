@@ -1,13 +1,14 @@
 import 'reflect-metadata';
 import { NotFoundException } from '@nestjs/common';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
+import { AutopaymentService } from '@payments/autopayment/autopayment.service';
 import { YookassaController } from '@payments/providers/yookassa/yookassa.controller';
 import type { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
-import type { YookassaWebhookService } from '@payments/providers/yookassa/yookassa-webhook.service';
+import type { YookassaService } from '@payments/providers/yookassa/yookassa.service';
 import type { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
+import { WebhookEventEnum } from '@workspace/types';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { PAYMENT_EVENTS } from '../notifications/payment-events';
 
 vi.mock('@workspace/database', () => {
   return {
@@ -21,11 +22,11 @@ describe('YookassaController', () => {
 
   let yookassaPaymentRepo: Repository<YookassaPayment>;
   let savedMethodRepo: Repository<SavedPaymentMethod>;
-  let yookassaWebhookService: YookassaWebhookService;
+  let YookassaService: YookassaService;
   let yookassaProvider: YooKassaProvider;
   let eventEmitter: EventEmitter2;
+  let autopaymentService: AutopaymentService;
 
-  // Repo mocks
   let mockYkFind: any;
   let mockYkFindOneBy: any;
   let mockYkCreate: any;
@@ -34,12 +35,9 @@ describe('YookassaController', () => {
   let mockSmFind: any;
   let mockSmFindOneBy: any;
   let mockSmSave: any;
-  let mockSmCount: any;
 
-  // Webhook / provider / emitter mocks
   let mockHandleWebhook: any;
-  let mockCreatePayment: any;
-  let mockCreateAutopayment: any;
+  let mockCreate: any;
   let mockEmit: any;
 
   beforeEach(() => {
@@ -60,25 +58,21 @@ describe('YookassaController', () => {
     mockSmFind = vi.fn();
     mockSmFindOneBy = vi.fn();
     mockSmSave = vi.fn(async (v: any) => v);
-    mockSmCount = vi.fn();
 
     savedMethodRepo = {
       find: mockSmFind,
       findOneBy: mockSmFindOneBy,
       save: mockSmSave,
-      count: mockSmCount,
     } as unknown as Repository<SavedPaymentMethod>;
 
     mockHandleWebhook = vi.fn();
-    yookassaWebhookService = {
+    YookassaService = {
       handleWebhook: mockHandleWebhook,
-    } as unknown as YookassaWebhookService;
+    } as unknown as YookassaService;
 
-    mockCreatePayment = vi.fn();
-    mockCreateAutopayment = vi.fn();
+    mockCreate = vi.fn();
     yookassaProvider = {
-      createPayment: mockCreatePayment,
-      createAutopayment: mockCreateAutopayment,
+      create: mockCreate,
     } as unknown as YooKassaProvider;
 
     mockEmit = vi.fn();
@@ -86,12 +80,17 @@ describe('YookassaController', () => {
       emit: mockEmit,
     } as unknown as EventEmitter2;
 
+    autopaymentService = {
+      disableActiveMethodIfExists: vi.fn(),
+    } as unknown as AutopaymentService;
+
     controller = new YookassaController(
       yookassaPaymentRepo,
       savedMethodRepo,
-      yookassaWebhookService,
+      YookassaService,
       yookassaProvider,
       eventEmitter,
+      autopaymentService,
     );
   });
 
@@ -110,43 +109,6 @@ describe('YookassaController', () => {
         order: { createdAt: 'DESC' },
       });
       expect(result).toBe(methods);
-    });
-  });
-
-  describe('toggleSavedMethod', () => {
-    it('disable the method if isActive is false', async () => {
-      const method = { id: 'm1', userId: 'u1', isActive: true };
-      mockSmFindOneBy.mockResolvedValue(method);
-
-      const result = await controller.toggleSavedMethod('m1', { userId: 'u1', isActive: false });
-
-      expect(method.isActive).toBe(false);
-      expect(mockSmSave).toHaveBeenCalledWith(method);
-      expect(result).toEqual({ isActive: false });
-    });
-
-    it('disables previous active method if it existst and isActive for different method is true', async () => {
-      const method = { id: 'm1', userId: 'u1', isActive: true };
-      const activeMethod = { id: 'm2', userId: 'u1', isActive: true };
-      mockSmFindOneBy.mockResolvedValueOnce(method);
-      mockSmFindOneBy.mockResolvedValueOnce(activeMethod);
-
-      const result = await controller.toggleSavedMethod('m1', { userId: 'u1', isActive: true });
-
-      expect(activeMethod.isActive).toBe(false);
-      expect(mockSmSave).toHaveBeenCalledWith(activeMethod);
-      expect(method.isActive).toBe(true);
-      expect(mockSmSave).toHaveBeenCalledWith(method);
-      expect(result).toEqual({ isActive: true });
-    });
-
-    it('throws NotFoundException when method does not exist', async () => {
-      mockSmFindOneBy.mockResolvedValue(null);
-
-      await expect(
-        controller.toggleSavedMethod('missing', { userId: 'u1', isActive: false }),
-      ).rejects.toBeInstanceOf(NotFoundException);
-      expect(mockSmSave).not.toHaveBeenCalled();
     });
   });
 
@@ -186,105 +148,54 @@ describe('YookassaController', () => {
       mockYkFindOneBy.mockResolvedValue(payment);
 
       await controller.updateStatus('p1', {
-        status: 'payment.succeeded',
+        status: 'succeeded',
         paidAt: '2026-01-01T00:00:00Z',
       });
 
-      expect(payment.status).toBe('payment.succeeded');
+      expect(payment.status).toBe('succeeded');
       expect(payment.paidAt).toBeInstanceOf(Date);
       expect(mockYkSave).toHaveBeenCalledWith(payment);
     });
 
-    it('clears paidAt when set to null', async () => {
-      const payment: any = { id: 'p1', status: 'pending', paidAt: new Date() };
-      mockYkFindOneBy.mockResolvedValue(payment);
-
-      await controller.updateStatus('p1', { paidAt: null });
-
-      expect(payment.paidAt).toBeNull();
-    });
-
     it('throws when payment not found', async () => {
       mockYkFindOneBy.mockResolvedValue(null);
-      await expect(controller.updateStatus('x', { status: 'y' })).rejects.toBeInstanceOf(
+      await expect(controller.updateStatus('x', { status: 'succeeded' })).rejects.toBeInstanceOf(
         NotFoundException,
       );
     });
   });
 
   // ─────────────────────────────────────────────────────────
-  // createSession (opt-out logic)
+  // createSession
   // ─────────────────────────────────────────────────────────
   describe('createSession', () => {
     const baseDto = {
       userId: 'user-1',
-      payment: { amount: 100, description: 'test' },
-      savePaymentMethod: false,
+      amount: 100,
+      description: 'test',
+      savePaymentMethod: true,
     };
 
-    beforeEach(() => {
-      mockCreatePayment.mockResolvedValue({
+    it('creates the payment, persists the record and returns { id, url }', async () => {
+      mockSmFindOneBy.mockResolvedValue(null); // no existing active method
+      mockCreate.mockResolvedValue({
         id: 'sess-1',
-        url: 'https://yk/sess-1',
+        status: 'pending',
+        confirmation: { type: 'redirect', confirmation_url: 'https://yk/sess-1' },
       });
-    });
-
-    it('uses explicit savePaymentMethod=false without consulting opt-out', async () => {
-      await controller.createSession({ ...baseDto, savePaymentMethod: false });
-
-      expect(mockCreatePayment).toHaveBeenCalledWith(
-        expect.objectContaining({ savePaymentMethod: false }),
-      );
-      expect(mockSmCount).not.toHaveBeenCalled();
-    });
-
-    it('uses explicit savePaymentMethod=true without consulting opt-out', async () => {
-      await controller.createSession({ ...baseDto, savePaymentMethod: true });
-
-      expect(mockCreatePayment).toHaveBeenCalledWith(
-        expect.objectContaining({ savePaymentMethod: true }),
-      );
-      expect(mockSmCount).not.toHaveBeenCalled();
-    });
-
-    it('defaults savePaymentMethod to true for a new user (no records)', async () => {
-      mockSmCount.mockResolvedValueOnce(0); // totalCount
-
-      await controller.createSession(baseDto);
-
-      expect(mockCreatePayment).toHaveBeenCalledWith(
-        expect.objectContaining({ savePaymentMethod: true }),
-      );
-    });
-
-    it('defaults savePaymentMethod to true when user has active records', async () => {
-      mockSmCount
-        .mockResolvedValueOnce(2) // totalCount
-        .mockResolvedValueOnce(1); // activeCount
-
-      await controller.createSession(baseDto);
-
-      expect(mockCreatePayment).toHaveBeenCalledWith(
-        expect.objectContaining({ savePaymentMethod: true }),
-      );
-    });
-
-    it('defaults savePaymentMethod to false when user has opted out', async () => {
-      mockSmCount
-        .mockResolvedValueOnce(3) // totalCount
-        .mockResolvedValueOnce(0); // activeCount => opted out
-
-      await controller.createSession(baseDto);
-
-      expect(mockCreatePayment).toHaveBeenCalledWith(
-        expect.objectContaining({ savePaymentMethod: false }),
-      );
-    });
-
-    it('persists the payment record and returns the provider session', async () => {
-      mockSmCount.mockResolvedValueOnce(0);
 
       const result = await controller.createSession(baseDto);
+
+      const [request] = mockCreate.mock.calls[0];
+      expect(request).toEqual(
+        expect.objectContaining({
+          amount: { value: '100', currency: 'RUB' },
+          capture: true,
+          confirmation: expect.objectContaining({ type: 'redirect' }),
+          description: 'test',
+          save_payment_method: true,
+        }),
+      );
 
       expect(mockYkCreate).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -300,6 +211,34 @@ describe('YookassaController', () => {
       expect(mockYkSave).toHaveBeenCalled();
       expect(result).toEqual({ id: 'sess-1', url: 'https://yk/sess-1' });
     });
+
+    it('omits save_payment_method when dto.savePaymentMethod is false', async () => {
+      mockSmFindOneBy.mockResolvedValue(null);
+      mockCreate.mockResolvedValue({
+        id: 'sess-2',
+        status: 'pending',
+        confirmation: { type: 'redirect', confirmation_url: 'https://yk/sess-2' },
+      });
+
+      await controller.createSession({ ...baseDto, savePaymentMethod: false });
+
+      const [request] = mockCreate.mock.calls[0];
+      expect(request.save_payment_method).toBeUndefined();
+    });
+
+    it('disables an existing active saved method before creating the session', async () => {
+      mockCreate.mockResolvedValue({
+        id: 'sess-3',
+        status: 'pending',
+        confirmation: { type: 'redirect', confirmation_url: 'https://yk/sess-3' },
+      });
+
+      await controller.createSession(baseDto);
+
+      // Controller delegates disabling to AutopaymentService — behavior of
+      // that method is covered by autopayment.service.spec.ts.
+      expect(autopaymentService.disableActiveMethodIfExists).toHaveBeenCalledWith('user-1');
+    });
   });
 
   // ─────────────────────────────────────────────────────────
@@ -311,7 +250,7 @@ describe('YookassaController', () => {
       const result = await controller.webhook(payload, '127.0.0.1');
 
       expect(mockHandleWebhook).toHaveBeenCalledWith(payload, '127.0.0.1');
-      expect(result).toEqual({ received: true });
+      expect(result).toEqual({ ok: true });
     });
   });
 
@@ -330,35 +269,37 @@ describe('YookassaController', () => {
       mockSmFindOneBy.mockResolvedValue(null);
 
       await expect(controller.makeAutopayment(dto)).rejects.toBeInstanceOf(NotFoundException);
-      expect(mockCreateAutopayment).not.toHaveBeenCalled();
+      expect(mockCreate).not.toHaveBeenCalled();
     });
 
-    it('creates autopayment, saves record and does NOT emit on success', async () => {
+    it('builds a payment_method_id request, persists, and does NOT emit on success', async () => {
       mockSmFindOneBy.mockResolvedValue({
         userId: 'user-1',
         paymentMethodId: 'pm_1',
         isActive: true,
       });
-      mockCreateAutopayment.mockResolvedValue({
+      mockCreate.mockResolvedValue({
         id: 'pay_1',
-        status: 'payment.succeeded',
+        status: 'succeeded',
       });
 
       const result = await controller.makeAutopayment(dto);
 
-      expect(mockCreateAutopayment).toHaveBeenCalledWith(
+      const [request] = mockCreate.mock.calls[0];
+      expect(request).toEqual(
         expect.objectContaining({
-          userId: 'user-1',
-          paymentMethodId: 'pm_1',
-          amount: 500,
-          selectedPeriod: 1,
+          amount: { value: '500', currency: 'RUB' },
+          capture: true,
+          payment_method_id: 'pm_1',
           description: 'autopay',
         }),
       );
+      expect(request.confirmation).toBeUndefined();
+
       expect(mockYkCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           id: 'pay_1',
-          status: 'payment.succeeded',
+          status: 'succeeded',
           amount: 500,
           userId: 'user-1',
           paidAt: expect.any(Date),
@@ -367,9 +308,8 @@ describe('YookassaController', () => {
       expect(mockYkSave).toHaveBeenCalled();
       expect(mockEmit).not.toHaveBeenCalled();
       expect(result).toEqual({
-        paymentId: 'pay_1',
-        status: 'payment.succeeded',
-        cancellationDetails: undefined,
+        id: 'pay_1',
+        status: 'succeeded',
       });
     });
 
@@ -379,9 +319,9 @@ describe('YookassaController', () => {
         paymentMethodId: 'pm_1',
         isActive: true,
       });
-      mockCreateAutopayment.mockResolvedValue({
+      mockCreate.mockResolvedValue({
         id: 'pay_2',
-        status: 'payment.canceled',
+        status: 'canceled',
         cancellation_details: {
           reason: 'insufficient_funds',
           party: 'payment_network',
@@ -392,21 +332,19 @@ describe('YookassaController', () => {
 
       expect(mockYkCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: 'payment.canceled',
+          status: 'canceled',
           paidAt: null,
         }),
       );
       expect(mockEmit).toHaveBeenCalledWith(
-        PAYMENT_EVENTS.AUTOPAYMENT_FAILED,
+        WebhookEventEnum['payment.autopayment_failed'],
         expect.objectContaining({
           telegramId: Number(dto.userId),
           provider: 'yookassa',
-          selectedPeriod: 1,
           reason: 'insufficient_funds',
-          party: 'payment_network',
         }),
       );
-      expect(result.cancellationDetails).toEqual({
+      expect(result.cancellation_details).toEqual({
         reason: 'insufficient_funds',
         party: 'payment_network',
       });
