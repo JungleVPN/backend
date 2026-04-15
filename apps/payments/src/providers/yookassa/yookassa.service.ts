@@ -2,6 +2,7 @@ import * as process from 'node:process';
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AutopaymentService } from '@payments/autopayment/autopayment.service';
 import { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
 import { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
 import {
@@ -35,6 +36,7 @@ export class YookassaService {
     private readonly savedMethodRepo: Repository<SavedPaymentMethod>,
     private readonly paymentStatusService: PaymentStatusService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly autopaymentService: AutopaymentService,
   ) {}
 
   async handleWebhook(payload: PaymentWebhookNotification, ip: string) {
@@ -79,6 +81,8 @@ export class YookassaService {
     );
 
     if (result.success) {
+      await this.autopaymentService.disableActiveMethodIfExists(String(telegramId));
+
       this.eventEmitter.emit(WebhookEventEnum['payment.succeeded'], {
         telegramId,
         provider: 'yookassa',

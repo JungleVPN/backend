@@ -24,12 +24,7 @@ import {
 } from '@workspace/types';
 import { Repository } from 'typeorm';
 import { YooKassaProvider } from './yookassa.provider';
-import type { CreateYookassaSessionDto, YookassaSessionResponse } from './yookassa.types';
-
-import PaymentSucceededEventPayload = Payments.PaymentSucceededEventPayload;
-import IPayment = Payments.IPayment;
-
-import { AutopaymentService } from '@payments/autopayment/autopayment.service';
+import type { YookassaSessionResponse } from './yookassa.types';
 
 @Controller('payments/yookassa')
 export class YookassaController {
@@ -43,7 +38,6 @@ export class YookassaController {
     private readonly yookassaService: YookassaService,
     private readonly yookassaProvider: YooKassaProvider,
     private readonly eventEmitter: EventEmitter2,
-    private readonly autopaymentService: AutopaymentService,
   ) {}
 
   // ── Saved payment methods (must be before :id to avoid route conflicts) ─
@@ -94,19 +88,21 @@ export class YookassaController {
    * (i.e. they previously had saved methods but disabled all of them).
    */
   @Post('create-session')
-  async createSession(@Body() dto: CreateYookassaSessionDto): Promise<YookassaSessionResponse> {
-    await this.autopaymentService.disableActiveMethodIfExists(dto.userId);
+  async createSession(
+    @Body() body: { paymentDto: Payments.IPayment; userId: string; save_payment_method: boolean },
+  ): Promise<YookassaSessionResponse> {
+    const { userId, save_payment_method, paymentDto } = body;
 
     const request: Payments.CreatePaymentRequest = {
-      amount: { value: String(dto.amount), currency: 'RUB' },
+      amount: paymentDto.amount,
       capture: true,
       confirmation: {
         type: 'redirect',
         return_url: process.env.RETURN_URL,
       },
-      description: dto.description,
-      metadata: dto.metadata,
-      save_payment_method: dto.savePaymentMethod || undefined,
+      description: paymentDto.description,
+      metadata: paymentDto.metadata,
+      save_payment_method,
     };
 
     const payment = await this.yookassaProvider.create(request);
@@ -122,16 +118,16 @@ export class YookassaController {
       id: payment.id,
       url: confirmationUrl,
       status: payment.status,
-      amount: Number(dto.amount),
+      amount: Number(payment.amount.value),
       currency: 'RUB',
-      userId: dto.userId,
-      description: dto.description ?? null,
-      metadata: dto.metadata ?? null,
+      userId,
+      description: payment.description ?? null,
+      metadata: payment.metadata ?? null,
       paidAt: null,
     });
     await this.yookassaPaymentRepo.save(record);
 
-    this.logger.log(`Created Yookassa payment session ${payment.id} for user ${dto.userId}`);
+    this.logger.log(`Created Yookassa payment session ${payment.id} for user ${userId}`);
     return { id: payment.id, url: confirmationUrl };
   }
 
@@ -156,7 +152,7 @@ export class YookassaController {
    * 4. If failed — emit AUTOPAYMENT_FAILED so the bot can fall back to manual payment
    */
   @Post('make-autopayment')
-  async makeAutopayment(@Body() dto: MakeAutopaymentDto): Promise<IPayment> {
+  async makeAutopayment(@Body() dto: MakeAutopaymentDto): Promise<Payments.IPayment> {
     const savedMethod = await this.savedMethodRepo.findOneBy({
       userId: dto.userId,
       isActive: true,

@@ -1,12 +1,11 @@
 import 'reflect-metadata';
 import { NotFoundException } from '@nestjs/common';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
-import { AutopaymentService } from '@payments/autopayment/autopayment.service';
 import { YookassaController } from '@payments/providers/yookassa/yookassa.controller';
 import type { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
 import type { YookassaService } from '@payments/providers/yookassa/yookassa.service';
 import type { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
-import { WebhookEventEnum } from '@workspace/types';
+import { Payments, WebhookEventEnum } from '@workspace/types';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -25,7 +24,6 @@ describe('YookassaController', () => {
   let YookassaService: YookassaService;
   let yookassaProvider: YooKassaProvider;
   let eventEmitter: EventEmitter2;
-  let autopaymentService: AutopaymentService;
 
   let mockYkFind: any;
   let mockYkFindOneBy: any;
@@ -80,17 +78,12 @@ describe('YookassaController', () => {
       emit: mockEmit,
     } as unknown as EventEmitter2;
 
-    autopaymentService = {
-      disableActiveMethodIfExists: vi.fn(),
-    } as unknown as AutopaymentService;
-
     controller = new YookassaController(
       yookassaPaymentRepo,
       savedMethodRepo,
       YookassaService,
       yookassaProvider,
       eventEmitter,
-      autopaymentService,
     );
   });
 
@@ -169,18 +162,37 @@ describe('YookassaController', () => {
   // createSession
   // ─────────────────────────────────────────────────────────
   describe('createSession', () => {
-    const baseDto = {
-      userId: 'user-1',
-      amount: 100,
-      description: 'test',
-      savePaymentMethod: true,
-    };
+    const baseDto: { paymentDto: Payments.IPayment; userId: string; save_payment_method: boolean } =
+      {
+        userId: 'user-1',
+        paymentDto: {
+          amount: {
+            value: '100.00',
+            currency: 'RUB',
+          },
+          description: 'test',
+          id: '',
+          status: 'succeeded',
+          created_at: '',
+          test: false,
+          paid: false,
+          refundable: false,
+        },
+        save_payment_method: true,
+      };
 
     it('creates the payment, persists the record and returns { id, url }', async () => {
       mockSmFindOneBy.mockResolvedValue(null); // no existing active method
       mockCreate.mockResolvedValue({
         id: 'sess-1',
         status: 'pending',
+        amount: {
+          value: '100.00',
+          currency: 'RUB',
+        },
+        paidAt: '2026-01-01T00:00:00Z',
+        metadata: null,
+        description: 'test',
         confirmation: { type: 'redirect', confirmation_url: 'https://yk/sess-1' },
       });
 
@@ -189,7 +201,7 @@ describe('YookassaController', () => {
       const [request] = mockCreate.mock.calls[0];
       expect(request).toEqual(
         expect.objectContaining({
-          amount: { value: '100', currency: 'RUB' },
+          amount: { value: '100.00', currency: 'RUB' },
           capture: true,
           confirmation: expect.objectContaining({ type: 'redirect' }),
           description: 'test',
@@ -220,24 +232,10 @@ describe('YookassaController', () => {
         confirmation: { type: 'redirect', confirmation_url: 'https://yk/sess-2' },
       });
 
-      await controller.createSession({ ...baseDto, savePaymentMethod: false });
+      await controller.createSession({ ...baseDto, save_payment_method: false });
 
       const [request] = mockCreate.mock.calls[0];
-      expect(request.save_payment_method).toBeUndefined();
-    });
-
-    it('disables an existing active saved method before creating the session', async () => {
-      mockCreate.mockResolvedValue({
-        id: 'sess-3',
-        status: 'pending',
-        confirmation: { type: 'redirect', confirmation_url: 'https://yk/sess-3' },
-      });
-
-      await controller.createSession(baseDto);
-
-      // Controller delegates disabling to AutopaymentService — behavior of
-      // that method is covered by autopayment.service.spec.ts.
-      expect(autopaymentService.disableActiveMethodIfExists).toHaveBeenCalledWith('user-1');
+      expect(request.save_payment_method).toBeFalsy();
     });
   });
 

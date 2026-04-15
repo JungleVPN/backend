@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import * as process from 'node:process';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
+import { AutopaymentService } from '@payments/autopayment/autopayment.service';
 import type { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
 import { YookassaService } from '@payments/providers/yookassa/yookassa.service';
 import type { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
@@ -57,6 +58,7 @@ describe('YookassaService', () => {
   let yooKassaProvider: YooKassaProvider;
   let paymentStatusService: PaymentStatusService;
   let eventEmitter: EventEmitter2;
+  let autopaymentService: AutopaymentService;
 
   let mockYkUpdate: any;
 
@@ -104,12 +106,17 @@ describe('YookassaService', () => {
       emit: mockEmit,
     } as unknown as EventEmitter2;
 
+    autopaymentService = {
+      disableActiveMethodIfExists: vi.fn(),
+    } as unknown as AutopaymentService;
+
     service = new YookassaService(
       yooKassaProvider,
       yookassaPaymentRepo,
       savedMethodRepo,
       paymentStatusService,
       eventEmitter,
+      autopaymentService,
     );
   });
 
@@ -321,6 +328,7 @@ describe('YookassaService', () => {
         savedMethodRepo,
         paymentStatusService,
         eventEmitter,
+        autopaymentService,
       );
     });
 

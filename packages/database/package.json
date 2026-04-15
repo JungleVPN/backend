@@ -26,7 +26,7 @@
     "dev": "tsc -w",
     "lint": "biome lint ./src",
     "clean": "rm -rf dist",
-    "migration:generate": "rm -rf dist && tsc && typeorm migration:generate -d ./dist/datasource.js",
+    "migration:generate": "rm -rf dist && tsc && typeorm migration:generate -d ./dist/datasource.js ./src/migrations/Migration",
     "migration:run": "rm -rf dist && tsc && typeorm migration:run -d ./dist/datasource.js",
     "migration:revert": "rm -rf dist && tsc && typeorm migration:revert -d ./dist/datasource.js"
   },
