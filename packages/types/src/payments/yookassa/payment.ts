@@ -86,11 +86,53 @@ export namespace Payments {
   /**
    * Причина отмены платежа.
    *
+   * - 3d_secure_failed -	3-D Secure authentication failed. The buyer should repeat the payment, contact their bank for details, or use another payment method
+   * - call_issuer - Payment made with this payment method was declined for unknown reasons. The buyer should contact the organization that provides the payment method
+   * - canceled_by_merchant	Payment canceled via API during a two-stage payment
+   * - card_expired	The bank card has expired. The buyer should use a different payment method when making a new attempt to pay
+   * - country_forbidden	Payments with a bank card issued in this country are not allowed. The buyer should use a different payment method when making a new attempt to pay.
+   * You can set up the limits for payments made via bank card issued by foreign banks
+   * - deal_expired	For those who use Safe deal: deal's validity period is over. If you still want to receive the payment, create a new deal and process a new payment for it
+   * - expired_on_capture	A two-stage payment’s term for debiting the money has expired. If you still want to accept the payment, repeat the payment using a new idempotency key and debit the money after the payment is confirmed by the user
+   * - expired_on_confirmation	Payment term has expired: the user hasn’t confirmed the payment within the time frame designated for payment using the selected method. If the user still wants to pay, you’ll need to repeat the payment using a new idempotency key, and the user needs to confirm it
+   * - fraud_suspected	The payment was blocked due to suspected fraud. The buyer should use a different payment method when making a new attempt to pay
+   * - general_decline	No detailed reason provided. The buyer should contact the initiator of the payment cancellation for more details
+   * - identification_required	Exceeded payment limit on the YooMoney wallet. The buyer should complete the identification process or select another payment method
+   * - insufficient_funds	Not enough money to make the payment. The buyer should add money to the account balance or select another payment method
+   * - internal_timeout	Technical difficulties on YooMoney’s side: couldn’t process the request within 30 seconds. Repeat the payment using a new idempotency key
+   * - invalid_card_number	Invalid card number. The buyer should repeat the payment and enter the correct card details
+   * - invalid_csc	The CVV2 code (CVC2, CID) was entered incorrectly. The buyer should repeat the payment and enter the correct card details
+   * - issuer_unavailable	The organization that provides the payment method is not available. The buyer should repeat the payment later or select another payment method
+   * - payment_method_limit_exceeded	Payment limit for this payment method or your store has been reached. The buyer should repeat the payment on the following day or select another payment method
+   * - payment_method_restricted	Transactions made with this payment method are forbidden (for example, the card is blocked due to loss or the wallet is blocked due to hacking). The buyer should contact the organization that provides the payment method
+   * - permission_revoked	Нельзя провести безакцептное списание: пользователь отозвал разрешение на автоплатежи. If the user wants to make another payment, you will need to create it, and the user will have to confirm it.
+   * - unsupported_mobile_operator	Payment can't be made from a number provided by this mobile carrier. The buyer should use a different payment method when making a new attempt to pay. List of supported carriers
+   *
    * NOTE: The upstream SDK uses a typed union derived from `paymentCancelReasonMap`.
    * We keep it as `string` here to avoid mirroring the dictionary table.
    * @see https://yookassa.ru/developers/payment-acceptance/after-the-payment/declined-payments#cancellation-details-reason
    */
-  export type CancelReason = string;
+  export type CancelReason =
+    | '3d_secure_failed'
+    | 'call_issuer'
+    | 'canceled_by_merchant'
+    | 'card_expired'
+    | 'country_forbidden'
+    | 'deal_expired'
+    | 'expired_on_capture'
+    | 'expired_on_confirmation'
+    | 'fraud_suspected'
+    | 'general_decline'
+    | 'identification_required'
+    | 'insufficient_funds'
+    | 'internal_timeout'
+    | 'invalid_card_number'
+    | 'invalid_csc'
+    | 'issuer_unavailable'
+    | 'payment_method_limit_exceeded'
+    | 'payment_method_restricted'
+    | 'permission_revoked'
+    | 'unsupported_mobile_operator';
 
   /**
    * Комментарий к статусу `canceled`: кто отменил платеж и по какой причине.

@@ -46,8 +46,13 @@ export class YookassaService {
     }
 
     try {
-      if (payload.event === WebhookEventEnum['payment.succeeded']) {
-        await this.handlePaymentSucceeded(payload);
+      switch (payload.event) {
+        case WebhookEventEnum['payment.succeeded']:
+          await this.handlePaymentSucceeded(payload);
+          break;
+        case WebhookEventEnum['payment.canceled']:
+          await this.handlePaymentCanceled(payload);
+          break;
       }
     } catch (apiError) {
       this.logger.error(`API verification failed for payment ${payload.object.id}`, apiError);
@@ -88,6 +93,27 @@ export class YookassaService {
         provider: 'yookassa',
         selectedPeriod,
       } satisfies Payments.PaymentSucceededEventPayload);
+    }
+  }
+
+  async handlePaymentCanceled(payload: PaymentWebhookNotification): Promise<void> {
+    const { metadata, id, status, cancellation_details } = payload.object;
+
+    const telegramId = Number(metadata?.telegramId);
+    const selectedPeriod = Number(metadata?.selectedPeriod);
+
+    await this.yookassaPaymentRepo.update(id, {
+      status,
+      url: null,
+    });
+
+    if (cancellation_details) {
+      this.eventEmitter.emit(WebhookEventEnum['payment.canceled'], {
+        telegramId,
+        provider: 'yookassa',
+        selectedPeriod,
+        reason: cancellation_details.reason,
+      } satisfies Payments.PaymentFailedEventPayload);
     }
   }
 

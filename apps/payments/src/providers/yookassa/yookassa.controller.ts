@@ -40,6 +40,14 @@ export class YookassaController {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  /** Yookassa webhook endpoint — IP validated inside the provider */
+  @Post('webhook')
+  @HttpCode(200)
+  async webhook(@Body() payload: PaymentWebhookNotification, @Ip() ip: string) {
+    await this.yookassaService.handleWebhook(payload, ip);
+    return { ok: true };
+  }
+
   // ── Saved payment methods (must be before :id to avoid route conflicts) ─
 
   /** List active saved payment methods for a user */
@@ -129,14 +137,6 @@ export class YookassaController {
 
     this.logger.log(`Created Yookassa payment session ${payment.id} for user ${userId}`);
     return { id: payment.id, url: confirmationUrl };
-  }
-
-  /** Yookassa webhook endpoint — IP validated inside the provider */
-  @Post('webhook')
-  @HttpCode(200)
-  async webhook(@Body() payload: PaymentWebhookNotification, @Ip() ip: string) {
-    await this.yookassaService.handleWebhook(payload, ip);
-    return { ok: true };
   }
 
   // ── Autopayment ────────────────────────────────────────────────────

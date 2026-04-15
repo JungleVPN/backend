@@ -33,6 +33,11 @@ export class BotNotificationService {
     await this.notify('payment.autopayment_failed', event);
   }
 
+  @OnEvent(WebhookEventEnum['payment.canceled'])
+  async onCancel(event: Payments.PaymentSucceededEventPayload): Promise<void> {
+    await this.notify('payment.canceled', event);
+  }
+
   /**
    * Sends payment notification to the bot's /notify/payment endpoint.
    * Best-effort: failures are logged but do not affect payment processing.
