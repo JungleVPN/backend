@@ -1,0 +1,52 @@
+{
+  "main": {
+    "page": {
+      "component": {
+        "buy": "Buy subscription",
+        "no-sub": "You don't have a subscription",
+        "podpiska": "Subscription",
+        "error-connect": "Connection error",
+        "error-parse-appconfig": "Ошибка обработки App-config",
+        "ERR_FATCH_USER": "Error getting user",
+        "ERR_GET_SUB_LINK": "Error getting subscription link",
+        "ERR_PARSE_APPCONFIG": "Error parsing app configuration",
+        "missing_id": "Missing subscription ID. Please provide ?id=YOUR_SHORT_UUID in the URL.",
+        "refresh": "Refresh"
+      }
+    }
+  },
+  "login": {
+    "title": "Login or Sign Up",
+    "email_label": "Email",
+    "email_placeholder": "Your email",
+    "submit": "Continue"
+  },
+  "confirm": {
+    "title": "Enter the code you received",
+    "submit": "Login",
+    "resend_in": "Resend in {timer}s",
+    "resend_otp": "Resend OTP",
+    "hint": "You will receive an email with the code to enter"
+  },
+  "header": {
+    "title": "JungleVPN",
+    "logout": "Logout",
+    "login": "Log In"
+  },
+  "getSubscription": {
+    "enter_email": "Enter the email for your JungleVPN account",
+    "email_placeholder": "example@gmail.com",
+    "email_description": "Needed to manage your subscription",
+    "error_empty_email": "Please enter your email address",
+    "error_invalid_email": "Please enter a valid email address",
+    "error_failed_to_create": "Failed to create subscription. Please try again.",
+    "order_summary": "Your order",
+    "item_name": "JungleVPN subscription",
+    "discount": "Discount 100%",
+    "submit_button": "Get Subscription",
+    "features_title": "Included in the subscription",
+    "feature_devices": "VPN for all your devices",
+    "feature_traffic": "Unlimited traffic. Fast servers",
+    "feature_support": "Friendly support 24/7"
+  }
+}

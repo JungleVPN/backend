@@ -10,14 +10,20 @@
     "./api": "./src/api/index.ts",
     "./hooks": "./src/hooks/index.ts",
     "./utils": "./src/utils/index.ts",
-    "./constants": "./src/constants/index.ts"
+    "./constants": "./src/constants/index.ts",
+    "./stores": "./src/stores/index.ts",
+    "./i18n": "./src/i18n/index.ts"
   },
   "scripts": {
     "lint": "biome lint ./src",
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@workspace/types": "workspace:*"
+    "@workspace/types": "workspace:*",
+    "@remnawave/backend-contract": "^2.7.2",
+    "@remnawave/subscription-page-types": "^0.4.0",
+    "zustand": "^5.0.9",
+    "i18next-browser-languagedetector": "^8.2.0"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0"

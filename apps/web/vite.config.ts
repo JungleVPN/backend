@@ -1,15 +1,22 @@
-import react from '@vitejs/plugin-react-swc';
+import path from 'node:path';
+import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  plugins: [react(), tsconfigPaths()],
-  build: {
-    target: 'esnext',
-    minify: 'terser',
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+  css: {
+    postcss: './postcss.config.mjs',
   },
   server: {
-    port: 5173,
-    host: true,
+    port: 7090,
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
   },
 });

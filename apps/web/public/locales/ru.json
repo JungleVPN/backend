@@ -1,0 +1,51 @@
+{
+  "main": {
+    "page": {
+      "component": {
+        "buy": "Приобрести подписку",
+        "no-sub": "У вас нет подписки",
+        "error-connect": "Ошибка подключения",
+        "error-parse-appconfig": "Ошибка обработки App-config",
+        "ERR_FATCH_USER": "Ошибка получения пользователя",
+        "ERR_GET_SUB_LINK": "Ошибка получения ссылки на подписку",
+        "ERR_PARSE_APPCONFIG": "Ошибка разбора конфигурации приложения",
+        "missing_id": "Отсутствует ID подписки. Пожалуйста, укажите ?id=ВАШ_SHORT_UUID в URL.",
+        "refresh": "Обновить"
+      }
+    }
+  },
+  "login": {
+    "title": "Войдите или зарегистрируйтесь",
+    "email_label": "Email",
+    "email_placeholder": "Введите email",
+    "submit": "Продолжить"
+  },
+  "confirm": {
+    "title": "Введите полученный код",
+    "submit": "Войти",
+    "resend_in": "Отправить снова через {timer}с",
+    "resend_otp": "Отправить код еще раз",
+    "hint": "Вы получите электронное письмо с кодом для входа"
+  },
+  "header": {
+    "title": "JungleVPN",
+    "logout": "Выйти",
+    "login": "Войти"
+  },
+  "getSubscription": {
+    "enter_email": "Введите email для вашего аккаунта JungleVPN",
+    "email_placeholder": "example@gmail.com",
+    "email_description": "Необходимо для управления вашей подпиской",
+    "error_empty_email": "Пожалуйста, введите ваш адрес электронной почты",
+    "error_invalid_email": "Пожалуйста, введите корректный адрес электронной почты",
+    "error_failed_to_create": "Не удалось создать подписку. Пожалуйста, попробуйте еще раз.",
+    "order_summary": "Ваш заказ",
+    "item_name": "Подписка JungleVPN",
+    "discount": "Скидка 100%",
+    "submit_button": "Получить подписку",
+    "features_title": "Включено в подписку",
+    "feature_devices": "VPN для всех ваших устройств",
+    "feature_traffic": "Безлимитный трафик. Быстрые серверы",
+    "feature_support": "Дружелюбная поддержка 24/7"
+  }
+}

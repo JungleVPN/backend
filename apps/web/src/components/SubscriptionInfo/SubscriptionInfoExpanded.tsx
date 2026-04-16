@@ -1,0 +1,142 @@
+import { Card, Group, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core';
+import {
+  IconAlertCircle,
+  IconArrowsUpDown,
+  IconCalendar,
+  IconCheck,
+  IconUserScan,
+  IconX,
+} from '@tabler/icons-react';
+import { InfoBlock } from '@/components/InfoBlock/InfoBlock';
+import { useTranslation } from '@/hooks/useTranslations';
+import { useSubscription } from '@/store/subscriptionInfo';
+import { getColorGradientSolid } from '@/utils/colorParser';
+import { formatDate, getExpirationTextUtil } from '@/utils/configParser';
+
+export const SubscriptionInfoExpanded = () => {
+  const { t, currentLang, baseTranslations } = useTranslation();
+  const subscription = useSubscription();
+
+  const { user } = subscription;
+
+  const getStatusAndIcon = (): {
+    color: string;
+    icon: React.ReactNode;
+    status: string;
+  } => {
+    if (user.userStatus === 'ACTIVE' && user.daysLeft > 0) {
+      return {
+        color: 'teal',
+        icon: <IconCheck size={18} />,
+        status: t(baseTranslations.active),
+      };
+    }
+    if (
+      (user.userStatus === 'ACTIVE' && user.daysLeft === 0) ||
+      (user.daysLeft >= 0 && user.daysLeft <= 3)
+    ) {
+      return {
+        color: 'orange',
+        icon: <IconAlertCircle size={18} />,
+        status: t(baseTranslations.active),
+      };
+    }
+    return {
+      color: 'red',
+      icon: <IconX size={18} />,
+      status: t(baseTranslations.inactive),
+    };
+  };
+
+  const statusInfo = getStatusAndIcon();
+  const gradientColor = getColorGradientSolid(statusInfo.color);
+
+  return (
+    <Card
+      p={'xs'}
+      radius="lg"
+      style={{
+        overflow: 'hidden',
+        zIndex: 3,
+        backgroundColor: 'rgb(26, 27, 30)',
+        border: '1px solid oklch(0.4676 0 0)',
+        gap: '0',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <Stack gap="sm">
+        <Group gap="sm" justify="space-between">
+          <Group gap="xs" style={{ minWidth: 0, flex: 1 }} wrap="nowrap">
+            <ThemeIcon
+              color={statusInfo.color}
+              radius="xl"
+              size="36"
+              style={{
+                background: gradientColor.background,
+                border: gradientColor.border,
+                boxShadow: gradientColor.boxShadow,
+                flexShrink: 0,
+              }}
+              variant="light"
+            >
+              {statusInfo.icon}
+            </ThemeIcon>
+
+            <Stack gap={2} style={{ minWidth: 0, flex: 1 }}>
+              <Title
+                c="white"
+                fw={600}
+                order={5}
+                style={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {user.username}
+              </Title>
+              <Text c={user.daysLeft === 0 ? 'red' : 'dimmed'} fw={600} size="xs">
+                {getExpirationTextUtil(user.expiresAt, currentLang, baseTranslations)}
+              </Text>
+            </Stack>
+          </Group>
+        </Group>
+
+        <SimpleGrid cols={{ base: 2, xs: 2, sm: 2 }} spacing="xs" verticalSpacing="xs">
+          <InfoBlock
+            color="blue"
+            icon={<IconUserScan size={16} />}
+            title={t(baseTranslations.name)}
+            value={user.username}
+          />
+
+          <InfoBlock
+            color={user.userStatus === 'ACTIVE' ? 'green' : 'red'}
+            icon={user.userStatus === 'ACTIVE' ? <IconCheck size={16} /> : <IconX size={16} />}
+            title={t(baseTranslations.status)}
+            value={
+              user.userStatus === 'ACTIVE'
+                ? t(baseTranslations.active)
+                : t(baseTranslations.inactive)
+            }
+          />
+
+          <InfoBlock
+            color="red"
+            icon={<IconCalendar size={16} />}
+            title={t(baseTranslations.expires)}
+            value={formatDate(user.expiresAt, currentLang, baseTranslations)}
+          />
+
+          <InfoBlock
+            color="yellow"
+            icon={<IconArrowsUpDown size={16} />}
+            title={t(baseTranslations.bandwidth)}
+            value={`${user.trafficUsed} / ${user.trafficLimit === '0' ? '∞' : user.trafficLimit}`}
+          />
+        </SimpleGrid>
+      </Stack>
+    </Card>
+  );
+};

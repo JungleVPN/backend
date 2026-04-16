@@ -3,3 +3,6 @@ export type { ApiClient, ApiClientConfig, ApiRequestOptions, ApiError } from './
 
 export { ApiProvider, useApiClient } from './context';
 export type { ApiProviderProps } from './context';
+
+export { createRemnawaveApi } from './remnawave';
+export type { RemnawaveApi } from './remnawave';

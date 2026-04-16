@@ -1,0 +1,103 @@
+@layer mantine, mantine-datatable;
+
+html,
+body {
+  background-color: oklch(0.1448 0 0);
+  background-size: 60px 60px;
+  background-attachment: fixed;
+  position: relative;
+  /*min-height: 100vh;*/
+}
+
+#root {
+  height: 100vh;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px oklch(0.19 0 0) inset !important;
+}
+
+input:focus {
+  border-color: oklch(0.6009 0.043 129.98);
+}
+
+.animated-background {
+  /*position: fixed;*/
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 25% 40%, rgba(151, 117, 250, 0.08), transparent 50%),
+    radial-gradient(ellipse 50% 50% at 85% 85%, rgba(34, 211, 238, 0.06), transparent 50%);
+}
+
+.step-card {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.step-card:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(34, 211, 238, 0.3) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+}
+
+.logo-text-highlight {
+  color: var(--mantine-color-cyan-4);
+}
+
+.logo-text-normal {
+  color: white;
+}
+
+.info-card-cyan {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.1) 0%, rgba(6, 182, 212, 0.05) 100%);
+  border: 1px solid rgba(34, 211, 238, 0.2);
+}
+
+.info-card-violet {
+  background: linear-gradient(135deg, rgba(151, 117, 250, 0.1) 0%, rgba(132, 94, 247, 0.05) 100%);
+  border: 1px solid rgba(151, 117, 250, 0.2);
+}
+
+.info-card-green {
+  background: linear-gradient(135deg, rgba(64, 192, 87, 0.1) 0%, rgba(55, 178, 77, 0.05) 100%);
+  border: 1px solid rgba(64, 192, 87, 0.2);
+}
+
+.info-card-red {
+  background: linear-gradient(135deg, rgba(250, 82, 82, 0.1) 0%, rgba(224, 49, 49, 0.05) 100%);
+  border: 1px solid rgba(250, 82, 82, 0.2);
+}
+
+.info-card-yellow {
+  background: linear-gradient(135deg, rgba(250, 176, 5, 0.1) 0%, rgba(245, 159, 0, 0.05) 100%);
+  border: 1px solid rgba(250, 176, 5, 0.2);
+}
+
+.info-card-blue {
+  background: linear-gradient(135deg, rgba(34, 139, 230, 0.1) 0%, rgba(28, 126, 214, 0.05) 100%);
+  border: 1px solid rgba(34, 139, 230, 0.2);
+}
+
+.info-card-teal {
+  background: linear-gradient(135deg, rgba(32, 201, 151, 0.1) 0%, rgba(18, 184, 134, 0.05) 100%);
+  border: 1px solid rgba(32, 201, 151, 0.2);
+}
+
+.info-card-orange {
+  background: linear-gradient(135deg, rgba(253, 126, 20, 0.1) 0%, rgba(247, 103, 7, 0.05) 100%);
+  border: 1px solid rgba(253, 126, 20, 0.2);
+}
