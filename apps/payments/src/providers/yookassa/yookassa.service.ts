@@ -1,5 +1,5 @@
 import * as process from 'node:process';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AutopaymentService } from '@payments/autopayment/autopayment.service';
@@ -75,11 +75,6 @@ export class YookassaService {
       this.logger.warn('Invalid telegramId in Yookassa metadata');
     }
 
-    // Persist payment method if YooKassa reports it as saved
-    if (payment_method && isSavablePaymentMethod(payment_method) && payment_method.saved) {
-      await this.trySavePaymentMethod(String(telegramId), payment_method);
-    }
-
     const result = await this.paymentStatusService.handlePaymentSucceeded(
       telegramId,
       selectedPeriod,
@@ -93,6 +88,11 @@ export class YookassaService {
         provider: 'yookassa',
         selectedPeriod,
       } satisfies Payments.PaymentSucceededEventPayload);
+    }
+
+    // Persist payment method if YooKassa reports it as saved
+    if (payment_method && isSavablePaymentMethod(payment_method) && payment_method.saved) {
+      await this.trySavePaymentMethod(String(telegramId), payment_method);
     }
   }
 
@@ -117,6 +117,15 @@ export class YookassaService {
     }
   }
 
+  async deletePaymentMethod(id: string, userId: string): Promise<void> {
+    const method = await this.savedMethodRepo.findOneBy({ id, userId });
+    if (!method) {
+      throw new NotFoundException(`Saved payment method ${id} not found for user ${userId}`);
+    }
+
+    await this.savedMethodRepo.delete({ id, userId });
+    this.logger.log(`Deleted saved payment method ${id} for user ${userId}`);
+  }
   /**
    * Persists a saved payment method from YooKassa's webhook payload.
    *
@@ -130,17 +139,12 @@ export class YookassaService {
     paymentMethod: IPaymentMethod & IGeneralPayMethod,
   ): Promise<void> {
     try {
-      if (await this.hasUserOptedOutOfAutopayments(userId)) {
-        this.logger.log(
-          `Skipping payment method save for user ${userId} — user opted out of autopayments`,
-        );
-        return;
-      }
-
       const existing = await this.savedMethodRepo.findOneBy({
         paymentMethodId: paymentMethod.id,
       });
-      if (existing) return;
+      if (existing) {
+        await this.deletePaymentMethod(existing.id, existing.userId);
+      }
 
       const card = isBankCardPaymentMethod(paymentMethod) ? paymentMethod.card : undefined;
 
@@ -162,15 +166,8 @@ export class YookassaService {
           : null,
         isActive: true,
       });
-
+      console.log(method);
       await this.savedMethodRepo.save(method);
-
-      this.eventEmitter.emit(WebhookEventEnum['payment.method_saved'], {
-        telegramId: Number(userId),
-        provider: 'yookassa',
-        paymentMethodType: paymentMethod.type,
-        title: paymentMethod.title,
-      });
 
       this.logger.log(
         `Saved payment method ${paymentMethod.id} (${paymentMethod.type}) for user ${userId}`,
@@ -178,22 +175,6 @@ export class YookassaService {
     } catch (err: any) {
       this.logger.error(`Failed to save payment method for user ${userId}: ${err.message}`);
     }
-  }
-
-  /**
-   * User has opted out if they have saved-method records but all are inactive.
-   * Zero records at all → new user → NOT opted out.
-   */
-  private async hasUserOptedOutOfAutopayments(userId: string): Promise<boolean> {
-    const totalCount = await this.savedMethodRepo.count({
-      where: { userId, provider: 'yookassa' },
-    });
-    if (totalCount === 0) return false;
-
-    const activeCount = await this.savedMethodRepo.count({
-      where: { userId, provider: 'yookassa', isActive: true },
-    });
-    return activeCount === 0;
   }
 
   async isIPRangeValid(ip: string): Promise<boolean> {

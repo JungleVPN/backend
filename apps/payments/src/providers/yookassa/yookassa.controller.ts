@@ -2,6 +2,7 @@ import * as process from 'node:process';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   InternalServerErrorException,
@@ -57,6 +58,22 @@ export class YookassaController {
       where: { userId, isActive: true },
       order: { createdAt: 'DESC' },
     });
+  }
+
+  /**
+   * Hard-delete a saved payment method owned by `userId`.
+   *
+   * The `userId` is part of the route (not just the id) so a user cannot
+   * delete someone else's saved method by guessing an id. 404 if the row
+   * doesn't exist or belongs to a different user.
+   */
+  @Delete('saved-methods/:userId/:id')
+  async deleteSavedMethod(
+    @Param('userId') userId: string,
+    @Param('id') id: string,
+  ): Promise<{ ok: true }> {
+    await this.yookassaService.deletePaymentMethod(id, userId);
+    return { ok: true };
   }
 
   // ── Payments ───────────────────────────────────────────────────────
