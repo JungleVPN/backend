@@ -1,0 +1,47 @@
+import * as process from 'node:process';
+import { BotService } from '@bot/bot.service';
+import { BotContext } from '@bot/bot.types';
+import { LocalisationService } from '@bot/localisation/localisation.service';
+import { toDateString } from '@bot/utils/utils';
+import { Injectable } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
+import { RemnaService } from '@remna/remna.service';
+import { Bot } from 'grammy';
+
+@Injectable()
+export class UserRewardedListener {
+  bot: Bot<BotContext>;
+
+  constructor(
+    private readonly botService: BotService,
+    private readonly remnaService: RemnaService,
+    private readonly localService: LocalisationService,
+  ) {
+    this.bot = this.botService.bot;
+  }
+
+  @OnEvent('user.rewarded')
+  async handleUserRewardedListener(payload: { telegramId: number; isNewUser: boolean }) {
+    const { telegramId, isNewUser } = payload;
+    // Only notify inviter when the invited user pays, not on initial subscription activation
+    if (isNewUser) return;
+
+    const user = await this.remnaService.getUserByTgId(telegramId);
+    const expireAt = user?.expireAt;
+    const locale = user?.description || process.env.DEFAULT_LOCALE || 'ru';
+    const formattedDate = toDateString(expireAt!);
+
+    const content = this.localService.i18n.t(locale, 'user-rewarded-text', {
+      inviterPaidBonusInDays: process.env.INVITER_PAID_BONUS_IN_DAYS || '7',
+      formattedDate,
+    });
+
+    try {
+      await this.bot.api.sendMessage(telegramId, content, {
+        parse_mode: 'HTML',
+      });
+    } catch (error) {
+      console.log('Failed to send user.rewarded message');
+    }
+  }
+}

@@ -132,6 +132,38 @@ services:
       - "127.0.0.1:${WEBHOOK_PORT}:${WEBHOOK_PORT}"
     restart: always
 
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["node", "apps/bot/dist/main.js"]
+    networks:
+      - jungle-net
+    depends_on:
+      db:
+        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
+      remnawave:
+        condition: service_started
+      payments:
+        condition: service_started
+      referrals:
+        condition: service_started
+      broadcasts:
+        condition: service_started
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
+      REMNAWAVE_URL: http://remnawave:${REMNAWAVE_PORT}
+      PAYMENTS_URL: http://payments:${PAYMENTS_PORT}
+      REFERRALS_URL: http://referrals:${REFERRALS_PORT}
+      BROADCASTS_URL: http://broadcasts:${BROADCASTS_PORT}
+      WEBHOOK_URL: http://webhook:${WEBHOOK_PORT}
+    ports:
+      - "127.0.0.1:${BOT_PORT:-7000}:${BOT_PORT:-7000}"
+    restart: always
+
 
 volumes:
   db:

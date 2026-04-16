@@ -1,0 +1,57 @@
+import * as process from 'node:process';
+import { Menu } from '@bot/navigation';
+import { DevicesMenu } from '@bot/navigation/features/devices/devices.menu';
+import { MainMenu } from '@bot/navigation/features/main/main.menu';
+import { MainMenuService } from '@bot/navigation/features/main/main.service';
+import { RevokeSubMenuService } from '@bot/navigation/features/subscription/revokeSub.service';
+import { Base } from '@bot/navigation/menu.base';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { InlineKeyboard } from 'grammy';
+
+@Injectable()
+export class SupportMenu extends Base {
+  menu = new Menu('support-menu');
+
+  constructor(
+    readonly revokeSubMenuService: RevokeSubMenuService,
+    @Inject(forwardRef(() => DevicesMenu))
+    readonly devicesMenu: DevicesMenu,
+    readonly mainMenuService: MainMenuService,
+    @Inject(forwardRef(() => MainMenu))
+    readonly mainMenu: MainMenu,
+  ) {
+    super();
+
+    this.menu
+      .dynamic((_, range) => {
+        const keyboard = new InlineKeyboard();
+        range.text(
+          (ctx) => ctx.t('new-link-button-label'),
+          async (ctx) => {
+            await this.revokeSubMenuService.init(ctx);
+
+            await this.render(
+              ctx,
+              ctx.t('revoked-sub-text'),
+              keyboard.webApp(
+                ctx.t('connect-button-label'),
+                process.env.WEB_APP_URL || 'https://miniapp.thejungle.pro',
+              ),
+            );
+          },
+        );
+      })
+      .row()
+      .url(
+        (ctx) => ctx.t('support-chanel-button-label'),
+        process.env.SUPPORT_URL || 'https://t.me/JungleVPN_support',
+      )
+      .row()
+      .text(
+        (ctx) => ctx.t('home-button-label'),
+        async (ctx) => {
+          await this.mainMenuService.init(ctx, this.mainMenu.menu);
+        },
+      );
+  }
+}

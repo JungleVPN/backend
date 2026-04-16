@@ -1,0 +1,21 @@
+{
+  "extends": "@workspace/shared-config/tsconfig.nestjs.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": ".",
+    "strictPropertyInitialization": false,
+    "paths": {
+      "@bot/*": ["src/bot/*"],
+      "@remna/*": ["src/remna/*"],
+      "@payments/*": ["src/payments/*"],
+      "@referral/*": ["src/referral/*"],
+      "@shared/*": ["src/types/*"],
+      "@broadcasts/*": ["src/broadcasts/*"],
+      "@assets/*": ["src/assets/*"],
+      "@utils/*": ["src/utils/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "test"]
+}

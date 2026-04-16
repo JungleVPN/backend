@@ -1,0 +1,15 @@
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - jungle-net
+    env_file: .env
+    ports:
+      - "$PORT:$PORT"
+    restart: always
+
+networks:
+  jungle-net:
+    external: true

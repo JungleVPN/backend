@@ -1,0 +1,11 @@
+node_modules
+/dist
+.env*
+.idea
+err.log
+out.log
+pgdata
+postgres-data
+DOCS.md
+credentials.json
+*.tsbuildinfo
