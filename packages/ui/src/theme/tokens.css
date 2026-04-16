@@ -1,0 +1,70 @@
+/*
+ * Design tokens for JungleVPN shared UI.
+ *
+ * Each platform overrides these variables:
+ * - TMA: mapped from Telegram's --tg-theme-* variables
+ * - Web: set directly from the web app's own theme
+ *
+ * Shared components only reference --jv-* tokens,
+ * so they look native on every platform.
+ */
+
+:root {
+  /* Colors — backgrounds */
+  --jv-color-bg: #ffffff;
+  --jv-color-bg-secondary: #f2f2f7;
+
+  /* Colors — text */
+  --jv-color-text: #000000;
+  --jv-color-text-secondary: #8e8e93;
+
+  /* Colors — accent */
+  --jv-color-accent: #007aff;
+  --jv-color-accent-text: #ffffff;
+
+  /* Colors — semantic */
+  --jv-color-destructive: #ff3b30;
+  --jv-color-success: #34c759;
+  --jv-color-warning: #ff9500;
+
+  /* Colors — surfaces */
+  --jv-color-surface: #ffffff;
+  --jv-color-border: #c6c6c8;
+
+  /* Spacing */
+  --jv-space-xs: 4px;
+  --jv-space-sm: 8px;
+  --jv-space-md: 16px;
+  --jv-space-lg: 24px;
+  --jv-space-xl: 32px;
+
+  /* Typography */
+  --jv-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+  --jv-font-size-xs: 12px;
+  --jv-font-size-sm: 14px;
+  --jv-font-size-md: 16px;
+  --jv-font-size-lg: 20px;
+  --jv-font-size-xl: 24px;
+
+  /* Border radius */
+  --jv-radius-sm: 6px;
+  --jv-radius-md: 10px;
+  --jv-radius-lg: 16px;
+  --jv-radius-full: 9999px;
+
+  /* Transitions */
+  --jv-transition-fast: 150ms ease;
+  --jv-transition-normal: 250ms ease;
+}
+
+/* Dark theme defaults (web). TMA overrides these via its own mapping. */
+[data-theme='dark'] {
+  --jv-color-bg: #1c1c1e;
+  --jv-color-bg-secondary: #2c2c2e;
+  --jv-color-text: #ffffff;
+  --jv-color-text-secondary: #8e8e93;
+  --jv-color-accent: #0a84ff;
+  --jv-color-surface: #2c2c2e;
+  --jv-color-border: #38383a;
+}

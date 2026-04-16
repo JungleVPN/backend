@@ -10,15 +10,18 @@ COPY apps/webhook/package.json ./apps/webhook/package.json
 COPY apps/remnawave/package.json ./apps/remnawave/package.json
 COPY apps/broadcasts/package.json ./apps/broadcasts/package.json
 COPY apps/bot/package.json ./apps/bot/package.json
+COPY apps/tma/package.json ./apps/tma/package.json
 COPY packages/shared-config/package.json ./packages/shared-config/package.json
 COPY packages/types/package.json ./packages/types/package.json
 COPY packages/database/package.json ./packages/database/package.json
+COPY packages/core/package.json ./packages/core/package.json
+COPY packages/ui/package.json ./packages/ui/package.json
 RUN pnpm install --frozen-lockfile
 
 # ── Build everything ─────────────────────────────────────────────────
 FROM deps AS build
 COPY . .
-RUN pnpm turbo build
+RUN pnpm turbo build --filter='!@workspace/tma'
 
 # ── Production dependencies only ─────────────────────────────────────
 FROM base AS prod-deps
@@ -28,9 +31,12 @@ COPY apps/webhook/package.json ./apps/webhook/package.json
 COPY apps/remnawave/package.json ./apps/remnawave/package.json
 COPY apps/broadcasts/package.json ./apps/broadcasts/package.json
 COPY apps/bot/package.json ./apps/bot/package.json
+COPY apps/tma/package.json ./apps/tma/package.json
 COPY packages/shared-config/package.json ./packages/shared-config/package.json
 COPY packages/types/package.json ./packages/types/package.json
 COPY packages/database/package.json ./packages/database/package.json
+COPY packages/core/package.json ./packages/core/package.json
+COPY packages/ui/package.json ./packages/ui/package.json
 RUN pnpm install --frozen-lockfile --prod
 
 # ── Production image ─────────────────────────────────────────────────

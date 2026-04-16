@@ -1,0 +1,22 @@
+@keyframes jv-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--jv-font-family);
+  font-size: var(--jv-font-size-md);
+  color: var(--jv-color-text);
+  background: var(--jv-color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
