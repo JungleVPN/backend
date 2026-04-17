@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStoreInfo } from '@/store/auth';
-import { remnawaveApi, createTrialUser } from '@/api/instance';
-import { SubscriptionView } from '@/components/SubscriptionView/SubscriptionView';
+import { createTrialUser, remnawaveApi } from '@/api/instance';
 import { Loading } from '@/components/Loading/Loading';
+import { SubscriptionView } from '@/components/SubscriptionView/SubscriptionView';
+import { useAuthStoreInfo } from '@/store/auth';
 
 export default function ProfileSubscriptionPage() {
   const { user, loading: authLoading } = useAuthStoreInfo();

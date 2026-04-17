@@ -1,5 +1,5 @@
-import type {
-  CreateUserCommand,
+import {
+  CreateUserResponseDto,
   GetSubpageConfigByShortUuidCommand,
   GetSubscriptionInfoByShortUuidCommand,
   GetUserByEmailCommand,
@@ -13,10 +13,6 @@ import type { ApiClient } from './client';
  * Accepts an ApiClient so each platform can inject its own auth strategy:
  * - Web: Bearer token from env
  * - TMA: Telegram initData header
- *
- * Usage:
- *   const api = createRemnawaveApi(client);
- *   const user = await api.getUserByEmail('user@example.com');
  */
 export function createRemnawaveApi(client: ApiClient) {
   return {
@@ -37,21 +33,22 @@ export function createRemnawaveApi(client: ApiClient) {
       }
     },
 
-    async createUser(params: {
-      email: string;
-      expireAt: Date;
-      squads: string[];
-    }): Promise<CreateUserCommand.Response['response']> {
-      const data = await client.post<CreateUserCommand.Response>('/api/users', {
-        uuid: crypto.randomUUID(),
+    async createUser(
+      params:
+        | {
+            email: string;
+            telegramId?: string;
+          }
+        | {
+            email?: string;
+            telegramId: string;
+          },
+    ): Promise<CreateUserResponseDto> {
+      return await client.post<CreateUserResponseDto>('/api/users', {
         email: params.email,
-        expireAt: params.expireAt,
-        activeInternalSquads: params.squads,
-        trafficLimitStrategy: 'MONTH',
-        status: 'ACTIVE',
+        telegramId: params.telegramId,
         username: crypto.randomUUID().slice(0, 8),
       });
-      return data.response;
     },
 
     async getSubscriptionByShortUuid(shortUuid: string): Promise<

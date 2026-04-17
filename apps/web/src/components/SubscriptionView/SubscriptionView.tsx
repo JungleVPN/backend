@@ -1,19 +1,27 @@
 import { Box, Center, Container, Stack, Title } from '@mantine/core';
 import { useOs } from '@mantine/hooks';
+import { ApiClientError } from '@workspace/core/api';
 import {
   SubscriptionPageRawConfigSchema,
   type TSubscriptionPagePlatformKey,
-  type TSubscriptionPageRawConfig,
-} from '@remnawave/subscription-page-types';
-import { ApiClientError } from '@workspace/core/api';
-import { useTranslation as useI18nextTranslation } from 'react-i18next';
+} from '@workspace/types';
 import { useEffect, useState } from 'react';
+import { useTranslation as useI18nextTranslation } from 'react-i18next';
 import { Snowfall } from 'react-snowfall';
 
 import '@/utils/initDayjs';
+import {
+  useAppConfigStoreActions,
+  useAppConfigStoreInfo,
+  useCurrentLang,
+  useIsConfigLoaded,
+  useSubscriptionConfig,
+  useSubscriptionConfigStoreActions,
+  useSubscriptionInfoStoreActions,
+  useSubscriptionInfoStoreInfo,
+} from '@workspace/core/stores';
 import { fetchAppEnv } from '@/api/fetchAppEnv';
 import { remnawaveApi } from '@/api/instance';
-import { env } from '@/config/env';
 import { AnimatedBackground } from '@/components/AnimatedBackground/AnimatedBackground';
 import { ErrorConnection } from '@/components/ErrorConnection/ErrorConnection';
 import {
@@ -31,17 +39,7 @@ import {
   SubscriptionInfoCollapsed,
   SubscriptionInfoExpanded,
 } from '@/components/SubscriptionInfo';
-import { useAppConfigStoreActions, useAppConfigStoreInfo } from '@workspace/core/stores';
-import {
-  useCurrentLang,
-  useIsConfigLoaded,
-  useSubscriptionConfig,
-  useSubscriptionConfigStoreActions,
-} from '@workspace/core/stores';
-import {
-  useSubscriptionInfoStoreActions,
-  useSubscriptionInfoStoreInfo,
-} from '@workspace/core/stores';
+import { env } from '@/config/env';
 
 function osToPlatform(os: string): TSubscriptionPagePlatformKey | undefined {
   switch (os) {
@@ -73,8 +71,6 @@ const SUBSCRIPTION_INFO_BLOCK_RENDERERS = {
   expanded: SubscriptionInfoExpanded,
   hidden: null,
 } as const;
-
-type TConfigsMap = Record<string, TSubscriptionPageRawConfig>;
 
 export function SubscriptionView(props: { shortUuid: string }) {
   const { shortUuid } = props;
@@ -187,9 +183,9 @@ export function SubscriptionView(props: { shortUuid: string }) {
   // Error state
   if (errorConnect) {
     return (
-      <Container my="xl" size="xl">
+      <Container my='xl' size='xl'>
         <Center>
-          <Stack gap="xl">
+          <Stack gap='xl'>
             <Title style={{ textAlign: 'center' }} order={4}>
               {errorConnect === 'ERR_FATCH_USER'
                 ? t('main.page.component.ERR_FATCH_USER')
@@ -217,7 +213,7 @@ export function SubscriptionView(props: { shortUuid: string }) {
           alignItems: 'center',
         }}
       >
-        <Container size="xl">
+        <Container size='xl'>
           <Title style={{ textAlign: 'center' }} order={4}>
             {t('main.page.component.missing_id')}
           </Title>
@@ -237,8 +233,8 @@ export function SubscriptionView(props: { shortUuid: string }) {
           alignItems: 'center',
         }}
       >
-        <Container size="xl">
-          <Stack gap="xl">
+        <Container size='xl'>
+          <Stack gap='xl'>
             <Title style={{ textAlign: 'center' }} order={4}>
               {t('main.page.component.no-sub')}
             </Title>
@@ -278,7 +274,7 @@ export function SubscriptionView(props: { shortUuid: string }) {
       ) : (
         <AnimatedBackground />
       )}
-      <Stack style={{ zIndex: 2 }} gap="xl">
+      <Stack style={{ zIndex: 2 }} gap='xl'>
         {SubscriptionInfoBlockRenderer && <SubscriptionInfoBlockRenderer />}
 
         {atLeastOnePlatformApp && (

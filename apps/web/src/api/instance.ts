@@ -37,13 +37,7 @@ export const remnawaveApi = createRemnawaveApi(apiClient);
  * TMA will have its own version of this with Telegram-specific defaults.
  */
 export async function createTrialUser(email: string) {
-  const trialDays = parseInt(env.trialPeriodInDays, 10);
-  const expireAt = new Date();
-  expireAt.setDate(expireAt.getDate() + trialDays);
-
   return remnawaveApi.createUser({
     email,
-    expireAt,
-    squads: env.internalSquads,
   });
 }

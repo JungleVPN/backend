@@ -1,9 +1,9 @@
 import { Badge, Button, Grid, Input, Stack, Text, TextInput } from '@mantine/core';
 import { IconArrowRight, IconCheck, IconMail } from '@tabler/icons-react';
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { type FormEvent, useState } from 'react';
-import { remnawaveApi, createTrialUser } from '@/api/instance';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { createTrialUser, remnawaveApi } from '@/api/instance';
 import { Block } from '@/ui/Block/Block';
 import styles from './getSubscription.module.css';
 
@@ -62,7 +62,7 @@ export default function GetSubscriptionPage() {
   return (
     <form className={styles.form}>
       <Grid
-        type="container"
+        type='container'
         breakpoints={{
           xs: '325px',
           sm: '425px',
@@ -73,13 +73,13 @@ export default function GetSubscriptionPage() {
       >
         <Grid.Col span={{ base: 12, md: 7, lg: 3 }}>
           <Block>
-            <Stack gap="xs">
-              <Text size="md" fw={500}>
+            <Stack gap='xs'>
+              <Text size='md' fw={500}>
                 {t('getSubscription.enter_email')}
               </Text>
               <TextInput
-                type="email"
-                size="md"
+                type='email'
+                size='md'
                 placeholder={t('getSubscription.email_placeholder')}
                 error={error}
                 value={email}
@@ -89,13 +89,13 @@ export default function GetSubscriptionPage() {
                 rightSection={
                   email !== '' ? <Input.ClearButton onClick={() => setEmail('')} /> : undefined
                 }
-                rightSectionPointerEvents="auto"
+                rightSectionPointerEvents='auto'
                 leftSection={<IconMail size={20} stroke={1.5} />}
                 onChange={(e) => {
                   setEmail(e.target.value);
                   if (error) setError('');
                 }}
-                autoComplete="email"
+                autoComplete='email'
                 styles={{
                   input: {
                     backgroundColor: 'rgba(255, 255, 255, 0.03)',
@@ -108,7 +108,7 @@ export default function GetSubscriptionPage() {
         </Grid.Col>
         <Grid.Col span={{ base: 12, md: 5, lg: 3 }}>
           <Block>
-            <Stack gap="xl">
+            <Stack gap='xl'>
               <div className={styles.orderSummary}>
                 <Text className={styles.summaryTitle}>{t('getSubscription.order_summary')}</Text>
 
@@ -117,8 +117,8 @@ export default function GetSubscriptionPage() {
                     <Stack gap={2}>
                       <Text className={styles.itemName}>{t('getSubscription.item_name')}</Text>
                       <Badge
-                        size="sm"
-                        variant="gradient"
+                        size='sm'
+                        variant='gradient'
                         gradient={{
                           from: 'oklch(0.6009 0.043 129.98)',
                           to: 'rgb(26, 27, 30)',
@@ -137,7 +137,7 @@ export default function GetSubscriptionPage() {
 
                 <div className={styles.divider} />
 
-                <Button size={'md'} type="submit" onClick={handleSubmit} disabled={isLoading}>
+                <Button size={'md'} type='submit' onClick={handleSubmit} disabled={isLoading}>
                   {isLoading ? (
                     <span className={styles.spinner} />
                   ) : (
@@ -148,15 +148,17 @@ export default function GetSubscriptionPage() {
                   )}
                 </Button>
 
-                <Stack gap="md">
-                  <Text className={styles.featuresTitle}>{t('getSubscription.features_title')}</Text>
+                <Stack gap='md'>
+                  <Text className={styles.featuresTitle}>
+                    {t('getSubscription.features_title')}
+                  </Text>
                   <div className={styles.featuresList}>
                     {features.map((feature) => (
                       <div key={feature} className={styles.featureItem}>
                         <div className={styles.featureIcon}>
                           <IconCheck size={18} stroke={3} />
                         </div>
-                        <Text size="sm">{feature}</Text>
+                        <Text size='sm'>{feature}</Text>
                       </div>
                     ))}
                   </div>
