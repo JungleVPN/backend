@@ -9,7 +9,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import * as Remnawave from './dto';
+import * as Remnawave from '@workspace/types';
 import { UserService } from './user.service';
 
 @Controller('users')

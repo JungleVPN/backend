@@ -580,12 +580,6 @@ importers:
 
   packages/core:
     dependencies:
-      '@remnawave/backend-contract':
-        specifier: ^2.7.2
-        version: 2.7.2
-      '@remnawave/subscription-page-types':
-        specifier: ^0.4.0
-        version: 0.4.0
       '@workspace/types':
         specifier: workspace:*
         version: link:../types
@@ -642,6 +636,9 @@ importers:
         specifier: ^2.7.2
         version: 2.7.2
     devDependencies:
+      '@remnawave/subscription-page-types':
+        specifier: ^0.4.0
+        version: 0.4.0
       '@workspace/shared-config':
         specifier: workspace:*
         version: link:../shared-config

@@ -1,4 +1,4 @@
-import type { GetSubscriptionInfoByShortUuidCommand } from '@remnawave/backend-contract';
+import type { GetSubscriptionInfoByShortUuidCommand } from '@workspace/types';
 import { create } from 'zustand';
 
 export type ExtendedSubscription = GetSubscriptionInfoByShortUuidCommand.Response['response'] & {
@@ -46,13 +46,12 @@ export const useSubscriptionInfoStoreActions = () =>
 
 export const useSubscriptionInfoStoreInfo = () => useSubscriptionInfoStore((state) => state);
 
-export const useSubscription =
-  (): GetSubscriptionInfoByShortUuidCommand.Response['response'] => {
-    const subscription = useSubscriptionInfoStore((state) => state.subscription);
-    if (!subscription) {
-      throw new Error(
-        'useSubscription must be used after subscription is loaded (after RootLayout gate)',
-      );
-    }
-    return subscription;
-  };
+export const useSubscription = (): GetSubscriptionInfoByShortUuidCommand.Response['response'] => {
+  const subscription = useSubscriptionInfoStore((state) => state.subscription);
+  if (!subscription) {
+    throw new Error(
+      'useSubscription must be used after subscription is loaded (after RootLayout gate)',
+    );
+  }
+  return subscription;
+};

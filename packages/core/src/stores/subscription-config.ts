@@ -1,7 +1,4 @@
-import type {
-  TSubscriptionPageLanguageCode,
-  TSubscriptionPageRawConfig,
-} from '@remnawave/subscription-page-types';
+import type { TSubscriptionPageLanguageCode, TSubscriptionPageRawConfig } from '@workspace/types';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import { create } from 'zustand';
 
@@ -93,5 +90,4 @@ export const useLocales = () => useSubscriptionConfigStore((state) => state.conf
 
 export const useCurrentLang = () => useSubscriptionConfigStore((state) => state.currentLang);
 
-export const useIsConfigLoaded = () =>
-  useSubscriptionConfigStore((state) => state.isConfigLoaded);
+export const useIsConfigLoaded = () => useSubscriptionConfigStore((state) => state.isConfigLoaded);

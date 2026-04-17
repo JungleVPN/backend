@@ -20,6 +20,7 @@
     "@remnawave/backend-contract": "^2.7.2"
   },
   "devDependencies": {
+    "@remnawave/subscription-page-types": "^0.4.0",
     "@workspace/shared-config": "workspace:*",
     "typescript": "^5.4.5"
   }

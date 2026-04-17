@@ -2,23 +2,21 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   CreateUserCommand,
-  DeleteUserCommand,
-  GetAllUsersCommand,
-  GetUserByTelegramIdCommand,
-  RevokeUserSubscriptionCommand,
-  UpdateUserCommand,
-} from '@workspace/types';
-import { addDays } from 'date-fns';
-import { RemnaPanelClient } from '../common/remna-panel.client';
-import {
   CreateUserRequestDto,
   CreateUserResponseDto,
+  DeleteUserCommand,
   DeleteUserResponseDto,
+  GetAllUsersCommand,
+  GetUserByTelegramIdCommand,
   GetUserByTelegramIdResponseDto,
+  RevokeUserSubscriptionCommand,
+  UpdateUserCommand,
   UpdateUserRequestDto,
   UpdateUserResponseDto,
   UserDto,
-} from './dto';
+} from '@workspace/types';
+import { addDays } from 'date-fns';
+import { RemnaPanelClient } from '../common/remna-panel.client';
 
 @Injectable()
 export class UserService {

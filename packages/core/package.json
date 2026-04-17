@@ -20,17 +20,15 @@
   },
   "dependencies": {
     "@workspace/types": "workspace:*",
-    "@remnawave/backend-contract": "^2.7.2",
-    "@remnawave/subscription-page-types": "^0.4.0",
-    "zustand": "^5.0.9",
-    "i18next-browser-languagedetector": "^8.2.0"
+    "i18next-browser-languagedetector": "^8.2.0",
+    "zustand": "^5.0.9"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0"
   },
   "devDependencies": {
-    "@workspace/shared-config": "workspace:*",
     "@types/react": "^18.3.24",
+    "@workspace/shared-config": "workspace:*",
     "react": "^18.3.1",
     "typescript": "^5.4.5"
   }

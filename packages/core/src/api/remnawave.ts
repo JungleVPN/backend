@@ -3,8 +3,8 @@ import type {
   GetSubpageConfigByShortUuidCommand,
   GetSubscriptionInfoByShortUuidCommand,
   GetUserByEmailCommand,
-} from '@remnawave/backend-contract';
-import type { TSubscriptionPageRawConfig } from '@remnawave/subscription-page-types';
+  TSubscriptionPageRawConfig,
+} from '@workspace/types';
 import type { ApiClient } from './client';
 
 /**
@@ -54,9 +54,7 @@ export function createRemnawaveApi(client: ApiClient) {
       return data.response;
     },
 
-    async getSubscriptionByShortUuid(
-      shortUuid: string,
-    ): Promise<
+    async getSubscriptionByShortUuid(shortUuid: string): Promise<
       GetSubscriptionInfoByShortUuidCommand.Response['response'] & {
         subpageConfigUuid?: string;
       }
@@ -75,9 +73,7 @@ export function createRemnawaveApi(client: ApiClient) {
       };
     },
 
-    async fetchAppData(
-      appDataUrl: string,
-    ): Promise<Record<string, TSubscriptionPageRawConfig>> {
+    async fetchAppData(appDataUrl: string): Promise<Record<string, TSubscriptionPageRawConfig>> {
       const response = await fetch(`${appDataUrl}?v=${Date.now()}`);
       if (!response.ok) {
         throw new Error(`Failed to fetch app config: ${response.status}`);
