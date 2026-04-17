@@ -25,11 +25,11 @@ export function createRemnawaveApi(client: ApiClient) {
       email: string,
     ): Promise<GetUserByEmailCommand.Response['response'] | null> {
       try {
-        const data = await client.get<GetUserByEmailCommand.Response>(
+        const data = await client.get<GetUserByEmailCommand.Response['response']>(
           GetUserByEmailCommand.url(email),
         );
-        if (data.response.length === 0) return null;
-        return data.response;
+        if (data.length === 0) return null;
+        return data;
       } catch (err: unknown) {
         if (err && typeof err === 'object' && 'status' in err && err.status === 404) {
           return null;

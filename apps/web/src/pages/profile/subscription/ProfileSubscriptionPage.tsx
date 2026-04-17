@@ -31,7 +31,7 @@ export default function ProfileSubscriptionPage() {
         }
       } catch (error) {
         console.error('Failed to get/create user:', error);
-        navigate('/login?message=Failed to retrieve or create user profile.');
+        // navigate('/login?message=Failed to retrieve or create user profile.');
       } finally {
         setLoading(false);
       }
