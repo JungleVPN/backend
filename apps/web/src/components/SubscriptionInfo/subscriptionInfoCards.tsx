@@ -7,7 +7,7 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import { useTranslation } from '@/hooks/useTranslations';
-import { useSubscription } from '@/store/subscriptionInfo';
+import { useSubscription } from '@workspace/core/stores';
 import { Block } from '@/ui/Block/Block';
 import { formatDate } from '@/utils/configParser';
 import classes from './subscriptionInfoCards.module.css';

@@ -1,5 +1,5 @@
 import { env } from '@/config/env';
-import type { AppConfig } from '@/store/appConfig';
+import type { AppConfig } from '@workspace/core/stores';
 
 /**
  * In the Next.js version this was a server-side endpoint that read process.env.

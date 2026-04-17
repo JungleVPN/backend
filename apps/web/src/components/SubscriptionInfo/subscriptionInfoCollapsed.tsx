@@ -20,7 +20,7 @@ import {
 import { useState } from 'react';
 import { InfoBlock } from '@/components/InfoBlock/InfoBlock';
 import { useTranslation } from '@/hooks/useTranslations';
-import { useSubscription } from '@/store/subscriptionInfo';
+import { useSubscription } from '@workspace/core/stores';
 import { getColorGradientSolid } from '@/utils/colorParser';
 import { formatDate, getExpirationTextUtil } from '@/utils/configParser';
 import { vibrate } from '@/utils/vibrate';

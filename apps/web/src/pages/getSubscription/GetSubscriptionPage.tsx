@@ -3,8 +3,7 @@ import { IconArrowRight, IconCheck, IconMail } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { type FormEvent, useState } from 'react';
-import { getUser } from '@/api/getUser';
-import { createUser } from '@/api/createUser';
+import { remnawaveApi, createTrialUser } from '@/api/instance';
 import { Block } from '@/ui/Block/Block';
 import styles from './getSubscription.module.css';
 
@@ -35,10 +34,10 @@ export default function GetSubscriptionPage() {
 
     setIsLoading(true);
     try {
-      const existingUser = await getUser(email);
+      const existingUser = await remnawaveApi.getUserByEmail(email);
 
       if (!existingUser) {
-        const user = await createUser(email);
+        const user = await createTrialUser(email);
         console.log(`Created user: ${user.email}`);
         navigate(`/subscription/${user.shortUuid}`);
         return;

@@ -1,7 +1,7 @@
 import { Box, Button, Stack } from '@mantine/core';
 import { useTranslation as useI18nextTranslation } from 'react-i18next';
 import { Link } from '@/components/Link/Link';
-import { useAppConfigStoreInfo } from '@/store/appConfig';
+import { useAppConfigStoreInfo } from '@workspace/core/stores';
 
 export function SubscribeCta() {
   const { t } = useI18nextTranslation();

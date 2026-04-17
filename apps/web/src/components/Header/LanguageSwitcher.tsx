@@ -1,6 +1,6 @@
 import { Menu, UnstyledButton } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { useSubscriptionConfigStoreActions } from '@/store/subscriptionConfig';
+import { useSubscriptionConfigStoreActions } from '@workspace/core/stores';
 import type { TSubscriptionPageLanguageCode } from '@remnawave/subscription-page-types';
 
 export function LanguageSwitcher() {

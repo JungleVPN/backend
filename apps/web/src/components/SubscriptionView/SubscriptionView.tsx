@@ -5,15 +5,15 @@ import {
   type TSubscriptionPagePlatformKey,
   type TSubscriptionPageRawConfig,
 } from '@remnawave/subscription-page-types';
-import { AxiosError } from 'axios';
+import { ApiClientError } from '@workspace/core/api';
 import { useTranslation as useI18nextTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { Snowfall } from 'react-snowfall';
 
 import '@/utils/initDayjs';
 import { fetchAppEnv } from '@/api/fetchAppEnv';
-import { fetchAppConfig } from '@/api/fetchAppConfig';
-import { fetchSubscriptionByShortUuid } from '@/api/fetchSubscriptionByShortUuid';
+import { remnawaveApi } from '@/api/instance';
+import { env } from '@/config/env';
 import { AnimatedBackground } from '@/components/AnimatedBackground/AnimatedBackground';
 import { ErrorConnection } from '@/components/ErrorConnection/ErrorConnection';
 import {
@@ -31,17 +31,17 @@ import {
   SubscriptionInfoCollapsed,
   SubscriptionInfoExpanded,
 } from '@/components/SubscriptionInfo';
-import { useAppConfigStoreActions, useAppConfigStoreInfo } from '@/store/appConfig';
+import { useAppConfigStoreActions, useAppConfigStoreInfo } from '@workspace/core/stores';
 import {
   useCurrentLang,
   useIsConfigLoaded,
   useSubscriptionConfig,
   useSubscriptionConfigStoreActions,
-} from '@/store/subscriptionConfig';
+} from '@workspace/core/stores';
 import {
   useSubscriptionInfoStoreActions,
   useSubscriptionInfoStoreInfo,
-} from '@/store/subscriptionInfo';
+} from '@workspace/core/stores';
 
 function osToPlatform(os: string): TSubscriptionPagePlatformKey | undefined {
   switch (os) {
@@ -105,12 +105,12 @@ export function SubscriptionView(props: { shortUuid: string }) {
 
     const fetchSubscription = async () => {
       try {
-        const subscription = await fetchSubscriptionByShortUuid(shortUuid);
+        const subscription = await remnawaveApi.getSubscriptionByShortUuid(shortUuid);
         if (subscription) {
           subscriptionActions.setSubscriptionInfo({ subscription });
         }
       } catch (error) {
-        if (error instanceof AxiosError && error.code === 'ERR_GET_SUB_LINK') {
+        if (error instanceof ApiClientError && error.status === 404) {
           setErrorConnect('ERR_GET_SUB_LINK');
         } else {
           setErrorConnect('ERR_FATCH_USER');
@@ -131,7 +131,7 @@ export function SubscriptionView(props: { shortUuid: string }) {
 
     const fetchConfig = async () => {
       try {
-        const configs = await fetchAppConfig();
+        const configs = await remnawaveApi.fetchAppData(env.appDataUrl);
 
         const configId = subscription?.subpageConfigUuid || targetUuid;
         const tempConfig = configs[configId];
