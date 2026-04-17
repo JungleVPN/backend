@@ -1,9 +1,7 @@
 import type { GetSubscriptionInfoByShortUuidCommand } from '@workspace/types';
 import { create } from 'zustand';
 
-export type ExtendedSubscription = GetSubscriptionInfoByShortUuidCommand.Response['response'] & {
-  subpageConfigUuid?: string;
-};
+export type ExtendedSubscription = GetSubscriptionInfoByShortUuidCommand.Response['response'];
 
 export interface ISubscriptionInfoState {
   subscription: ExtendedSubscription | null;

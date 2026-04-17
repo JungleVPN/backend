@@ -7,12 +7,9 @@ import {
 } from '@workspace/types';
 import { useEffect, useState } from 'react';
 import { useTranslation as useI18nextTranslation } from 'react-i18next';
-import { Snowfall } from 'react-snowfall';
 
 import '@/utils/initDayjs';
 import {
-  useAppConfigStoreActions,
-  useAppConfigStoreInfo,
   useCurrentLang,
   useIsConfigLoaded,
   useSubscriptionConfig,
@@ -20,9 +17,7 @@ import {
   useSubscriptionInfoStoreActions,
   useSubscriptionInfoStoreInfo,
 } from '@workspace/core/stores';
-import { fetchAppEnv } from '@/api/fetchAppEnv';
-import { remnawaveApi } from '@/api/instance';
-import { AnimatedBackground } from '@/components/AnimatedBackground/AnimatedBackground';
+import { remnawaveApi } from '@/api/instance.ts';
 import { ErrorConnection } from '@/components/ErrorConnection/ErrorConnection';
 import {
   AccordionBlockRenderer,
@@ -39,7 +34,7 @@ import {
   SubscriptionInfoCollapsed,
   SubscriptionInfoExpanded,
 } from '@/components/SubscriptionInfo';
-import { env } from '@/config/env';
+import { env } from '@/config/env.ts';
 
 function osToPlatform(os: string): TSubscriptionPagePlatformKey | undefined {
   switch (os) {
@@ -78,11 +73,9 @@ export function SubscriptionView(props: { shortUuid: string }) {
   const config = useSubscriptionConfig();
   const subscriptionActions = useSubscriptionInfoStoreActions();
   const configActions = useSubscriptionConfigStoreActions();
-  const appConfigActions = useAppConfigStoreActions();
+  const { setLanguage } = configActions;
   const currentLang = useCurrentLang();
-  const { setLanguage } = useSubscriptionConfigStoreActions();
   const os = useOs({ getValueInEffect: false });
-  const { appConfig } = useAppConfigStoreInfo();
   const { subscription } = useSubscriptionInfoStoreInfo();
 
   const [errorConnect, setErrorConnect] = useState<string | null>(null);
@@ -101,10 +94,13 @@ export function SubscriptionView(props: { shortUuid: string }) {
 
     const fetchSubscription = async () => {
       try {
-        const subscription = await remnawaveApi.getSubscriptionByShortUuid(shortUuid);
-        if (subscription) {
-          subscriptionActions.setSubscriptionInfo({ subscription });
-        }
+        const subscriptionInfo = await remnawaveApi.getSubscriptionInfoByShortUuid(shortUuid);
+
+        subscriptionActions.setSubscriptionInfo({
+          subscription: {
+            ...subscriptionInfo,
+          },
+        });
       } catch (error) {
         if (error instanceof ApiClientError && error.status === 404) {
           setErrorConnect('ERR_GET_SUB_LINK');
@@ -121,66 +117,28 @@ export function SubscriptionView(props: { shortUuid: string }) {
   }, [shortUuid, subscriptionActions]);
 
   useEffect(() => {
-    const targetUuid = '00000000-0000-0000-0000-000000000000';
-    let retryCount = 0;
-    const maxRetries = 3;
+    const configUuid = env.subpageConfigUuid;
 
     const fetchConfig = async () => {
       try {
-        const configs = await remnawaveApi.fetchAppData(env.appDataUrl);
+        const { config: rawConfig } = await remnawaveApi.getSubscriptionPageConfig(configUuid);
 
-        const configId = subscription?.subpageConfigUuid || targetUuid;
-        const tempConfig = configs[configId];
-
-        if (!tempConfig) {
-          if (retryCount < maxRetries) {
-            retryCount++;
-            setTimeout(fetchConfig, 2000);
-            return;
-          }
-          throw new Error(`Config with UUID ${configId} not found`);
-        }
-
-        const parsedConfig = await SubscriptionPageRawConfigSchema.safeParseAsync(tempConfig);
+        const parsedConfig = await SubscriptionPageRawConfigSchema.safeParseAsync(rawConfig);
         if (!parsedConfig.success) {
           setErrorConnect('ERR_PARSE_APPCONFIG');
           return;
         }
 
         configActions.setConfig(parsedConfig.data);
-      } catch (error: any) {
-        if (error.response?.status === 404 && retryCount < maxRetries) {
-          retryCount++;
-          setTimeout(fetchConfig, 2000);
-          return;
-        }
+      } catch {
         setErrorConnect('ERR_PARSE_APPCONFIG');
       }
     };
 
-    if (subscription || !shortUuid) {
-      fetchConfig();
-    }
-  }, [configActions, subscription, shortUuid]);
+    fetchConfig();
+  }, [configActions, subscription]);
 
-  useEffect(() => {
-    const fetchEnv = async () => {
-      try {
-        const appConfig = await fetchAppEnv();
-        if (appConfig) appConfigActions.setAppConfig(appConfig);
-      } catch (error) {
-        console.error('Failed to fetch env config:', error);
-      }
-    };
-    fetchEnv();
-  }, [appConfigActions]);
-
-  // Loading state
-  if (isLoading || !isConfigLoaded) {
-    return <Loading />;
-  }
-
-  // Error state
+  // Error state (checked before config-loaded to avoid infinite loading on fetch failure)
   if (errorConnect) {
     return (
       <Container my='xl' size='xl'>
@@ -200,6 +158,11 @@ export function SubscriptionView(props: { shortUuid: string }) {
         </Center>
       </Container>
     );
+  }
+
+  // Loading state
+  if (isLoading || !isConfigLoaded) {
+    return <Loading />;
   }
 
   // Missing ID state
@@ -269,11 +232,6 @@ export function SubscriptionView(props: { shortUuid: string }) {
 
   return (
     <Box style={{ position: 'relative' }}>
-      {appConfig?.isSnowflakeEnabled ? (
-        <Snowfall style={{ position: 'fixed', zIndex: 2 }} speed={[0, 1]} />
-      ) : (
-        <AnimatedBackground />
-      )}
       <Stack style={{ zIndex: 2 }} gap='xl'>
         {SubscriptionInfoBlockRenderer && <SubscriptionInfoBlockRenderer />}
 

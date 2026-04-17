@@ -50,13 +50,12 @@ export class RemnaPanelClient implements OnModuleInit {
         data: body,
       });
       if (res.status === 404) {
-        return null as Data;
+        throw new RemnaPanelError(`Remna panel endpoint not found: ${url}`, 404, res.data);
       }
       const data: { response: Data } = res.data;
-
       if (!data || data.response === undefined) {
         this.logger.error(`Invalid response from Remna panel`);
-        throw new RemnaPanelError(res.statusText, res.status);
+        throw new RemnaPanelError(res.statusText, res.status, { ...res.data, url });
       }
 
       return data.response;

@@ -78,14 +78,14 @@ export class RemnaService {
 
   async getAllUsers(): Promise<UserDto[]> {
     return this.fetch<UserDto[]>({
-      url: '/users',
+      url: '/api/users',
       method: 'GET',
     });
   }
 
   async createUser(payload: { username: string; telegramId: number; description?: string }) {
     return this.fetch<CreateUserResponseDto>({
-      url: '/users',
+      url: '/api/users',
       body: payload,
     });
   }
@@ -93,14 +93,14 @@ export class RemnaService {
   async updateUser(body: UpdateUserRequestDto) {
     return this.fetch<UserDto>({
       method: 'PATCH',
-      url: '/users',
+      url: '/api/users',
       body,
     });
   }
 
   async getUserByTgId(id: number): Promise<UserDto | null> {
     const users = await this.fetch<CreateUserResponseDto[] | null>({
-      url: `/users/by-telegramId/${id}`,
+      url: `/api/users/by-telegram-id/${id}`,
       method: 'GET',
     });
 
@@ -109,12 +109,12 @@ export class RemnaService {
   }
 
   async deleteUser(uuid: string) {
-    await this.fetch({ url: `/users/${uuid}`, method: 'DELETE' });
+    await this.fetch({ url: `/api/users/${uuid}`, method: 'DELETE' });
   }
 
   async revokeSub(uuid: string) {
     const subscriptionUrl = await this.fetch<string>({
-      url: `/users/revoke-subscription/${uuid}`,
+      url: `/api/users/${uuid}/actions/revoke`,
     });
 
     return subscriptionUrl;

@@ -1,10 +1,4 @@
 export type { AppConfig, IAppConfigActions, IAppConfigState } from './app-config';
-export {
-  useAppConfig,
-  useAppConfigStore,
-  useAppConfigStoreActions,
-  useAppConfigStoreInfo,
-} from './app-config';
 export type { ISubscriptionConfigActions, ISubscriptionConfigState } from './subscription-config';
 export {
   useCurrentLang,

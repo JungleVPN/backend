@@ -16,11 +16,11 @@ import type {
   TSubscriptionPageButtonConfig,
   TSubscriptionPagePlatformKey,
 } from '@remnawave/subscription-page-types';
+import { useSubscription, useSubscriptionConfig } from '@workspace/core/stores';
 import clsx from 'clsx';
 import { useState } from 'react';
 import { Link } from '@/components/Link/Link';
 import { useTranslation } from '@/hooks/useTranslations';
-import { useAppConfigStoreInfo, useSubscriptionConfig, useSubscription } from '@workspace/core/stores';
 import { Block } from '@/ui/Block/Block';
 import { getIconFromLibrary } from '@/utils/configParser';
 import { TemplateEngine } from '@/utils/templateEngine';
@@ -44,7 +44,6 @@ export const InstallationGuideConnector = (props: IProps) => {
   const { platforms, svgLibrary } = useSubscriptionConfig();
   const { copy } = useClipboard({ timeout: 2_000 });
   const subscription = useSubscription();
-  const { appConfig } = useAppConfigStoreInfo();
 
   const [selectedAppIndex, setSelectedAppIndex] = useState(0);
   const [selectedPlatform, setSelectedPlatform] = useState<TSubscriptionPagePlatformKey>(() => {
@@ -80,19 +79,14 @@ export const InstallationGuideConnector = (props: IProps) => {
     if (buttons.length === 0) return null;
 
     return (
-      <Group gap="xs" wrap="wrap">
+      <Group gap='xs' wrap='wrap'>
         {buttons.map((button, index) => {
           let formattedUrl: string | undefined;
           if (button.type === 'subscriptionLink' || button.type === 'copyButton') {
-            const isCryptoActive = selectedApp.name === 'Happ' && appConfig?.cryptoLink;
-            if (isCryptoActive) {
-              formattedUrl = subscriptionUrl;
-            } else {
-              formattedUrl = TemplateEngine.formatWithMetaInfo(button.link, {
-                username: subscription.user.username,
-                subscriptionUrl,
-              });
-            }
+            formattedUrl = TemplateEngine.formatWithMetaInfo(button.link, {
+              username: subscription.user.username,
+              subscriptionUrl,
+            });
           } else {
             formattedUrl = button.link;
           }
@@ -124,7 +118,7 @@ export const InstallationGuideConnector = (props: IProps) => {
                     color: 'cyan',
                   });
                 }}
-                radius="md"
+                radius='md'
                 variant={variant}
               >
                 {t(button.text)}
@@ -139,8 +133,8 @@ export const InstallationGuideConnector = (props: IProps) => {
                 component={Link}
                 href={button.link}
                 leftSection={leftSection}
-                target="_blank"
-                radius="md"
+                target='_blank'
+                radius='md'
                 variant={variant}
               >
                 {t(button.text)}
@@ -153,7 +147,7 @@ export const InstallationGuideConnector = (props: IProps) => {
               key={index}
               onClick={() => window.open(formattedUrl, '_blank')}
               leftSection={leftSection}
-              radius="md"
+              radius='md'
               variant={variant}
             >
               {t(button.text)}
@@ -170,12 +164,12 @@ export const InstallationGuideConnector = (props: IProps) => {
     <Card
       component={Block}
       p={{ base: 'sm', xs: 'md', sm: 'lg', md: 'xl' }}
-      radius="lg"
+      radius='lg'
       style={{ zIndex: 3 }}
     >
-      <Stack gap="md">
-        <Group gap="sm" justify="space-between">
-          <Title c="white" fw={600} order={4}>
+      <Stack gap='md'>
+        <Group gap='sm' justify='space-between'>
+          <Title c='white' fw={600} order={4}>
             {t(baseTranslations.installationGuideHeader)}
           </Title>
 
@@ -204,8 +198,8 @@ export const InstallationGuideConnector = (props: IProps) => {
                 setSelectedPlatform(value);
                 setSelectedAppIndex(0);
               }}
-              radius="md"
-              size="sm"
+              radius='md'
+              size='sm'
               value={selectedPlatform}
               w={150}
             />

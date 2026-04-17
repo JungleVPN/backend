@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { RemnawaveHealthController } from './health/health.controller';
+import { SubscriptionModule } from './subscription/subscription.module';
 import { UserModule } from './user/user.module';
 
 @Module({
@@ -10,6 +11,7 @@ import { UserModule } from './user/user.module';
       envFilePath: ['.env', '../../.env'],
     }),
     UserModule,
+    SubscriptionModule,
   ],
   controllers: [RemnawaveHealthController],
 })

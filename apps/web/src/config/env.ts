@@ -10,8 +10,7 @@ export const env = {
   buyLink: import.meta.env.VITE_BUY_LINK ?? '',
   cryptoLink: import.meta.env.VITE_CRYPTO_LINK === 'true',
   redirectLink:
-    import.meta.env.VITE_REDIRECT_LINK ||
-    'https://maposia.github.io/redirect-page/?redirect_to=',
+    import.meta.env.VITE_REDIRECT_LINK || 'https://maposia.github.io/redirect-page/?redirect_to=',
   authApiKey: import.meta.env.VITE_AUTH_API_KEY ?? '',
   customSubDomain: import.meta.env.VITE_CUSTOM_SUB_DOMAIN === 'true',
   telegramBotToken: import.meta.env.VITE_TELEGRAM_BOT_TOKEN ?? '',
@@ -20,5 +19,5 @@ export const env = {
   internalSquads: JSON.parse(import.meta.env.VITE_INTERNAL_SQUADS || '[]') as string[],
   supabaseUrl: import.meta.env.VITE_SUPABASE_URL ?? '',
   supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY ?? '',
-  appDataUrl: import.meta.env.VITE_APP_DATA_URL || '/app-data.json',
+  subpageConfigUuid: '00000000-0000-0000-0000-000000000000',
 } as const;

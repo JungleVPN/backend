@@ -7,6 +7,7 @@
   "exports": {
     ".": {
       "types": "./src/index.ts",
+      "import": "./src/index.ts",
       "default": "./dist/index.js"
     }
   },
@@ -17,10 +18,10 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@remnawave/backend-contract": "^2.7.2"
+    "@remnawave/backend-contract": "^2.7.2",
+    "@remnawave/subscription-page-types": "^0.4.0"
   },
   "devDependencies": {
-    "@remnawave/subscription-page-types": "^0.4.0",
     "@workspace/shared-config": "workspace:*",
     "typescript": "^5.4.5"
   }

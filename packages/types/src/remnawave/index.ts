@@ -1,7 +1,23 @@
 export type { TRemnawaveWebhookUserEvent as RemnawebhookPayload } from '@remnawave/backend-contract';
-export * from '@remnawave/backend-contract';
-export { EVENTS as REMNAWAVE_EVENTS } from '@remnawave/backend-contract';
-export * from '@remnawave/subscription-page-types';
+export {
+  CreateUserCommand,
+  DeleteUserCommand,
+  EVENTS as REMNAWAVE_EVENTS,
+  GetAllUsersCommand,
+  GetSubpageConfigByShortUuidCommand,
+  GetSubscriptionInfoByShortUuidCommand,
+  GetSubscriptionPageConfigCommand,
+  GetUserByEmailCommand,
+  GetUserByTelegramIdCommand,
+  RevokeUserSubscriptionCommand,
+  UpdateUserCommand,
+} from '@remnawave/backend-contract';
+export {
+  SubscriptionPageRawConfigSchema,
+  type TSubscriptionPageLanguageCode,
+  type TSubscriptionPagePlatformKey,
+  type TSubscriptionPageRawConfig,
+} from '@remnawave/subscription-page-types';
 
 import {
   CreateUserCommand,

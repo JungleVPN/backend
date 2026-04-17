@@ -27,7 +27,7 @@ export class RemnaClient {
   async getUserByTgId(telegramId: number): Promise<RemnaUser | null> {
     try {
       const { data } = await axios.get<RemnaUser[]>(
-        `${this.baseUrl}/users/by-telegramId/${telegramId}`,
+        `${this.baseUrl}/api/users/by-telegram-id/${telegramId}`,
       );
 
       const user = Array.isArray(data) ? data[0] : data;
@@ -44,7 +44,7 @@ export class RemnaClient {
     telegramId: number;
     description?: string;
   }): Promise<RemnaUser> {
-    const { data } = await axios.post<RemnaUser>(`${this.baseUrl}/users`, payload);
+    const { data } = await axios.post<RemnaUser>(`${this.baseUrl}/api/users`, payload);
     return data;
   }
 
@@ -53,7 +53,7 @@ export class RemnaClient {
     expireAt?: Date | string;
     [key: string]: unknown;
   }): Promise<RemnaUser> {
-    const { data } = await axios.patch<RemnaUser>(`${this.baseUrl}/users`, payload);
+    const { data } = await axios.patch<RemnaUser>(`${this.baseUrl}/api/users`, payload);
     return data;
   }
 }

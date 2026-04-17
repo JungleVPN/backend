@@ -2,21 +2,14 @@ import { createApiClient, createRemnawaveApi } from '@workspace/core/api';
 import { env } from '@/config/env';
 
 /**
- * Web-specific API client.
- * Authenticates with the Remnawave panel via Bearer token from env.
+ * API client pointing to the NestJS remnawave backend.
+ * The backend mirrors @remnawave/backend-contract URLs,
+ * so the shared API works without any web-specific overrides.
  */
-export const apiClient = createApiClient({
+const backendClient = createApiClient({
   baseUrl: env.remnawavePanelUrl,
   getHeaders: () => {
-    const headers: Record<string, string> = {
-      'user-agent': 'Remnawave Mini App Subscription Page',
-      Authorization: `Bearer ${env.remnawaveToken}`,
-    };
-
-    if (env.remnawavePanelUrl?.startsWith('http://')) {
-      headers['x-forwarded-for'] = '127.0.0.1';
-      headers['x-forwarded-proto'] = 'https';
-    }
+    const headers: Record<string, string> = {};
 
     if (env.authApiKey) {
       headers['X-Api-Key'] = env.authApiKey;
@@ -26,18 +19,4 @@ export const apiClient = createApiClient({
   },
 });
 
-/**
- * Typed Remnawave API — same endpoints the TMA app uses,
- * just with web-specific auth headers.
- */
-export const remnawaveApi = createRemnawaveApi(apiClient);
-
-/**
- * Web-specific: creates a trial user with trial period and squads from env.
- * TMA will have its own version of this with Telegram-specific defaults.
- */
-export async function createTrialUser(email: string) {
-  return remnawaveApi.createUser({
-    email,
-  });
-}
+export const remnawaveApi = createRemnawaveApi(backendClient);

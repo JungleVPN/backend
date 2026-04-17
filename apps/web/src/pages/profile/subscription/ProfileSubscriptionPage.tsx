@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createTrialUser, remnawaveApi } from '@/api/instance';
+import { remnawaveApi } from '@/api/instance';
 import { Loading } from '@/components/Loading/Loading';
 import { SubscriptionView } from '@/components/SubscriptionView/SubscriptionView';
 import { useAuthStoreInfo } from '@/store/auth';
@@ -13,20 +13,20 @@ export default function ProfileSubscriptionPage() {
 
   useEffect(() => {
     if (authLoading) return;
-
-    if (!user?.email) {
+    const email = user?.email;
+    if (!email) {
       navigate('/login');
       return;
     }
 
     const fetchOrCreate = async () => {
       try {
-        const existingUsers = await remnawaveApi.getUserByEmail(user.email!);
+        const existingUsers = await remnawaveApi.getUserByEmail(email);
 
         if (existingUsers && existingUsers.length > 0) {
           setShortUuid(existingUsers[0].shortUuid);
         } else {
-          const newUser = await createTrialUser(user.email!);
+          const newUser = await remnawaveApi.createUser({ email });
           setShortUuid(newUser.shortUuid);
         }
       } catch (error) {

@@ -1,5 +1,5 @@
 import { type FC, type JSX } from 'react';
-import { Link as RouterLink, type LinkProps as RouterLinkProps } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 
 export interface LinkProps extends Omit<JSX.IntrinsicElements['a'], 'href'> {
   href: string;
@@ -31,6 +31,7 @@ export const Link: FC<LinkProps> = ({ className, onClick, href, target, children
 
   return (
     <RouterLink {...rest} to={href} onClick={onClick} className={className}>
+      {/*@ts-ignore*/}
       {children}
     </RouterLink>
   );

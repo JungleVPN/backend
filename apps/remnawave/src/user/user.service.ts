@@ -7,6 +7,7 @@ import {
   DeleteUserCommand,
   DeleteUserResponseDto,
   GetAllUsersCommand,
+  GetUserByEmailCommand,
   GetUserByTelegramIdCommand,
   GetUserByTelegramIdResponseDto,
   RevokeUserSubscriptionCommand,
@@ -57,7 +58,6 @@ export class UserService {
   ): Promise<GetUserByTelegramIdResponseDto | null> {
     if (!telegramId) return null;
     try {
-      // Panel returns an array of users for this endpoint
       const users = await this.panelClient.request<GetUserByTelegramIdResponseDto>({
         method: GetUserByTelegramIdCommand.endpointDetails.REQUEST_METHOD,
         url: GetUserByTelegramIdCommand.url(telegramId.toString()),
@@ -72,7 +72,7 @@ export class UserService {
   }
 
   async createUser(
-    payload: Pick<CreateUserRequestDto, 'username' | 'telegramId' | 'email' | 'description'>,
+    payload: Pick<CreateUserRequestDto, 'telegramId' | 'email' | 'description'>,
   ): Promise<CreateUserResponseDto> {
     const trialDays = Number(this.configService.get('TRIAL_PERIOD_IN_DAYS', '3'));
     const activeInternalSquads = JSON.parse(
@@ -82,6 +82,7 @@ export class UserService {
 
     const body: CreateUserRequestDto = {
       ...payload,
+      username: crypto.randomUUID().slice(0, 10),
       expireAt,
       activeInternalSquads,
       trafficLimitStrategy: 'MONTH',
@@ -104,10 +105,26 @@ export class UserService {
   }
 
   async deleteUser(uuid: string): Promise<DeleteUserResponseDto> {
-    return await this.panelClient.request<DeleteUserResponseDto>({
+    return this.panelClient.request<DeleteUserResponseDto>({
       url: DeleteUserCommand.url(uuid),
       method: DeleteUserCommand.endpointDetails.REQUEST_METHOD,
     });
+  }
+
+  async getUserByEmail(email: string): Promise<GetUserByEmailCommand.Response['response'] | null> {
+    if (!email) return null;
+    try {
+      const users = await this.panelClient.request<GetUserByEmailCommand.Response['response']>({
+        method: GetUserByEmailCommand.endpointDetails.REQUEST_METHOD,
+        url: GetUserByEmailCommand.url(email),
+      });
+
+      if (!users || users.length === 0) return null;
+      return users;
+    } catch (e: any) {
+      if (e.status === 404) return null;
+      throw e;
+    }
   }
 
   async revokeSubscription(uuid: string): Promise<string> {

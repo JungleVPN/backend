@@ -21,20 +21,22 @@ export class UserController {
     return this.userService.getAllUsers();
   }
 
-  @Get('by-telegramId/:telegramId')
+  @Get('by-telegram-id/:telegramId')
   async getUserByTelegramId(
     @Param('telegramId') telegramId: Remnawave.CreateUserRequestDto['telegramId'],
   ): Promise<Remnawave.GetUserByTelegramIdResponseDto | null> {
     return this.userService.getUserByTgId(telegramId);
   }
 
+  @Get('by-email/:email')
+  async getUserByEmail(@Param('email') email: string) {
+    return this.userService.getUserByEmail(email);
+  }
+
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async createUser(
-    @Body() body: Pick<
-      Remnawave.CreateUserRequestDto,
-      'username' | 'telegramId' | 'email' | 'description'
-    >,
+    @Body() body: Pick<Remnawave.CreateUserRequestDto, 'telegramId' | 'email' | 'description'>,
   ): Promise<Remnawave.CreateUserResponseDto> {
     return this.userService.createUser(body);
   }
@@ -43,17 +45,16 @@ export class UserController {
   async updateUser(
     @Body() body: Remnawave.UpdateUserRequestDto,
   ): Promise<Remnawave.UpdateUserResponseDto> {
-    console.log(`Updating user ${body.uuid} with data:`, body);
     return this.userService.updateUser(body);
   }
 
   @Delete(':uuid')
   async deleteUser(@Param('uuid') uuid: string): Promise<Remnawave.DeleteUserResponseDto> {
-    return await this.userService.deleteUser(uuid);
+    return this.userService.deleteUser(uuid);
   }
 
-  @Post('revoke-subscription/:uuid')
+  @Post(':uuid/actions/revoke')
   async revokeSubscription(@Param('uuid') uuid: string): Promise<string> {
-    return await this.userService.revokeSubscription(uuid);
+    return this.userService.revokeSubscription(uuid);
   }
 }

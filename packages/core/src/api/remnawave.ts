@@ -1,18 +1,23 @@
 import {
+  CreateUserCommand,
   CreateUserResponseDto,
   GetSubpageConfigByShortUuidCommand,
   GetSubscriptionInfoByShortUuidCommand,
+  GetSubscriptionPageConfigCommand,
   GetUserByEmailCommand,
-  TSubscriptionPageRawConfig,
 } from '@workspace/types';
 import type { ApiClient } from './client';
 
 /**
- * Remnawave API methods.
+ * Shared Remnawave API.
+ *
+ * All paths come directly from `@remnawave/backend-contract` commands,
+ * so they match both the Remnawave panel AND the NestJS proxy (which
+ * mirrors the same URL structure).
  *
  * Accepts an ApiClient so each platform can inject its own auth strategy:
- * - Web: Bearer token from env
- * - TMA: Telegram initData header
+ * - Web: API key header → NestJS proxy
+ * - TMA: Telegram initData header → NestJS proxy
  */
 export function createRemnawaveApi(client: ApiClient) {
   return {
@@ -21,7 +26,7 @@ export function createRemnawaveApi(client: ApiClient) {
     ): Promise<GetUserByEmailCommand.Response['response'] | null> {
       try {
         const data = await client.get<GetUserByEmailCommand.Response>(
-          `/api/users/email/${encodeURIComponent(email)}`,
+          GetUserByEmailCommand.url(email),
         );
         if (data.response.length === 0) return null;
         return data.response;
@@ -34,48 +39,37 @@ export function createRemnawaveApi(client: ApiClient) {
     },
 
     async createUser(
-      params:
-        | {
-            email: string;
-            telegramId?: string;
-          }
-        | {
-            email?: string;
-            telegramId: string;
-          },
+      params: { email: string; telegramId?: string } | { email?: string; telegramId: string },
     ): Promise<CreateUserResponseDto> {
-      return await client.post<CreateUserResponseDto>('/api/users', {
+      return client.post<CreateUserResponseDto>(CreateUserCommand.url, {
         email: params.email,
         telegramId: params.telegramId,
         username: crypto.randomUUID().slice(0, 8),
       });
     },
 
-    async getSubscriptionByShortUuid(shortUuid: string): Promise<
-      GetSubscriptionInfoByShortUuidCommand.Response['response'] & {
-        subpageConfigUuid?: string;
-      }
-    > {
-      const subpageConfig = await client.get<GetSubpageConfigByShortUuidCommand.Response>(
-        `/api/subscription/subpage-config/${shortUuid}`,
+    async getSubpageConfigByShortUuid(
+      shortUuid: string,
+    ): Promise<GetSubpageConfigByShortUuidCommand.Response['response']> {
+      return await client.get<GetSubpageConfigByShortUuidCommand.Response['response']>(
+        GetSubpageConfigByShortUuidCommand.url(shortUuid),
       );
-
-      const subscriptionInfo = await client.get<GetSubscriptionInfoByShortUuidCommand.Response>(
-        `/api/subscription/info/${shortUuid}`,
-      );
-
-      return {
-        ...subscriptionInfo.response,
-        subpageConfigUuid: subpageConfig.response.subpageConfigUuid ?? undefined,
-      };
     },
 
-    async fetchAppData(appDataUrl: string): Promise<Record<string, TSubscriptionPageRawConfig>> {
-      const response = await fetch(`${appDataUrl}?v=${Date.now()}`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch app config: ${response.status}`);
-      }
-      return response.json();
+    async getSubscriptionInfoByShortUuid(
+      shortUuid: string,
+    ): Promise<GetSubscriptionInfoByShortUuidCommand.Response['response']> {
+      return await client.get<GetSubscriptionInfoByShortUuidCommand.Response['response']>(
+        GetSubscriptionInfoByShortUuidCommand.url(shortUuid),
+      );
+    },
+
+    async getSubscriptionPageConfig(
+      uuid: string,
+    ): Promise<GetSubscriptionPageConfigCommand.Response['response']> {
+      return await client.get<GetSubscriptionPageConfigCommand.Response['response']>(
+        GetSubscriptionPageConfigCommand.url(uuid),
+      );
     },
   };
 }

@@ -57,7 +57,7 @@ export class PaymentStatusService {
   ): Promise<{ uuid: string; telegramId: number | null; expireAt: string }> {
     try {
       const { data } = await axios.get(
-        `${this.remnawareBaseUrl}/users/by-telegramId/${telegramId}`,
+        `${this.remnawareBaseUrl}/api/users/by-telegram-id/${telegramId}`,
       );
       const user = Array.isArray(data) ? data[0] : data;
       return user ?? { uuid: '15cda6c0-0342-4244-9eeb-457e31376090', telegramId: 575800239 };
@@ -69,7 +69,7 @@ export class PaymentStatusService {
   }
 
   private async updateUserExpiry(uuid: string, expireAt: Date): Promise<void> {
-    await axios.patch(`${this.remnawareBaseUrl}/users`, {
+    await axios.patch(`${this.remnawareBaseUrl}/api/users`, {
       uuid,
       expireAt: expireAt.toISOString(),
     });
