@@ -74,20 +74,20 @@ export class UserService {
   }
 
   async createUser(
-    payload: Pick<CreateUserRequestDto, 'username' | 'telegramId' | 'description'>,
+    payload: Pick<CreateUserRequestDto, 'username' | 'telegramId' | 'email' | 'description'>,
   ): Promise<CreateUserResponseDto> {
     const trialDays = Number(this.configService.get('TRIAL_PERIOD_IN_DAYS', '3'));
-    const squads = JSON.parse(this.configService.get('REMNAWAVE_INTERNAL_SQUADS', '[]'));
-    const expiryTime = addDays(new Date(), trialDays);
+    const activeInternalSquads = JSON.parse(
+      this.configService.get('REMNAWAVE_INTERNAL_SQUADS', '[]'),
+    );
+    const expireAt = addDays(new Date(), trialDays);
 
     const body: CreateUserRequestDto = {
-      username: payload.username,
-      telegramId: payload.telegramId,
-      expireAt: expiryTime,
-      activeInternalSquads: squads,
+      ...payload,
+      expireAt,
+      activeInternalSquads,
       trafficLimitStrategy: 'MONTH',
       status: 'ACTIVE',
-      description: payload.description,
     };
 
     return this.panelClient.request<CreateUserResponseDto>({

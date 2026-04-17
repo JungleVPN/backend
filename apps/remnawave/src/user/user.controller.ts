@@ -31,7 +31,10 @@ export class UserController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async createUser(
-    @Body() body: Pick<Remnawave.CreateUserRequestDto, 'username' | 'telegramId' | 'description'>,
+    @Body() body: Pick<
+      Remnawave.CreateUserRequestDto,
+      'username' | 'telegramId' | 'email' | 'description'
+    >,
   ): Promise<Remnawave.CreateUserResponseDto> {
     return this.userService.createUser(body);
   }
