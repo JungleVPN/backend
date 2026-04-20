@@ -1,5 +1,6 @@
 import {
   CreateUserCommand,
+  CreateUserRequestDto,
   CreateUserResponseDto,
   GetSubpageConfigByShortUuidCommand,
   GetSubscriptionInfoByShortUuidCommand,
@@ -22,11 +23,11 @@ import type { ApiClient } from '../client';
 export function createRemnawaveApi(client: ApiClient) {
   return {
     async getUserByEmail(
-      email: string,
+      body: GetUserByEmailCommand.Request,
     ): Promise<GetUserByEmailCommand.Response['response'] | null> {
       try {
         const data = await client.get<GetUserByEmailCommand.Response['response']>(
-          GetUserByEmailCommand.url(email),
+          GetUserByEmailCommand.url(body.email),
         );
         if (data.length === 0) return null;
         return data;
@@ -39,7 +40,7 @@ export function createRemnawaveApi(client: ApiClient) {
     },
 
     async createUser(
-      params: { email: string; telegramId?: string } | { email?: string; telegramId: string },
+      params: Pick<CreateUserRequestDto, 'email' | 'telegramId'>,
     ): Promise<CreateUserResponseDto> {
       return client.post<CreateUserResponseDto>(CreateUserCommand.url, {
         email: params.email,

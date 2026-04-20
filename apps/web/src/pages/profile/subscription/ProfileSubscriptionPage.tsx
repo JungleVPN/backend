@@ -21,7 +21,7 @@ export default function ProfileSubscriptionPage() {
 
     const fetchOrCreate = async () => {
       try {
-        const existingUsers = await remnawaveApi.getUserByEmail(email);
+        const existingUsers = await remnawaveApi.getUserByEmail({ email });
 
         if (existingUsers && existingUsers.length > 0) {
           setShortUuid(existingUsers[0].shortUuid);

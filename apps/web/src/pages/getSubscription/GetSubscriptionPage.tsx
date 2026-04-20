@@ -1,17 +1,19 @@
 import { Badge, Button, Grid, Input, Stack, Text, TextInput } from '@mantine/core';
 import { IconArrowRight, IconCheck, IconMail } from '@tabler/icons-react';
+import { UserDto } from '@workspace/types';
 import { type FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { paymentsApi } from '@/api/payments.ts';
-import { remnawaveApi } from '@/api/remnawave.ts';
 import { env } from '@/config/env';
 import { Block } from '@/ui/Block/Block';
+import { initUser } from '@/utils/remnawave.ts';
 import styles from './getSubscription.module.css';
 
 export default function GetSubscriptionPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [user, setUser] = useState<UserDto | null>(null);
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -37,18 +39,10 @@ export default function GetSubscriptionPage() {
 
     setIsLoading(true);
     try {
-      const existingUser = await remnawaveApi.getUserByEmail(email);
+      const data = await initUser({ email });
+      setUser(data);
 
-      if (!existingUser) {
-        const user = await remnawaveApi.createUser({ email });
-        console.log(`Created user: ${user.email}`);
-        navigate(`/subscription/${user.shortUuid}`);
-        return;
-      } else {
-        console.log(`User already exists: ${existingUser[0].email}`);
-        navigate(`/subscription/${existingUser[0].shortUuid}`);
-        return;
-      }
+      navigate(`/subscription/${data.shortUuid}`);
     } catch (err) {
       setError(t('getSubscription.error_failed_to_create'));
     } finally {
@@ -71,43 +65,20 @@ export default function GetSubscriptionPage() {
 
     setIsPaying(true);
     try {
-      // 1. Ensure user exists
-      let userId: string;
-      let shortUuid: string;
-      let telegramId: number | null;
-
-      const existingUser = await remnawaveApi.getUserByEmail(email);
-
-      if (existingUser && existingUser.length > 0) {
-        userId = existingUser[0].uuid;
-        shortUuid = existingUser[0].shortUuid;
-        telegramId = existingUser[0].telegramId;
-      } else {
-        const user = await remnawaveApi.createUser({ email });
-        userId = user.uuid;
-        shortUuid = user.shortUuid;
-        telegramId = user.telegramId;
-      }
-
-      // 2. Create payment session — redirect back to subscription page after payment
-      const return_url = `${window.location.origin}/subscription/${shortUuid}`;
-
       const session = await paymentsApi.createYookassaSession({
         save_payment_method: true,
         amount: { value: env.priceRub, currency: 'RUB' },
         description: env.paymentDescription,
         confirmation: {
-          return_url,
+          return_url: `${window.location.origin}/subscription/${email}`,
           type: 'redirect',
         },
         metadata: {
-          telegramId,
+          email,
           selectedPeriod: env.selectedPeriodMonths,
-          userId,
         },
       });
 
-      // 3. Redirect to YooKassa payment page
       window.location.href = session.url;
     } catch (err) {
       setError(t('getSubscription.error_failed_to_create'));

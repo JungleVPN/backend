@@ -10,7 +10,6 @@ import { useTranslation as useI18nextTranslation } from 'react-i18next';
 
 import '@/utils/initDayjs';
 import {
-  useCurrentLang,
   useIsConfigLoaded,
   useSubscriptionConfig,
   useSubscriptionConfigStoreActions,
@@ -26,9 +25,7 @@ import {
   MinimalBlockRenderer,
   TimelineBlockRenderer,
 } from '@/components/InstallationGuide';
-import { LanguagePicker } from '@/components/LanguagePicker/LanguagePicker';
 import { Loading } from '@/components/Loading/Loading';
-import { SubscribeCta } from '@/components/SubscribeCTA/SubscribeCTA';
 import {
   SubscriptionInfoCards,
   SubscriptionInfoCollapsed,
@@ -73,8 +70,6 @@ export function SubscriptionView(props: { shortUuid: string }) {
   const config = useSubscriptionConfig();
   const subscriptionActions = useSubscriptionInfoStoreActions();
   const configActions = useSubscriptionConfigStoreActions();
-  const { setLanguage } = configActions;
-  const currentLang = useCurrentLang();
   const os = useOs({ getValueInEffect: false });
   const { subscription } = useSubscriptionInfoStoreInfo();
 
@@ -136,7 +131,7 @@ export function SubscriptionView(props: { shortUuid: string }) {
     };
 
     fetchConfig();
-  }, [configActions, subscription]);
+  }, [configActions]);
 
   // Error state (checked before config-loaded to avoid infinite loading on fetch failure)
   if (errorConnect) {
@@ -185,36 +180,6 @@ export function SubscriptionView(props: { shortUuid: string }) {
     );
   }
 
-  // No active subscription state
-  if (!activeSubscription) {
-    return (
-      <Box
-        style={{
-          height: '100vh',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
-        <Container size='xl'>
-          <Stack gap='xl'>
-            <Title style={{ textAlign: 'center' }} order={4}>
-              {t('main.page.component.no-sub')}
-            </Title>
-            <SubscribeCta />
-            <Center mt={20}>
-              <LanguagePicker
-                currentLang={currentLang}
-                locales={config?.locales ?? []}
-                onLanguageChange={setLanguage}
-              />
-            </Center>
-          </Stack>
-        </Container>
-      </Box>
-    );
-  }
-
   // Final render (guaranteed that config is loaded)
   const hasPlatformApps: Record<TSubscriptionPagePlatformKey, boolean> = {
     ios: Boolean(config.platforms.ios?.apps.length),
@@ -228,14 +193,16 @@ export function SubscriptionView(props: { shortUuid: string }) {
 
   const atLeastOnePlatformApp = Object.values(hasPlatformApps).some((value) => value);
   const SubscriptionInfoBlockRenderer =
-    SUBSCRIPTION_INFO_BLOCK_RENDERERS[config.uiConfig.subscriptionInfoBlockType];
+    SUBSCRIPTION_INFO_BLOCK_RENDERERS[
+      activeSubscription ? config.uiConfig.subscriptionInfoBlockType : 'expanded'
+    ];
 
   return (
     <Box style={{ position: 'relative' }}>
       <Stack style={{ zIndex: 2 }} gap='xl'>
         {SubscriptionInfoBlockRenderer && <SubscriptionInfoBlockRenderer />}
 
-        {atLeastOnePlatformApp && (
+        {atLeastOnePlatformApp && activeSubscription && (
           <InstallationGuideConnector
             BlockRenderer={BLOCK_RENDERERS[config.uiConfig.installationGuidesBlockType]}
             hasPlatformApps={hasPlatformApps}
