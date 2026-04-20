@@ -1,5 +1,5 @@
 import { Group, Image, Title } from '@mantine/core';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Block } from '@/ui/Block/Block';
 import { AuthButtons } from './AuthButtons';
 import { LanguageSwitcher } from './LanguageSwitcher';

@@ -1,7 +1,7 @@
 import { Alert, Button, Container, TextInput, Title } from '@mantine/core';
 import { type FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router';
 import { createClient } from '@/lib/supabase/client';
 import { Block } from '@/ui/Block/Block';
 import css from './login.module.css';

@@ -1,5 +1,5 @@
 import { Box, Button, Flex, PinInput, Text, Title } from '@mantine/core';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';

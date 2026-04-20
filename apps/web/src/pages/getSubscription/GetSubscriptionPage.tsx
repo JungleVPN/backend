@@ -3,7 +3,7 @@ import { IconArrowRight, IconCheck, IconMail } from '@tabler/icons-react';
 import { UserDto } from '@workspace/types';
 import { type FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { paymentsApi } from '@/api/payments.ts';
 import { env } from '@/config/env';
 import { Block } from '@/ui/Block/Block';

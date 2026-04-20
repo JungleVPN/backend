@@ -1,5 +1,5 @@
 import { type FC, type JSX } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 
 export interface LinkProps extends Omit<JSX.IntrinsicElements['a'], 'href'> {
   href: string;

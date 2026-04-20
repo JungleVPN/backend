@@ -1,5 +1,5 @@
 import { Button, Group } from '@mantine/core';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStoreInfo, useAuthStoreActions } from '@/store/auth';

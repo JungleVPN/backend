@@ -479,8 +479,8 @@ importers:
       react-i18next:
         specifier: ^15.0.0
         version: 15.7.4(i18next@24.2.3(typescript@5.9.3))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(typescript@5.9.3)
-      react-router-dom:
-        specifier: ^7.1.0
+      react-router:
+        specifier: ^7.14.1
         version: 7.14.1(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       react-snowfall:
         specifier: ^2.4.0
@@ -4464,13 +4464,6 @@ packages:
     peerDependencies:
       react: '>=16.8'
       react-dom: '>=16.8'
-
-  react-router-dom@7.14.1:
-    resolution: {integrity: sha512-ZkrQuwwhGibjQLqH1eCdyiZyLWglPxzxdl5tgwgKEyCSGC76vmAjleGocRe3J/MLfzMUIKwaFJWpFVJhK3d2xA==}
-    engines: {node: '>=20.0.0'}
-    peerDependencies:
-      react: '>=18'
-      react-dom: '>=18'
 
   react-router@6.30.3:
     resolution: {integrity: sha512-XRnlbKMTmktBkjCLE8/XcZFlnHvr2Ltdr1eJX4idL55/9BbORzyZEaIkBFDhFGCEWBBItsVrDxwx3gnisMitdw==}
@@ -9653,12 +9646,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       react-router: 6.30.3(react@18.3.1)
-
-  react-router-dom@7.14.1(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
-    dependencies:
-      react: 19.2.5
-      react-dom: 19.2.5(react@19.2.5)
-      react-router: 7.14.1(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
 
   react-router@6.30.3(react@18.3.1):
     dependencies:

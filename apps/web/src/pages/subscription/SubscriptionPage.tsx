@@ -1,5 +1,5 @@
 import { Box } from '@mantine/core';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import { SubscriptionView } from '@/components/SubscriptionView/SubscriptionView';
 
 export default function SubscriptionPage() {

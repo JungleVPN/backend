@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { remnawaveApi } from '@/api/remnawave.ts';
 import { Loading } from '@/components/Loading/Loading';
 import { SubscriptionView } from '@/components/SubscriptionView/SubscriptionView';
