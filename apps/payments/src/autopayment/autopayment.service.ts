@@ -34,6 +34,7 @@ export class AutopaymentService {
   }
 
   async init(payload: RemnawebhookPayload): Promise<void> {
+    const userId = payload.data.uuid;
     const telegramId = payload.data.telegramId;
 
     if (!telegramId) {
@@ -44,7 +45,7 @@ export class AutopaymentService {
     this.logger.log(`User ${telegramId} expires in 24h — checking saved payment methods`);
 
     const savedMethod = await this.savedMethodRepo.findOneBy({
-      userId: String(telegramId),
+      userId,
       isActive: true,
     });
 
@@ -60,32 +61,40 @@ export class AutopaymentService {
       return;
     }
 
-    await this.attemptAutopaymentWithRetries(telegramId, savedMethod.paymentMethodId);
+    await this.attemptAutopaymentWithRetries({
+      userId,
+      paymentMethodId: savedMethod.paymentMethodId,
+    });
   }
 
-  private async attemptAutopaymentWithRetries(
-    telegramId: number,
-    paymentMethodId: string,
-  ): Promise<void> {
+  private async attemptAutopaymentWithRetries({
+    telegramId,
+    userId,
+    paymentMethodId,
+  }: {
+    userId: string;
+    paymentMethodId: string;
+    telegramId?: number;
+  }): Promise<void> {
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-      this.logger.log(`Autopayment attempt ${attempt}/${MAX_RETRIES} for user ${telegramId}`);
+      this.logger.log(`Autopayment attempt ${attempt}/${MAX_RETRIES} for user ${userId}`);
 
       try {
-        const result = await this.executeAutopayment(telegramId, paymentMethodId);
+        const result = await this.executeAutopayment({ userId, paymentMethodId });
 
         if (result.status === 'succeeded') {
-          this.logger.log(`Autopayment succeeded for user ${telegramId} (attempt ${attempt})`);
+          this.logger.log(`Autopayment succeeded for user ${userId} (attempt ${attempt})`);
           return;
         }
 
         // Payment processed but failed (e.g. canceled by bank)
         this.logger.warn(
-          `Autopayment attempt ${attempt} for user ${telegramId}: status=${result.status}` +
+          `Autopayment attempt ${attempt} for user ${userId}: status=${result.status}` +
             (result.cancellation_details ? ` reason=${result.cancellation_details.reason}` : ''),
         );
       } catch (err: any) {
         this.logger.error(
-          `Autopayment attempt ${attempt} for user ${telegramId} failed: ${err.message}`,
+          `Autopayment attempt ${attempt} for user ${userId} failed: ${err.message}`,
         );
       }
 
@@ -98,7 +107,7 @@ export class AutopaymentService {
       `All ${MAX_RETRIES} autopayment attempts failed for user ${telegramId} — falling back to manual payment`,
     );
     await this.botNotificationService.notify('payment.autopayment_exhausted', {
-      telegramId,
+      telegramId: telegramId ?? null,
       provider: 'yookassa',
       reason: 'autopayment_exhausted',
     });
@@ -108,19 +117,28 @@ export class AutopaymentService {
    * Execute a single autopayment attempt.
    * Creates the payment via YooKassa, persists the record, and emits failure events.
    */
-  private async executeAutopayment(
-    telegramId: number,
-    paymentMethodId: string,
-  ): Promise<Payments.IPayment> {
-    const userId = String(telegramId);
+  private async executeAutopayment({
+    telegramId,
+    userId,
+    paymentMethodId,
+  }: {
+    userId: string;
+    paymentMethodId: string;
+    telegramId?: number;
+  }): Promise<Payments.IPayment> {
     const amount = this.autopaymentAmount;
     const selectedPeriod = this.autopaymentPeriod;
     const description = process.env.PAYMENT_DESCRIPTION || 'Happy to see you in the JUNGLE 🌴';
 
     const metadata = {
-      telegramId: userId,
+      userId,
+      telegramId: telegramId ?? null,
       selectedPeriod,
     };
+
+    if (!telegramId) {
+      this.logger.warn(`Executing autopayment for user ${userId} with no telegramId in metadata`);
+    }
 
     const request: Payments.CreatePaymentRequest = {
       amount: { value: String(amount), currency: 'RUB' },
@@ -145,7 +163,7 @@ export class AutopaymentService {
 
     if (payment.status === 'canceled' && payment.cancellation_details) {
       this.eventEmitter.emit(WebhookEventEnum['payment.autopayment_failed'], {
-        telegramId,
+        telegramId: telegramId ?? null,
         provider: 'yookassa',
         reason: payment.cancellation_details.reason,
       } satisfies Payments.PaymentFailedEventPayload);

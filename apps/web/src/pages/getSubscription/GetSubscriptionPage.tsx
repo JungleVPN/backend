@@ -3,7 +3,9 @@ import { IconArrowRight, IconCheck, IconMail } from '@tabler/icons-react';
 import { type FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { remnawaveApi } from '@/api/instance';
+import { paymentsApi } from '@/api/payments.ts';
+import { remnawaveApi } from '@/api/remnawave.ts';
+import { env } from '@/config/env';
 import { Block } from '@/ui/Block/Block';
 import styles from './getSubscription.module.css';
 
@@ -13,6 +15,7 @@ export default function GetSubscriptionPage() {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
 
   const validateEmail = (value: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -50,6 +53,66 @@ export default function GetSubscriptionPage() {
       setError(t('getSubscription.error_failed_to_create'));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handlePay = async () => {
+    setError('');
+
+    if (!email.trim()) {
+      setError(t('getSubscription.error_empty_email'));
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setError(t('getSubscription.error_invalid_email'));
+      return;
+    }
+
+    setIsPaying(true);
+    try {
+      // 1. Ensure user exists
+      let userId: string;
+      let shortUuid: string;
+      let telegramId: number | null;
+
+      const existingUser = await remnawaveApi.getUserByEmail(email);
+
+      if (existingUser && existingUser.length > 0) {
+        userId = existingUser[0].uuid;
+        shortUuid = existingUser[0].shortUuid;
+        telegramId = existingUser[0].telegramId;
+      } else {
+        const user = await remnawaveApi.createUser({ email });
+        userId = user.uuid;
+        shortUuid = user.shortUuid;
+        telegramId = user.telegramId;
+      }
+
+      // 2. Create payment session — redirect back to subscription page after payment
+      const return_url = `${window.location.origin}/subscription/${shortUuid}`;
+
+      const session = await paymentsApi.createYookassaSession({
+        save_payment_method: true,
+        amount: { value: env.priceRub, currency: 'RUB' },
+        description: env.paymentDescription,
+        confirmation: {
+          return_url,
+          type: 'redirect',
+        },
+        metadata: {
+          telegramId,
+          selectedPeriod: env.selectedPeriodMonths,
+          userId,
+        },
+      });
+
+      // 3. Redirect to YooKassa payment page
+      window.location.href = session.url;
+    } catch (err) {
+      setError(t('getSubscription.error_failed_to_create'));
+    } finally {
+      setIsPaying(false);
     }
   };
 
@@ -104,6 +167,11 @@ export default function GetSubscriptionPage() {
                 }}
               />
             </Stack>
+          </Block>
+          <Block>
+            <Button onClick={handlePay} loading={isPaying} disabled={isPaying}>
+              Pay
+            </Button>
           </Block>
         </Grid.Col>
         <Grid.Col span={{ base: 12, md: 5, lg: 3 }}>

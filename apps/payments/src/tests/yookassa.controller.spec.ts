@@ -162,24 +162,19 @@ describe('YookassaController', () => {
   // createSession
   // ─────────────────────────────────────────────────────────
   describe('createSession', () => {
-    const baseDto: { paymentDto: Payments.IPayment; userId: string; save_payment_method: boolean } =
-      {
+    const baseDto: Payments.CreatePaymentRequest = {
+      metadata: {
         userId: 'user-1',
-        paymentDto: {
-          amount: {
-            value: '100.00',
-            currency: 'RUB',
-          },
-          description: 'test',
-          id: '',
-          status: 'succeeded',
-          created_at: '',
-          test: false,
-          paid: false,
-          refundable: false,
-        },
-        save_payment_method: true,
-      };
+        telegramId: 123,
+        selectedPeriod: 1,
+      },
+      amount: {
+        value: '100.00',
+        currency: 'RUB',
+      },
+      description: 'test',
+      save_payment_method: true,
+    };
 
     it('creates the payment, persists the record and returns { id, url }', async () => {
       mockSmFindOneBy.mockResolvedValue(null); // no existing active method
@@ -232,7 +227,10 @@ describe('YookassaController', () => {
         confirmation: { type: 'redirect', confirmation_url: 'https://yk/sess-2' },
       });
 
-      await controller.createSession({ ...baseDto, save_payment_method: false });
+      await controller.createSession({
+        ...baseDto,
+        save_payment_method: false,
+      });
 
       const [request] = mockCreate.mock.calls[0];
       expect(request.save_payment_method).toBeFalsy();
@@ -257,6 +255,7 @@ describe('YookassaController', () => {
   // ─────────────────────────────────────────────────────────
   describe('makeAutopayment', () => {
     const dto = {
+      telegramId: 123,
       userId: 'user-1',
       amount: 500,
       selectedPeriod: 1,

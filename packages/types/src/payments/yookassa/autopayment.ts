@@ -4,8 +4,8 @@
  * between webhook → payments service → bot.
  */
 export interface MakeAutopaymentDto {
-  /** Telegram ID */
   userId: string;
+  telegramId: number | null;
   amount: number;
   selectedPeriod: number;
   description?: string;

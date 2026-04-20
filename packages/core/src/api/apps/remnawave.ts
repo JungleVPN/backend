@@ -6,7 +6,7 @@ import {
   GetSubscriptionPageConfigCommand,
   GetUserByEmailCommand,
 } from '@workspace/types';
-import type { ApiClient } from './client';
+import type { ApiClient } from '../client';
 
 /**
  * Shared Remnawave API.

@@ -9,9 +9,12 @@ export {
   GetSubscriptionPageConfigCommand,
   GetUserByEmailCommand,
   GetUserByTelegramIdCommand,
+  GetUserByUuidCommand,
   RevokeUserSubscriptionCommand,
+  type TRemnawaveWebhookEvent,
   UpdateUserCommand,
 } from '@remnawave/backend-contract';
+
 export {
   SubscriptionPageRawConfigSchema,
   type TSubscriptionPageLanguageCode,

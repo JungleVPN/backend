@@ -51,7 +51,10 @@ export enum CurrencyEnum {
  * @see https://yookassa.ru/developers/api#payment_object_metadata
  */
 export interface Metadata {
-  [key: string]: string | number | boolean | null;
+  telegramId: number | null;
+  userId: string;
+  selectedPeriod: number;
+  // [key: string]: string | number | boolean | null;
 }
 
 /**

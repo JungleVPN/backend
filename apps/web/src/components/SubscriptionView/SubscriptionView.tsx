@@ -17,7 +17,7 @@ import {
   useSubscriptionInfoStoreActions,
   useSubscriptionInfoStoreInfo,
 } from '@workspace/core/stores';
-import { remnawaveApi } from '@/api/instance.ts';
+import { remnawaveApi } from '@/api/remnawave.ts';
 import { ErrorConnection } from '@/components/ErrorConnection/ErrorConnection';
 import {
   AccordionBlockRenderer,

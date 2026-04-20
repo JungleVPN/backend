@@ -59,7 +59,7 @@ export namespace Payments {
   };
 
   interface PaymentResultEventPayload {
-    telegramId: number;
+    telegramId: number | null;
     provider: 'stripe' | 'yookassa';
     invoiceUrl?: string;
     selectedPeriod?: number;
@@ -71,7 +71,7 @@ export namespace Payments {
 
   export interface PaymentSucceededEventPayload extends PaymentResultEventPayload {}
 
-  export interface PaymentFailedEventPayload extends PaymentSucceededEventPayload {
+  export interface PaymentFailedEventPayload extends PaymentResultEventPayload {
     reason: string;
   }
 

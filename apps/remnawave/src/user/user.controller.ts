@@ -48,6 +48,13 @@ export class UserController {
     return this.userService.updateUser(body);
   }
 
+  @Get(':uuid')
+  async getUserByUuid(
+    @Param('uuid') uuid: string,
+  ): Promise<Remnawave.GetUserByUuidResponseDto | null> {
+    return this.userService.getUserByUuid(uuid);
+  }
+
   @Delete(':uuid')
   async deleteUser(@Param('uuid') uuid: string): Promise<Remnawave.DeleteUserResponseDto> {
     return this.userService.deleteUser(uuid);

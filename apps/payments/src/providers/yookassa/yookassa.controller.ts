@@ -19,13 +19,13 @@ import { YookassaService } from '@payments/providers/yookassa/yookassa.service';
 import { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
 import {
   type MakeAutopaymentDto,
+  PaymentSession,
   Payments,
   type PaymentWebhookNotification,
   WebhookEventEnum,
 } from '@workspace/types';
 import { Repository } from 'typeorm';
 import { YooKassaProvider } from './yookassa.provider';
-import type { YookassaSessionResponse } from './yookassa.types';
 
 @Controller('payments/yookassa')
 export class YookassaController {
@@ -114,36 +114,41 @@ export class YookassaController {
    */
   @Post('create-session')
   async createSession(
-    @Body() body: { paymentDto: Payments.IPayment; userId: string; save_payment_method: boolean },
-  ): Promise<YookassaSessionResponse> {
-    const { userId, save_payment_method, paymentDto } = body;
-
+    @Body()
+    body: Payments.CreatePaymentRequest,
+  ): Promise<PaymentSession> {
     const request: Payments.CreatePaymentRequest = {
-      amount: paymentDto.amount,
+      ...body,
       capture: true,
       confirmation: {
         type: 'redirect',
-        return_url: process.env.RETURN_URL,
+        return_url:
+          body.confirmation?.type === 'redirect'
+            ? body.confirmation.return_url
+            : process.env.RETURN_URL,
       },
-      description: paymentDto.description,
-      metadata: paymentDto.metadata,
-      save_payment_method,
     };
 
     const payment = await this.yookassaProvider.create(request);
-
     const confirmationUrl = this.extractRedirectUrl(payment);
+
     if (!confirmationUrl) {
       throw new InternalServerErrorException(
         `YooKassa did not return a confirmation URL for payment ${payment.id}`,
       );
     }
 
+    if (!body.metadata) {
+      throw new InternalServerErrorException('No payment metadata found');
+    }
+
+    const userId = String(body.metadata?.userId);
+
     const record = this.yookassaPaymentRepo.create({
       id: payment.id,
       url: confirmationUrl,
       status: payment.status,
-      amount: Number(payment.amount.value),
+      amount: Number(request.amount.value),
       currency: 'RUB',
       userId,
       description: payment.description ?? null,
@@ -180,8 +185,9 @@ export class YookassaController {
     }
 
     const metadata = {
-      telegramId: savedMethod.userId,
+      telegramId: dto.telegramId,
       selectedPeriod: dto.selectedPeriod,
+      userId: dto.userId,
     };
 
     const request: Payments.CreatePaymentRequest = {

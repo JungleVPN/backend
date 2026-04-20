@@ -64,6 +64,7 @@ export class YookassaService {
 
     const telegramId = Number(metadata?.telegramId);
     const selectedPeriod = Number(metadata?.selectedPeriod);
+    const userId = metadata?.userId;
 
     await this.yookassaPaymentRepo.update(id, {
       status,
@@ -71,13 +72,15 @@ export class YookassaService {
       url: null,
     });
 
-    if (!telegramId) {
-      this.logger.warn('Invalid telegramId in Yookassa metadata');
+    if (!userId) {
+      this.logger.warn('No userId in Yookassa metadata');
+      return;
     }
 
     const result = await this.paymentStatusService.handlePaymentSucceeded(
       telegramId,
       selectedPeriod,
+      userId,
     );
 
     if (result.success) {
@@ -92,7 +95,7 @@ export class YookassaService {
 
     // Persist payment method if YooKassa reports it as saved
     if (payment_method && isSavablePaymentMethod(payment_method) && payment_method.saved) {
-      await this.trySavePaymentMethod(String(telegramId), payment_method);
+      await this.trySavePaymentMethod(userId, payment_method);
     }
   }
 

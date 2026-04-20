@@ -10,6 +10,8 @@ import {
   GetUserByEmailCommand,
   GetUserByTelegramIdCommand,
   GetUserByTelegramIdResponseDto,
+  GetUserByUuidCommand,
+  GetUserByUuidResponseDto,
   RevokeUserSubscriptionCommand,
   UpdateUserCommand,
   UpdateUserRequestDto,
@@ -109,6 +111,19 @@ export class UserService {
       url: DeleteUserCommand.url(uuid),
       method: DeleteUserCommand.endpointDetails.REQUEST_METHOD,
     });
+  }
+
+  async getUserByUuid(uuid: string): Promise<GetUserByUuidResponseDto | null> {
+    if (!uuid) return null;
+    try {
+      return await this.panelClient.request<GetUserByUuidResponseDto>({
+        method: GetUserByUuidCommand.endpointDetails.REQUEST_METHOD,
+        url: GetUserByUuidCommand.url(uuid),
+      });
+    } catch (e: any) {
+      if (e.status === 404) return null;
+      throw e;
+    }
   }
 
   async getUserByEmail(email: string): Promise<GetUserByEmailCommand.Response['response'] | null> {
