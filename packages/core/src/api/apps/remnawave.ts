@@ -43,8 +43,7 @@ export function createRemnawaveApi(client: ApiClient) {
       params: Pick<CreateUserRequestDto, 'email' | 'telegramId'>,
     ): Promise<CreateUserResponseDto> {
       return client.post<CreateUserResponseDto>(CreateUserCommand.url, {
-        email: params.email,
-        telegramId: params.telegramId,
+        ...params,
         username: crypto.randomUUID().slice(0, 8),
       });
     },

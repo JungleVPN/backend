@@ -99,6 +99,7 @@ export class StripeProvider {
       return customer;
     }
     const newCustomer = await this.stripe.customers.create({
+      email: dto.metadata.email,
       metadata: { ...dto.metadata },
     });
     return newCustomer.id;

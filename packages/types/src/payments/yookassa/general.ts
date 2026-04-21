@@ -38,25 +38,11 @@ export enum CurrencyEnum {
 }
 
 /**
- * Любые дополнительные данные, которые нужны вам для работы.
- *
- * Передаются в виде набора пар «ключ-значение» и возвращаются в ответе от ЮKassa.
- *
- * **Ограничения:**
- * - максимум 16 ключей
- * - имя ключа не больше 32 символов
- * - значение ключа не больше 512 символов
- * - тип данных — строка в формате UTF-8
- *
+ * Arbitrary key-value metadata returned by YooKassa on payment objects.
+ * All values are strings (YooKassa constraint: max 512 chars per value).
  * @see https://yookassa.ru/developers/api#payment_object_metadata
  */
-export interface Metadata {
-  telegramId?: number | null;
-  userId?: string | null;
-  email?: string | null;
-  selectedPeriod: number;
-  // [key: string]: string | number | boolean | null;
-}
+export type Metadata = Record<string, string>;
 
 /**
  * Сумма платежа. Иногда партнеры ЮKassa берут с пользователя дополнительную комиссию, которая не входит в эту сумму.

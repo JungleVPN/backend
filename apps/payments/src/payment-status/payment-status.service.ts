@@ -1,6 +1,6 @@
 import * as process from 'node:process';
 import { Injectable, Logger } from '@nestjs/common';
-import { UserDto } from '@workspace/types';
+import { GetUserByUuidResponseDto } from '@workspace/types';
 import axios from 'axios';
 
 /**
@@ -23,63 +23,43 @@ export class PaymentStatusService {
 
   /**
    * Called after a successful payment (Stripe or Yookassa).
-   * 1. Fetches user from remnawave by telegramId
+   * Looks up user by email (web), telegramId (bot), or userId (uuid), in that priority order.
+   * 1. Fetches user from remnawave
    * 2. Extends subscription via remnawave PATCH /users
    * 3. Triggers referral reward via referrals POST /referrals/reward-after-payment
    */
-  /**
-   * Called after a successful payment (Stripe or Yookassa).
-   * Supports both bot (telegramId) and web (userId) flows.
-   */
-  async handlePaymentSucceeded(
-    telegramId: number,
-    selectedPeriod: number,
-    userId?: string,
-  ): Promise<{ success: boolean }> {
-    // 1. Get user from remnawave — prefer uuid lookup (web), fall back to telegramId (bot)
-    const user = userId
-      ? await this.getUserByUuid(userId)
-      : await this.getUserByTelegramId(telegramId);
+  async handlePaymentSucceeded({
+    selectedPeriod,
+    userId,
+  }: {
+    selectedPeriod: number;
+    userId: string;
+  }): Promise<{ success: boolean }> {
+    const user = await this.getUserByUuid(userId);
 
     if (!user) {
-      this.logger.warn(`User not found: telegramId=${telegramId}, uuid=${userId}`);
+      this.logger.warn(`User not found: userId=${userId}`);
       return { success: false };
     }
 
-    // 2. Extend subscription
-    const currentExpiry = new Date(user.expireAt);
-    const newExpiry = this.addMonths(currentExpiry, selectedPeriod);
+    const newExpiry = this.addMonths(user.expireAt, selectedPeriod);
 
     await this.updateUserExpiry(user.uuid, newExpiry);
 
-    // 3. Trigger referral reward (best-effort)
     if (user.telegramId) {
       await this.triggerReferralReward(user.telegramId);
     }
 
-    this.logger.log(`Payment processed for ${userId || telegramId}: +${selectedPeriod} month(s)`);
+    this.logger.log(`Payment processed for user ${user.uuid}: +${selectedPeriod} month(s)`);
 
     return { success: true };
   }
 
-  private async getUserByTelegramId(telegramId: number): Promise<UserDto | null> {
+  private async getUserByUuid(uuid: string): Promise<GetUserByUuidResponseDto | null> {
     try {
-      const { data } = await axios.get(
-        `${this.remnawareBaseUrl}/api/users/by-telegram-id/${telegramId}`,
+      const { data } = await axios.get<GetUserByUuidResponseDto>(
+        `${this.remnawareBaseUrl}/api/users/${uuid}`,
       );
-      const user = Array.isArray(data) ? data[0] : data;
-      return user ?? null;
-    } catch (err: any) {
-      this.logger.error(`Failed to fetch user by telegramId ${telegramId}: ${err.message}`);
-      throw err;
-    }
-  }
-
-  private async getUserByUuid(
-    uuid: string,
-  ): Promise<{ uuid: string; telegramId: number | null; expireAt: string } | null> {
-    try {
-      const { data } = await axios.get(`${this.remnawareBaseUrl}/api/users/${uuid}`);
       return data ?? null;
     } catch (err: any) {
       if (err.response?.status === 404) return null;

@@ -1,13 +1,18 @@
 import type { User } from '@supabase/supabase-js';
+import type { GetUserByUuidResponseDto } from '@workspace/types';
 
 export interface IState {
-  user: User | null;
+  /** Supabase authenticated user. */
+  authUser: User | null;
+  /** Remnawave panel user fetched/created after login. */
+  rmnUser: GetUserByUuidResponseDto | null;
   loading: boolean;
 }
 
 export interface IActions {
   actions: {
-    setUser: (user: User | null) => void;
+    setAuthUser: (user: User | null) => void;
+    setRmnUser: (user: GetUserByUuidResponseDto | null) => void;
     setLoading: (loading: boolean) => void;
   };
 }

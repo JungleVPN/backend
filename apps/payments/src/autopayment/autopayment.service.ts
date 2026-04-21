@@ -130,14 +130,8 @@ export class AutopaymentService {
     const selectedPeriod = this.autopaymentPeriod;
     const description = process.env.PAYMENT_DESCRIPTION || 'Happy to see you in the JUNGLE 🌴';
 
-    const metadata = {
-      userId,
-      telegramId: telegramId ?? null,
-      selectedPeriod,
-    };
-
     if (!telegramId) {
-      this.logger.warn(`Executing autopayment for user ${userId} with no telegramId in metadata`);
+      this.logger.warn(`Executing autopayment for user ${userId} with no telegramId`);
     }
 
     const request: Payments.CreatePaymentRequest = {
@@ -145,7 +139,6 @@ export class AutopaymentService {
       capture: true,
       payment_method_id: paymentMethodId,
       description,
-      metadata,
     };
 
     const payment = await this.yookassaProvider.create(request);
@@ -155,8 +148,9 @@ export class AutopaymentService {
       status: payment.status,
       amount,
       userId,
+      selectedPeriod,
+      telegramId: telegramId ?? null,
       description,
-      metadata,
       paidAt: payment.status === 'succeeded' ? new Date() : null,
     });
     await this.yookassaPaymentRepo.save(record);
@@ -170,20 +164,6 @@ export class AutopaymentService {
     }
 
     return payment;
-  }
-
-  async disableActiveMethodIfExists(userId: string) {
-    const savedMethod = await this.savedMethodRepo.findOneBy({
-      userId,
-      isActive: true,
-    });
-
-    // If the user still has an active saved method, disable it. A new session
-    // creates a new card, and we want only one active method per user.
-    if (savedMethod) {
-      savedMethod.isActive = false;
-      await this.savedMethodRepo.save(savedMethod);
-    }
   }
 
   private delay(ms: number): Promise<void> {

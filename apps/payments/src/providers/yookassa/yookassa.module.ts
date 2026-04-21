@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AutopaymentModule } from '@payments/autopayment/autopayment.module';
 import { BotNotificationModule } from '@payments/notifications/bot-notification.module';
 import { YooKassaConnector } from '@payments/providers/yookassa/helpers/yookassa.connector';
 import { YookassaController } from '@payments/providers/yookassa/yookassa.controller';
@@ -13,7 +12,6 @@ import { PaymentStatusModule } from '../../payment-status/payment-status.module'
   imports: [
     TypeOrmModule.forFeature([YookassaPayment, SavedPaymentMethod]),
     PaymentStatusModule,
-    AutopaymentModule,
     BotNotificationModule,
   ],
   controllers: [YookassaController],

@@ -8,13 +8,13 @@ import { useAuthStoreActions } from '@/store/auth';
  * No server-side session — auth is fully client-side.
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { setUser, setLoading } = useAuthStoreActions();
+  const { setAuthUser, setLoading } = useAuthStoreActions();
   const supabase = createClient();
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      setAuthUser(session?.user ?? null);
       setLoading(false);
     });
 
@@ -22,12 +22,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      setAuthUser(session?.user ?? null);
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase.auth, setUser, setLoading]);
+  }, [supabase.auth, setAuthUser, setLoading]);
 
   return <>{children}</>;
 }

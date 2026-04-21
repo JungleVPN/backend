@@ -15,9 +15,11 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@workspace/core": "workspace:*"
+    "@workspace/core": "workspace:*",
+    "@workspace/types": "workspace:*"
   },
   "peerDependencies": {
+    "@mantine/core": ">=7.0.0",
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0"
   },

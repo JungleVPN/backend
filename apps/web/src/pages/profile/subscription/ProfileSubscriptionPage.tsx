@@ -1,48 +1,13 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
-import { remnawaveApi } from '@/api/remnawave.ts';
 import { Loading } from '@/components/Loading/Loading';
 import { SubscriptionView } from '@/components/SubscriptionView/SubscriptionView';
 import { useAuthStoreInfo } from '@/store/auth';
 
 export default function ProfileSubscriptionPage() {
-  const { user, loading: authLoading } = useAuthStoreInfo();
-  const navigate = useNavigate();
-  const [shortUuid, setShortUuid] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { rmnUser } = useAuthStoreInfo();
 
-  useEffect(() => {
-    if (authLoading) return;
-    const email = user?.email;
-    if (!email) {
-      navigate('/login');
-      return;
-    }
-
-    const fetchOrCreate = async () => {
-      try {
-        const existingUsers = await remnawaveApi.getUserByEmail({ email });
-
-        if (existingUsers && existingUsers.length > 0) {
-          setShortUuid(existingUsers[0].shortUuid);
-        } else {
-          const newUser = await remnawaveApi.createUser({ email });
-          setShortUuid(newUser.shortUuid);
-        }
-      } catch (error) {
-        console.error('Failed to get/create user:', error);
-        // navigate('/login?message=Failed to retrieve or create user profile.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrCreate();
-  }, [user, authLoading, navigate]);
-
-  if (authLoading || loading || !shortUuid) {
+  if (!rmnUser) {
     return <Loading />;
   }
 
-  return <SubscriptionView shortUuid={shortUuid} />;
+  return <SubscriptionView shortUuid={rmnUser.shortUuid} />;
 }

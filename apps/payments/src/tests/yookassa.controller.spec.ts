@@ -5,7 +5,7 @@ import { YookassaController } from '@payments/providers/yookassa/yookassa.contro
 import type { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
 import type { YookassaService } from '@payments/providers/yookassa/yookassa.service';
 import type { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
-import { Payments, WebhookEventEnum } from '@workspace/types';
+import { type CreateYookassaSessionDto, Payments, WebhookEventEnum } from '@workspace/types';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -162,31 +162,19 @@ describe('YookassaController', () => {
   // createSession
   // ─────────────────────────────────────────────────────────
   describe('createSession', () => {
-    const baseDto: Payments.CreatePaymentRequest = {
-      metadata: {
-        userId: 'user-1',
-        telegramId: 123,
-        selectedPeriod: 1,
-      },
-      amount: {
-        value: '100.00',
-        currency: 'RUB',
-      },
+    const baseDto: CreateYookassaSessionDto = {
+      userId: 'user-1',
+      selectedPeriod: 1,
+      amount: { value: '100.00', currency: 'RUB' },
       description: 'test',
       save_payment_method: true,
     };
 
     it('creates the payment, persists the record and returns { id, url }', async () => {
-      mockSmFindOneBy.mockResolvedValue(null); // no existing active method
       mockCreate.mockResolvedValue({
         id: 'sess-1',
         status: 'pending',
-        amount: {
-          value: '100.00',
-          currency: 'RUB',
-        },
-        paidAt: '2026-01-01T00:00:00Z',
-        metadata: null,
+        amount: { value: '100.00', currency: 'RUB' },
         description: 'test',
         confirmation: { type: 'redirect', confirmation_url: 'https://yk/sess-1' },
       });
@@ -203,6 +191,10 @@ describe('YookassaController', () => {
           save_payment_method: true,
         }),
       );
+      // Our fields must NOT be forwarded to YooKassa
+      expect(request.userId).toBeUndefined();
+      expect(request.selectedPeriod).toBeUndefined();
+      expect(request.metadata).toBeUndefined();
 
       expect(mockYkCreate).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -212,6 +204,7 @@ describe('YookassaController', () => {
           amount: 100,
           currency: 'RUB',
           userId: 'user-1',
+          selectedPeriod: 1,
           description: 'test',
         }),
       );
@@ -220,17 +213,13 @@ describe('YookassaController', () => {
     });
 
     it('omits save_payment_method when dto.savePaymentMethod is false', async () => {
-      mockSmFindOneBy.mockResolvedValue(null);
       mockCreate.mockResolvedValue({
         id: 'sess-2',
         status: 'pending',
         confirmation: { type: 'redirect', confirmation_url: 'https://yk/sess-2' },
       });
 
-      await controller.createSession({
-        ...baseDto,
-        save_payment_method: false,
-      });
+      await controller.createSession({ ...baseDto, save_payment_method: false });
 
       const [request] = mockCreate.mock.calls[0];
       expect(request.save_payment_method).toBeFalsy();
@@ -292,6 +281,7 @@ describe('YookassaController', () => {
         }),
       );
       expect(request.confirmation).toBeUndefined();
+      expect(request.metadata).toBeUndefined();
 
       expect(mockYkCreate).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -299,6 +289,8 @@ describe('YookassaController', () => {
           status: 'succeeded',
           amount: 500,
           userId: 'user-1',
+          selectedPeriod: 1,
+          telegramId: 123,
           paidAt: expect.any(Date),
         }),
       );

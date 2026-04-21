@@ -24,8 +24,11 @@ export class YookassaPayment {
   @Column({ type: 'varchar', nullable: true })
   description: string | null;
 
-  @Column({ type: 'jsonb', nullable: true })
-  metadata: Record<string, any> | null;
+  @Column({ type: 'int', nullable: true })
+  selectedPeriod: number | null;
+
+  @Column({ type: 'bigint', nullable: true })
+  telegramId: number | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

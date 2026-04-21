@@ -38,22 +38,24 @@ export class StripeWebhookService {
     const payload = await this.buildInvoicePayload(event, true);
     if (!payload) return;
 
-    const telegramId = Number(payload.userId);
+    const telegramId = payload.metadata.telegramId
+      ? Number(payload.metadata.telegramId)
+      : undefined;
     const selectedPeriod = Number(payload.metadata.selectedPeriod);
 
-    if (!telegramId) {
-      this.logger.warn('No telegramId in Stripe invoice payload');
+    if (!payload.userId) {
+      this.logger.warn('No payload.userId in Stripe invoice payload');
       return;
     }
 
-    const result = await this.paymentStatusService.handlePaymentSucceeded(
-      telegramId,
+    const result = await this.paymentStatusService.handlePaymentSucceeded({
       selectedPeriod,
-    );
+      userId: payload.userId,
+    });
 
     if (result.success) {
       this.eventEmitter.emit(WebhookEventEnum['payment.succeeded'], {
-        telegramId,
+        telegramId: telegramId ?? null,
         provider: 'stripe',
         metadata: {
           selectedPeriod,
@@ -96,10 +98,10 @@ export class StripeWebhookService {
       invoiceUrl: invoice.hosted_invoice_url || null,
       metadata: {
         ...customer.metadata,
-        telegramId: customer.metadata.telegramId,
         selectedPeriod: monthsToAdd.toString(),
       },
-      userId: customer.metadata.telegramId,
+      // Prefer email (web flow); fall back to telegramId (bot flow)
+      userId: customer.metadata.email || customer.metadata.telegramId || null,
       currency: 'EUR',
       paidAt,
       url: null,

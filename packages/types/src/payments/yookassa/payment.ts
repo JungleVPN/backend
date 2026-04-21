@@ -75,6 +75,12 @@ export namespace Payments {
     reason: string;
   }
 
+  export interface PaymentMethodSavedEventPayload {
+    telegramId: number | null;
+    provider: 'stripe' | 'yookassa';
+    paymentMethodType: string;
+  }
+
   /** Получатель платежа. */
   export interface IRecipient {
     /** Идентификатор магазина в ЮKassa. */

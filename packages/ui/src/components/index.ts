@@ -6,3 +6,6 @@ export type { SpinnerProps } from './Spinner';
 
 export { EmptyState } from './EmptyState';
 export type { EmptyStateProps } from './EmptyState';
+
+export { SavedMethodCard } from './SavedMethodCard/SavedMethodCard';
+export type { SavedMethodCardProps } from './SavedMethodCard/SavedMethodCard';

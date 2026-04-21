@@ -1,12 +1,23 @@
 import type Stripe from 'stripe';
 
+/**
+ * Metadata attached to a Stripe payment session.
+ * Platform-specific: web flow requires `email` so the webhook can identify
+ * the user without a telegramId.
+ */
+export interface WebStripeMetadata {
+  readonly email: string;
+  readonly [key: string]: string;
+}
+
 export interface CreateStripePaymentDto {
   readonly userId: string;
   readonly payment: {
     readonly amount: number | string;
     readonly currency: 'EUR';
   };
-  readonly metadata?: Record<string, any>;
+  /** Required for web: must contain at least { email }. */
+  readonly metadata: WebStripeMetadata;
 }
 
 export type BillingPortalSession = Promise<Stripe.Response<Stripe.BillingPortal.Session>>;

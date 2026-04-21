@@ -11,5 +11,6 @@ export * from './confirmation';
 export * from './general';
 export * from './payment';
 export * from './payment-method';
+export * from './saved-method';
 export * from './session';
 export * from './webhook';

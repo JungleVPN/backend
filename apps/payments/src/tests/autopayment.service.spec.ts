@@ -252,12 +252,10 @@ describe('AutopaymentService', () => {
           status: 'succeeded',
           amount: 200,
           userId: '42',
+          selectedPeriod: 1,
+          telegramId: 42,
           description: 'Test payment',
           paidAt: expect.any(Date),
-          metadata: expect.objectContaining({
-            selectedPeriod: 1,
-            telegramId: '42',
-          }),
         }),
       );
       expect(mockYkSave).toHaveBeenCalled();

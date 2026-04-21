@@ -2,7 +2,6 @@ import * as process from 'node:process';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AutopaymentService } from '@payments/autopayment/autopayment.service';
 import { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
 import { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
 import {
@@ -36,7 +35,6 @@ export class YookassaService {
     private readonly savedMethodRepo: Repository<SavedPaymentMethod>,
     private readonly paymentStatusService: PaymentStatusService,
     private readonly eventEmitter: EventEmitter2,
-    private readonly autopaymentService: AutopaymentService,
   ) {}
 
   async handleWebhook(payload: PaymentWebhookNotification, ip: string) {
@@ -60,11 +58,13 @@ export class YookassaService {
   }
 
   async handlePaymentSucceeded(payload: PaymentWebhookNotification): Promise<void> {
-    const { metadata, payment_method, id, status, captured_at } = payload.object;
+    const { payment_method, id, status, captured_at } = payload.object;
 
-    const telegramId = Number(metadata?.telegramId);
-    const selectedPeriod = Number(metadata?.selectedPeriod);
-    const userId = metadata?.userId;
+    const record = await this.yookassaPaymentRepo.findOneBy({ id });
+    if (!record?.userId || !record?.selectedPeriod) {
+      this.logger.error(`Payment ${id}: missing userId or selectedPeriod in DB`);
+      return;
+    }
 
     await this.yookassaPaymentRepo.update(id, {
       status,
@@ -72,49 +72,35 @@ export class YookassaService {
       url: null,
     });
 
-    if (!userId) {
-      this.logger.warn('No userId in Yookassa metadata');
-      return;
-    }
-
-    const result = await this.paymentStatusService.handlePaymentSucceeded(
-      telegramId,
-      selectedPeriod,
-      userId,
-    );
+    const result = await this.paymentStatusService.handlePaymentSucceeded({
+      selectedPeriod: record.selectedPeriod,
+      userId: record.userId,
+    });
 
     if (result.success) {
-      await this.autopaymentService.disableActiveMethodIfExists(String(telegramId));
-
       this.eventEmitter.emit(WebhookEventEnum['payment.succeeded'], {
-        telegramId,
+        telegramId: record.telegramId ?? null,
         provider: 'yookassa',
-        selectedPeriod,
+        selectedPeriod: record.selectedPeriod,
       } satisfies Payments.PaymentSucceededEventPayload);
-    }
 
-    // Persist payment method if YooKassa reports it as saved
-    if (payment_method && isSavablePaymentMethod(payment_method) && payment_method.saved) {
-      await this.trySavePaymentMethod(userId, payment_method);
+      if (payment_method && isSavablePaymentMethod(payment_method) && payment_method.saved) {
+        await this.activatePaymentMethod(record.userId, record.telegramId ?? null, payment_method);
+      }
     }
   }
 
   async handlePaymentCanceled(payload: PaymentWebhookNotification): Promise<void> {
-    const { metadata, id, status, cancellation_details } = payload.object;
+    const { id, status, cancellation_details } = payload.object;
 
-    const telegramId = Number(metadata?.telegramId);
-    const selectedPeriod = Number(metadata?.selectedPeriod);
-
-    await this.yookassaPaymentRepo.update(id, {
-      status,
-      url: null,
-    });
+    const record = await this.yookassaPaymentRepo.findOneBy({ id });
+    await this.yookassaPaymentRepo.update(id, { status, url: null });
 
     if (cancellation_details) {
       this.eventEmitter.emit(WebhookEventEnum['payment.canceled'], {
-        telegramId,
+        telegramId: record?.telegramId ?? null,
         provider: 'yookassa',
-        selectedPeriod,
+        selectedPeriod: record?.selectedPeriod ?? 0,
         reason: cancellation_details.reason,
       } satisfies Payments.PaymentFailedEventPayload);
     }
@@ -130,15 +116,16 @@ export class YookassaService {
     this.logger.log(`Deleted saved payment method ${id} for user ${userId}`);
   }
   /**
-   * Persists a saved payment method from YooKassa's webhook payload.
+   * Activates a new payment method for a user.
    *
    * Idempotent: if `paymentMethodId` already exists, nothing is written.
-   * Respects user opt-out: if the user has previously disabled all saved
-   * methods, we do NOT re-save. Errors are swallowed — saving is best-effort
-   * and must not block webhook processing.
+   * Deactivates any previously active methods before saving the new one.
+   * Emits `payment.method_saved` on success.
+   * Errors are swallowed — this is best-effort and must not block webhook processing.
    */
-  private async trySavePaymentMethod(
+  private async activatePaymentMethod(
     userId: string,
+    telegramId: number | null,
     paymentMethod: IPaymentMethod & IGeneralPayMethod,
   ): Promise<void> {
     try {
@@ -146,8 +133,11 @@ export class YookassaService {
         paymentMethodId: paymentMethod.id,
       });
       if (existing) {
-        await this.deletePaymentMethod(existing.id, existing.userId);
+        this.logger.log(`Payment method ${paymentMethod.id} already stored — skipping`);
+        return;
       }
+
+      await this.savedMethodRepo.update({ userId, isActive: true }, { isActive: false });
 
       const card = isBankCardPaymentMethod(paymentMethod) ? paymentMethod.card : undefined;
 
@@ -169,14 +159,14 @@ export class YookassaService {
           : null,
         isActive: true,
       });
-      console.log(method);
+
       await this.savedMethodRepo.save(method);
 
       this.logger.log(
-        `Saved payment method ${paymentMethod.id} (${paymentMethod.type}) for user ${userId}`,
+        `Activated payment method ${paymentMethod.id} (${paymentMethod.type}) for user ${userId}`,
       );
     } catch (err: any) {
-      this.logger.error(`Failed to save payment method for user ${userId}: ${err.message}`);
+      this.logger.error(`Failed to activate payment method for user ${userId}: ${err.message}`);
     }
   }
 

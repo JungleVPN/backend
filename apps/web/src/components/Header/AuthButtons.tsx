@@ -5,8 +5,8 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuthStoreInfo, useAuthStoreActions } from '@/store/auth';
 
 export function AuthButtons() {
-  const { user, loading } = useAuthStoreInfo();
-  const { setUser } = useAuthStoreActions();
+  const { authUser, loading } = useAuthStoreInfo();
+  const { setAuthUser, setRmnUser } = useAuthStoreActions();
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
@@ -22,11 +22,12 @@ export function AuthButtons() {
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    setUser(null);
+    setAuthUser(null);
+    setRmnUser(null);
     navigate('/');
   };
 
-  if (user) {
+  if (authUser) {
     return (
       <Group gap="xs">
         <Button variant="outline" color="red" onClick={handleLogout}>

@@ -7,13 +7,13 @@ import { useAuthStoreInfo } from '@/store/auth';
  * Replaces the Next.js middleware auth check.
  */
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuthStoreInfo();
+  const { authUser, loading } = useAuthStoreInfo();
 
   if (loading) {
     return <Loading />;
   }
 
-  if (!user) {
+  if (!authUser) {
     return <Navigate to='/login' replace />;
   }
 

@@ -18,6 +18,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { YookassaService } from '@payments/providers/yookassa/yookassa.service';
 import { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
 import {
+  type CreateYookassaSessionDto,
   type MakeAutopaymentDto,
   PaymentSession,
   Payments,
@@ -113,12 +114,11 @@ export class YookassaController {
    * (i.e. they previously had saved methods but disabled all of them).
    */
   @Post('create-session')
-  async createSession(
-    @Body()
-    body: Payments.CreatePaymentRequest,
-  ): Promise<PaymentSession> {
+  async createSession(@Body() body: CreateYookassaSessionDto): Promise<PaymentSession> {
+    const { userId, selectedPeriod, ...paymentFields } = body;
+
     const request: Payments.CreatePaymentRequest = {
-      ...body,
+      ...paymentFields,
       capture: true,
       confirmation: {
         type: 'redirect',
@@ -138,12 +138,6 @@ export class YookassaController {
       );
     }
 
-    if (!body.metadata) {
-      throw new InternalServerErrorException('No payment metadata found');
-    }
-
-    const userId = String(body.metadata?.userId);
-
     const record = this.yookassaPaymentRepo.create({
       id: payment.id,
       url: confirmationUrl,
@@ -151,8 +145,8 @@ export class YookassaController {
       amount: Number(request.amount.value),
       currency: 'RUB',
       userId,
+      selectedPeriod,
       description: payment.description ?? null,
-      metadata: payment.metadata ?? null,
       paidAt: null,
     });
     await this.yookassaPaymentRepo.save(record);
@@ -184,19 +178,12 @@ export class YookassaController {
       throw new NotFoundException(`No active saved payment method for user ${dto.userId}`);
     }
 
-    const metadata = {
-      telegramId: dto.telegramId,
-      selectedPeriod: dto.selectedPeriod,
-      userId: dto.userId,
-    };
-
     const request: Payments.CreatePaymentRequest = {
       amount: { value: String(dto.amount), currency: 'RUB' },
       capture: true,
       payment_method_id: savedMethod.paymentMethodId,
       description:
         dto.description || process.env.PAYMENT_DESCRIPTION || 'Happy to see you in the JUNGLE 🌴',
-      metadata,
     };
 
     const payment = await this.yookassaProvider.create(request);
@@ -206,9 +193,10 @@ export class YookassaController {
       id: payment.id,
       status: payment.status,
       amount: dto.amount,
-      userId: savedMethod.userId,
+      userId: dto.userId,
+      selectedPeriod: dto.selectedPeriod,
+      telegramId: dto.telegramId,
       description: request.description ?? null,
-      metadata: request.metadata ?? null,
       paidAt: payment.status === 'succeeded' ? new Date() : null,
     });
     await this.yookassaPaymentRepo.save(record);

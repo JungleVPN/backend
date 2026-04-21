@@ -35,7 +35,7 @@ export type UpdateUserRequestDto = UpdateUserCommand.Request;
 
 export type UserDto = CreateUserCommand.Response['response'];
 
-// by-telegram-id returns an array of users inside `response`
+// by-telegram-id and by-email return arrays of users inside `response`
 export type GetUserByTelegramIdResponseDto = GetUserByTelegramIdCommand.Response['response'];
 export type GetUserByUuidResponseDto = GetUserByUuidCommand.Response['response'];
 export type CreateUserResponseDto = CreateUserCommand.Response['response'];

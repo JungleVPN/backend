@@ -1,9 +1,8 @@
 import 'reflect-metadata';
 import * as process from 'node:process';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
-import { AutopaymentService } from '@payments/autopayment/autopayment.service';
-import type { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
 import { YookassaService } from '@payments/providers/yookassa/yookassa.service';
+import type { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
 import type { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
 import { PaymentWebhookNotification, WebhookEventEnum } from '@workspace/types';
 import type { Repository } from 'typeorm';
@@ -28,7 +27,6 @@ const makeSucceededPayload = (overrides: Partial<any> = {}): PaymentWebhookNotif
       status: 'succeeded' as const,
       paid: true,
       amount: { value: '100', currency: 'RUB' },
-      metadata: { telegramId: 42, selectedPeriod: 1 },
       payment_method: {
         type: 'bank_card',
         id: 'pm_1',
@@ -58,14 +56,14 @@ describe('YookassaService', () => {
   let yooKassaProvider: YooKassaProvider;
   let paymentStatusService: PaymentStatusService;
   let eventEmitter: EventEmitter2;
-  let autopaymentService: AutopaymentService;
 
   let mockYkUpdate: any;
+  let mockYkFindOneBy: any;
 
   let mockSmFindOneBy: any;
   let mockSmCreate: any;
   let mockSmSave: any;
-  let mockSmCount: any;
+  let mockSmUpdate: any;
 
   let mockHandlePaymentSucceeded: any;
   let mockGetPayment: any;
@@ -76,19 +74,25 @@ describe('YookassaService', () => {
     process.env.NODE_ENV = 'test';
 
     mockYkUpdate = vi.fn();
+    mockYkFindOneBy = vi.fn().mockResolvedValue({
+      userId: 'user-1',
+      selectedPeriod: 1,
+      telegramId: 42,
+    });
     yookassaPaymentRepo = {
       update: mockYkUpdate,
+      findOneBy: mockYkFindOneBy,
     } as unknown as Repository<YookassaPayment>;
 
     mockSmFindOneBy = vi.fn();
     mockSmCreate = vi.fn((data: any) => data);
     mockSmSave = vi.fn(async (v: any) => v);
-    mockSmCount = vi.fn();
+    mockSmUpdate = vi.fn();
     savedMethodRepo = {
       findOneBy: mockSmFindOneBy,
       create: mockSmCreate,
       save: mockSmSave,
-      count: mockSmCount,
+      update: mockSmUpdate,
     } as unknown as Repository<SavedPaymentMethod>;
 
     mockGetPayment = vi.fn();
@@ -106,17 +110,12 @@ describe('YookassaService', () => {
       emit: mockEmit,
     } as unknown as EventEmitter2;
 
-    autopaymentService = {
-      disableActiveMethodIfExists: vi.fn(),
-    } as unknown as AutopaymentService;
-
     service = new YookassaService(
       yooKassaProvider,
       yookassaPaymentRepo,
       savedMethodRepo,
       paymentStatusService,
       eventEmitter,
-      autopaymentService,
     );
   });
 
@@ -125,7 +124,6 @@ describe('YookassaService', () => {
   // ─────────────────────────────────────────────────────────
   describe('handleWebhook', () => {
     it('processes payment.succeeded in non-prod (no IP/API validation)', async () => {
-      mockSmCount.mockResolvedValue(0); // new user, not opted out
       mockSmFindOneBy.mockResolvedValue(null); // no existing record
 
       const payload = makeSucceededPayload();
@@ -139,29 +137,30 @@ describe('YookassaService', () => {
           paidAt: expect.any(Date),
         }),
       );
-      expect(mockHandlePaymentSucceeded).toHaveBeenCalledWith(42, 1);
+      expect(mockHandlePaymentSucceeded).toHaveBeenCalledWith(1, 42, 'user-1');
       expect(mockEmit).toHaveBeenCalledWith(
         WebhookEventEnum['payment.succeeded'],
         expect.objectContaining({ telegramId: 42, provider: 'yookassa', selectedPeriod: 1 }),
       );
     });
 
-    it('ignores non-succeeded events', async () => {
+    it('routes payment.canceled to handlePaymentCanceled, not handlePaymentSucceeded', async () => {
       const payload: any = {
         type: 'notification',
         event: 'payment.canceled',
-        object: { id: 'pay_x', metadata: {} },
+        object: { id: 'pay_x', status: 'canceled' },
       };
 
       await service.handleWebhook(payload, '127.0.0.1');
 
-      expect(mockYkUpdate).not.toHaveBeenCalled();
+      // status update is persisted but subscription logic is NOT triggered
+      expect(mockYkUpdate).toHaveBeenCalledWith('pay_x', { status: 'canceled', url: null });
       expect(mockHandlePaymentSucceeded).not.toHaveBeenCalled();
+      // no cancellation_details in payload → no event emitted
       expect(mockEmit).not.toHaveBeenCalled();
     });
 
     it('does NOT emit SUCCEEDED when paymentStatusService returns { success: false }', async () => {
-      mockSmCount.mockResolvedValue(0);
       mockSmFindOneBy.mockResolvedValue(null);
       mockHandlePaymentSucceeded.mockResolvedValue({ success: false });
 
@@ -176,18 +175,23 @@ describe('YookassaService', () => {
   });
 
   // ─────────────────────────────────────────────────────────
-  // trySavePaymentMethod (exercised via handleWebhook)
+  // activatePaymentMethod (exercised via handleWebhook)
   // ─────────────────────────────────────────────────────────
   describe('save payment method flow', () => {
-    it('saves a new payment method and emits METHOD_SAVED', async () => {
-      mockSmCount.mockResolvedValue(0); // not opted out
+    it('saves a new payment method, deactivates previous ones, and emits METHOD_SAVED', async () => {
       mockSmFindOneBy.mockResolvedValue(null); // no existing record
 
       await service.handleWebhook(makeSucceededPayload(), '127.0.0.1');
 
+      // Previous active methods deactivated
+      expect(mockSmUpdate).toHaveBeenCalledWith(
+        { userId: 'user-1', isActive: true },
+        { isActive: false },
+      );
+
       expect(mockSmCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: '42',
+          userId: 'user-1',
           provider: 'yookassa',
           paymentMethodId: 'pm_1',
           paymentMethodType: 'bank_card',
@@ -212,12 +216,12 @@ describe('YookassaService', () => {
       );
     });
 
-    it('does NOT re-save when a record with same paymentMethodId exists', async () => {
-      mockSmCount.mockResolvedValue(0); // not opted out
+    it('skips saving when a record with same paymentMethodId already exists', async () => {
       mockSmFindOneBy.mockResolvedValue({ id: 'existing', paymentMethodId: 'pm_1' });
 
       await service.handleWebhook(makeSucceededPayload(), '127.0.0.1');
 
+      expect(mockSmUpdate).not.toHaveBeenCalled();
       expect(mockSmCreate).not.toHaveBeenCalled();
       expect(mockSmSave).not.toHaveBeenCalled();
       expect(mockEmit).not.toHaveBeenCalledWith(
@@ -226,39 +230,7 @@ describe('YookassaService', () => {
       );
     });
 
-    it('does NOT save when user has opted out (records exist but zero active)', async () => {
-      // totalCount > 0, activeCount === 0
-      mockSmCount.mockResolvedValueOnce(2).mockResolvedValueOnce(0);
-
-      await service.handleWebhook(makeSucceededPayload(), '127.0.0.1');
-
-      expect(mockSmFindOneBy).not.toHaveBeenCalled();
-      expect(mockSmCreate).not.toHaveBeenCalled();
-      expect(mockSmSave).not.toHaveBeenCalled();
-    });
-
-    it('saves for new users (zero records → not opted out)', async () => {
-      mockSmCount.mockResolvedValue(0);
-      mockSmFindOneBy.mockResolvedValue(null);
-
-      await service.handleWebhook(makeSucceededPayload(), '127.0.0.1');
-
-      expect(mockSmCreate).toHaveBeenCalled();
-      expect(mockSmSave).toHaveBeenCalled();
-    });
-
-    it('saves when user has at least one active saved method', async () => {
-      mockSmCount.mockResolvedValueOnce(2).mockResolvedValueOnce(1);
-      mockSmFindOneBy.mockResolvedValue(null);
-
-      await service.handleWebhook(makeSucceededPayload(), '127.0.0.1');
-
-      expect(mockSmCreate).toHaveBeenCalled();
-    });
-
     it('skips saving when payment_method.saved is false', async () => {
-      mockSmCount.mockResolvedValue(0);
-
       const payload = makeSucceededPayload();
       (payload.object.payment_method as { saved: boolean }).saved = false;
 
@@ -328,7 +300,6 @@ describe('YookassaService', () => {
         savedMethodRepo,
         paymentStatusService,
         eventEmitter,
-        autopaymentService,
       );
     });
 

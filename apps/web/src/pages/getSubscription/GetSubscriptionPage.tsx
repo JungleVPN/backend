@@ -1,11 +1,8 @@
 import { Badge, Button, Grid, Input, Stack, Text, TextInput } from '@mantine/core';
 import { IconArrowRight, IconCheck, IconMail } from '@tabler/icons-react';
-import { UserDto } from '@workspace/types';
 import { type FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import { paymentsApi } from '@/api/payments.ts';
-import { env } from '@/config/env';
 import { Block } from '@/ui/Block/Block';
 import { initUser } from '@/utils/remnawave.ts';
 import styles from './getSubscription.module.css';
@@ -13,11 +10,9 @@ import styles from './getSubscription.module.css';
 export default function GetSubscriptionPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [user, setUser] = useState<UserDto | null>(null);
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isPaying, setIsPaying] = useState(false);
 
   const validateEmail = (value: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -40,50 +35,12 @@ export default function GetSubscriptionPage() {
     setIsLoading(true);
     try {
       const data = await initUser({ email });
-      setUser(data);
 
       navigate(`/subscription/${data.shortUuid}`);
     } catch (err) {
       setError(t('getSubscription.error_failed_to_create'));
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handlePay = async () => {
-    setError('');
-
-    if (!email.trim()) {
-      setError(t('getSubscription.error_empty_email'));
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      setError(t('getSubscription.error_invalid_email'));
-      return;
-    }
-
-    setIsPaying(true);
-    try {
-      const session = await paymentsApi.createYookassaSession({
-        save_payment_method: true,
-        amount: { value: env.priceRub, currency: 'RUB' },
-        description: env.paymentDescription,
-        confirmation: {
-          return_url: `${window.location.origin}/subscription/${email}`,
-          type: 'redirect',
-        },
-        metadata: {
-          email,
-          selectedPeriod: env.selectedPeriodMonths,
-        },
-      });
-
-      window.location.href = session.url;
-    } catch (err) {
-      setError(t('getSubscription.error_failed_to_create'));
-    } finally {
-      setIsPaying(false);
     }
   };
 
@@ -138,11 +95,6 @@ export default function GetSubscriptionPage() {
                 }}
               />
             </Stack>
-          </Block>
-          <Block>
-            <Button onClick={handlePay} loading={isPaying} disabled={isPaying}>
-              Pay
-            </Button>
           </Block>
         </Grid.Col>
         <Grid.Col span={{ base: 12, md: 5, lg: 3 }}>
