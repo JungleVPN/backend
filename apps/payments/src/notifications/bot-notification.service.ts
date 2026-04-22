@@ -65,7 +65,7 @@ export class BotNotificationService {
       this.logger.log(`Bot notified: ${eventType} for telegramId=${payload.telegramId}`);
     } catch (err: any) {
       this.logger.warn(
-        `Failed to notify bot about ${eventType} for telegramId=${payload.telegramId}: ${err.message}`,
+        `Failed to notify bot about ${eventType} for telegramId=${payload.telegramId}: ${err.message} ${err.data}`,
       );
     }
   }

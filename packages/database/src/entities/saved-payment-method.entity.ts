@@ -11,15 +11,15 @@ export class SavedPaymentMethod {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  /** Telegram ID stored as string, consistent with YookassaPayment.userId */
-  @Column({ type: 'varchar' })
+  /** uuid stored as string, consistent with YookassaPayment.userId */
+  @Column({ nullable: false, unique: false })
   userId: string;
 
   @Column({ type: 'varchar', default: 'yookassa' })
   provider: string;
 
   /** YooKassa's payment_method.id — used as payment_method_id in autopayment requests */
-  @Column({ type: 'varchar' })
+  @Column({ nullable: false, unique: false })
   paymentMethodId: string;
 
   /** e.g. 'bank_card', 'yoo_money', 'sbp', 'sberbank' */

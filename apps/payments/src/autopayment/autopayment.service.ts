@@ -64,6 +64,7 @@ export class AutopaymentService {
     await this.attemptAutopaymentWithRetries({
       userId,
       paymentMethodId: savedMethod.paymentMethodId,
+      telegramId,
     });
   }
 
@@ -80,7 +81,7 @@ export class AutopaymentService {
       this.logger.log(`Autopayment attempt ${attempt}/${MAX_RETRIES} for user ${userId}`);
 
       try {
-        const result = await this.executeAutopayment({ userId, paymentMethodId });
+        const result = await this.executeAutopayment({ userId, paymentMethodId, telegramId });
 
         if (result.status === 'succeeded') {
           this.logger.log(`Autopayment succeeded for user ${userId} (attempt ${attempt})`);
@@ -129,10 +130,6 @@ export class AutopaymentService {
     const amount = this.autopaymentAmount;
     const selectedPeriod = this.autopaymentPeriod;
     const description = process.env.PAYMENT_DESCRIPTION || 'Happy to see you in the JUNGLE 🌴';
-
-    if (!telegramId) {
-      this.logger.warn(`Executing autopayment for user ${userId} with no telegramId`);
-    }
 
     const request: Payments.CreatePaymentRequest = {
       amount: { value: String(amount), currency: 'RUB' },

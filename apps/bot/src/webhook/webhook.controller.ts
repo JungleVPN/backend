@@ -1,3 +1,4 @@
+import * as process from 'node:process';
 import { Body, Controller, Headers, HttpCode, Post, UnauthorizedException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WebHookEvent } from '@remna/remna.model';
