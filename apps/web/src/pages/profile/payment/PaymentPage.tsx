@@ -1,5 +1,5 @@
 import { Button, Loader, Stack, Text } from '@mantine/core';
-import { useCreatePaymentSession, useSavedMethods } from '@workspace/core/hooks';
+import { useCreatePaymentSession, useDeleteSavedMethod, useSavedMethods } from '@workspace/core/hooks';
 import { SavedMethodCard } from '@workspace/ui';
 import { useEffect } from 'react';
 import { paymentsApi } from '@/api/payments';
@@ -17,12 +17,21 @@ export default function PaymentPage() {
   } = useSavedMethods(paymentsApi);
 
   const { isLoading: isPaying, execute: createSession } = useCreatePaymentSession(paymentsApi);
+  const { isLoading: isDeleting, execute: deleteMethod } = useDeleteSavedMethod(paymentsApi);
 
   useEffect(() => {
     if (rmnUser?.uuid) {
       fetchMethods(rmnUser.uuid);
     }
   }, [fetchMethods, rmnUser?.uuid]);
+
+  const hasActiveMethod = savedMethods?.some((m) => m.isActive) ?? false;
+
+  const handleDelete = async (id: string) => {
+    if (!rmnUser?.uuid) return;
+    await deleteMethod(rmnUser.uuid, id);
+    await fetchMethods(rmnUser.uuid);
+  };
 
   const handlePay = async () => {
     if (!authUser?.email || !rmnUser) return;
@@ -56,7 +65,12 @@ export default function PaymentPage() {
         ) : savedMethods && savedMethods.length > 0 ? (
           <Stack gap='sm'>
             {savedMethods.map((method) => (
-              <SavedMethodCard key={method.id} method={method} />
+              <SavedMethodCard
+                key={method.id}
+                method={method}
+                onDelete={handleDelete}
+                isDeleting={isDeleting}
+              />
             ))}
           </Stack>
         ) : (
@@ -66,15 +80,21 @@ export default function PaymentPage() {
         )}
       </Block>
 
-      <Button
-        size='md'
-        fullWidth
-        onClick={handlePay}
-        loading={isPaying}
-        disabled={!authUser?.email}
-      >
-        Pay {env.priceRub} ₽
-      </Button>
+      {hasActiveMethod ? (
+        <Text size='xs' c='dimmed' ta='center'>
+          Autopayment is active. To pay manually, remove your saved card first.
+        </Text>
+      ) : (
+        <Button
+          size='md'
+          fullWidth
+          onClick={handlePay}
+          loading={isPaying}
+          disabled={!authUser?.email}
+        >
+          Pay {env.priceRub} ₽
+        </Button>
+      )}
     </Stack>
   );
 }

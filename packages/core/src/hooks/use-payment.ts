@@ -32,3 +32,15 @@ export function useCreatePaymentSession(api: PaymentsApi) {
   );
   return useAsync(fn);
 }
+
+/**
+ * Deletes a saved payment method by id.
+ * Call `execute(userId, id)`, then refetch the methods list on success.
+ */
+export function useDeleteSavedMethod(api: PaymentsApi) {
+  const fn = useCallback(
+    (userId: string, id: string) => api.deleteSavedMethod(userId, id),
+    [api],
+  );
+  return useAsync(fn);
+}

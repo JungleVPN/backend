@@ -12,5 +12,11 @@ export function createPaymentsApi(client: ApiClient) {
         `/api/payments/yookassa/saved-methods/${encodeURIComponent(userId)}`,
       );
     },
+
+    async deleteSavedMethod(userId: string, id: string): Promise<void> {
+      return client.delete<void>(
+        `/api/payments/yookassa/saved-methods/${encodeURIComponent(userId)}/${encodeURIComponent(id)}`,
+      );
+    },
   };
 }

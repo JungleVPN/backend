@@ -10,9 +10,8 @@ export interface AsyncState<T> {
  * Generic hook for managing async operations with loading/error states.
  * Use this as a building block for data fetching hooks.
  */
-export function useAsync<T, Args extends unknown[] = []>(
-  asyncFn: (...args: Args) => Promise<T>,
-) {
+// ToDo move to router actions
+export function useAsync<T, Args extends unknown[] = []>(asyncFn: (...args: Args) => Promise<T>) {
   const [state, setState] = useState<AsyncState<T>>({
     data: null,
     error: null,

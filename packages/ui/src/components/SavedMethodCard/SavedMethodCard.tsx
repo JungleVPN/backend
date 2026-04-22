@@ -1,8 +1,10 @@
-import { Badge, Group, Stack, Text } from '@mantine/core';
+import { ActionIcon, Badge, Group, Stack, Text, Tooltip } from '@mantine/core';
 import type { SavedMethodDto } from '@workspace/types';
 
 export interface SavedMethodCardProps {
   method: SavedMethodDto;
+  onDelete?: (id: string) => void;
+  isDeleting?: boolean;
 }
 
 const METHOD_ICONS: Record<string, string> = {
@@ -31,8 +33,10 @@ function formatCardLabel(method: SavedMethodDto): string {
 /**
  * Displays a single saved payment method.
  * Shared between web and Telegram Mini App — pure Mantine, no platform deps.
+ *
+ * Pass `onDelete` to render a remove button (web-only usage).
  */
-export const SavedMethodCard = ({ method }: SavedMethodCardProps) => {
+export const SavedMethodCard = ({ method, onDelete, isDeleting }: SavedMethodCardProps) => {
   return (
     <Group gap='md' wrap='nowrap'>
       <Text size='xl' style={{ lineHeight: 1 }}>
@@ -50,6 +54,21 @@ export const SavedMethodCard = ({ method }: SavedMethodCardProps) => {
           </Badge>
         )}
       </Stack>
+
+      {onDelete && (
+        <Tooltip label='Remove card' withArrow position='left'>
+          <ActionIcon
+            variant='subtle'
+            color='red'
+            size='sm'
+            loading={isDeleting}
+            onClick={() => onDelete(method.id)}
+            aria-label='Delete payment method'
+          >
+            ✕
+          </ActionIcon>
+        </Tooltip>
+      )}
     </Group>
   );
 };

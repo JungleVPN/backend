@@ -28,6 +28,7 @@ export class PaymentStatusService {
    * 2. Extends subscription via remnawave PATCH /users
    * 3. Triggers referral reward via referrals POST /referrals/reward-after-payment
    */
+  // ToDo remove and add update expiryData method on BE side
   async handlePaymentSucceeded({
     selectedPeriod,
     userId,
