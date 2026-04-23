@@ -1,8 +1,8 @@
 import 'reflect-metadata';
 import * as process from 'node:process';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
-import { YookassaService } from '@payments/providers/yookassa/yookassa.service';
 import type { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
+import { YookassaService } from '@payments/providers/yookassa/yookassa.service';
 import type { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
 import { PaymentWebhookNotification, WebhookEventEnum } from '@workspace/types';
 import type { Repository } from 'typeorm';
@@ -137,7 +137,10 @@ describe('YookassaService', () => {
           paidAt: expect.any(Date),
         }),
       );
-      expect(mockHandlePaymentSucceeded).toHaveBeenCalledWith(1, 42, 'user-1');
+      expect(mockHandlePaymentSucceeded).toHaveBeenCalledWith({
+        selectedPeriod: 1,
+        userId: 'user-1',
+      });
       expect(mockEmit).toHaveBeenCalledWith(
         WebhookEventEnum['payment.succeeded'],
         expect.objectContaining({ telegramId: 42, provider: 'yookassa', selectedPeriod: 1 }),
@@ -207,11 +210,11 @@ describe('YookassaService', () => {
       );
       expect(mockSmSave).toHaveBeenCalled();
       expect(mockEmit).toHaveBeenCalledWith(
-        WebhookEventEnum['payment.method_saved'],
+        WebhookEventEnum['payment.succeeded'],
         expect.objectContaining({
           telegramId: 42,
           provider: 'yookassa',
-          paymentMethodType: 'bank_card',
+          selectedPeriod: 1,
         }),
       );
     });

@@ -5,7 +5,7 @@ import { YookassaController } from '@payments/providers/yookassa/yookassa.contro
 import type { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
 import type { YookassaService } from '@payments/providers/yookassa/yookassa.service';
 import type { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
-import { type CreateYookassaSessionDto, Payments, WebhookEventEnum } from '@workspace/types';
+import { type CreateYookassaSessionDto, WebhookEventEnum } from '@workspace/types';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -132,29 +132,6 @@ describe('YookassaController', () => {
     it('throws NotFoundException when payment is missing', async () => {
       mockYkFindOneBy.mockResolvedValue(null);
       await expect(controller.getById('missing')).rejects.toBeInstanceOf(NotFoundException);
-    });
-  });
-
-  describe('updateStatus', () => {
-    it('updates status and paidAt when provided', async () => {
-      const payment: any = { id: 'p1', status: 'pending', paidAt: null };
-      mockYkFindOneBy.mockResolvedValue(payment);
-
-      await controller.updateStatus('p1', {
-        status: 'succeeded',
-        paidAt: '2026-01-01T00:00:00Z',
-      });
-
-      expect(payment.status).toBe('succeeded');
-      expect(payment.paidAt).toBeInstanceOf(Date);
-      expect(mockYkSave).toHaveBeenCalledWith(payment);
-    });
-
-    it('throws when payment not found', async () => {
-      mockYkFindOneBy.mockResolvedValue(null);
-      await expect(controller.updateStatus('x', { status: 'succeeded' })).rejects.toBeInstanceOf(
-        NotFoundException,
-      );
     });
   });
 

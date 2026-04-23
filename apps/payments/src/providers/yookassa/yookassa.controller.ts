@@ -1,5 +1,6 @@
 import * as process from 'node:process';
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -10,7 +11,6 @@ import {
   Logger,
   NotFoundException,
   Param,
-  Patch,
   Post,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -93,21 +93,6 @@ export class YookassaController {
     return payment;
   }
 
-  /** Update a Yookassa payment status (and optional fields) */
-  @Patch(':id')
-  async updateStatus(
-    @Param('id') id: string,
-    @Body() body: { status?: Payments.PaymentStatus; paidAt?: string | null },
-  ) {
-    const payment = await this.yookassaPaymentRepo.findOneBy({ id });
-    if (!payment) throw new NotFoundException(`Yookassa payment ${id} not found`);
-
-    if (body.status !== undefined) payment.status = body.status;
-    if (body.paidAt !== undefined) payment.paidAt = body.paidAt ? new Date(body.paidAt) : null;
-
-    return this.yookassaPaymentRepo.save(payment);
-  }
-
   /**
    * Create a one-shot payment session via YooKassa.
    * Saves the payment method by default UNLESS the user has explicitly opted out
@@ -115,6 +100,14 @@ export class YookassaController {
    */
   @Post('create-session')
   async createSession(@Body() body: CreateYookassaSessionDto): Promise<PaymentSession> {
+    const allowedPeriods = this.getAllowedPeriods();
+
+    if (!allowedPeriods.includes(body.selectedPeriod)) {
+      throw new BadRequestException(
+        `Invalid selectedPeriod: ${body.selectedPeriod}. Allowed values: ${allowedPeriods.join(', ')}`,
+      );
+    }
+
     const { userId, selectedPeriod, ...paymentFields } = body;
 
     const request: Payments.CreatePaymentRequest = {
@@ -169,6 +162,18 @@ export class YookassaController {
    */
   @Post('make-autopayment')
   async makeAutopayment(@Body() dto: MakeAutopaymentDto): Promise<Payments.IPayment> {
+    const allowedAmount = Number(process.env.AUTOPAYMENT_AMOUNT || '200');
+    const allowedPeriods = this.getAllowedPeriods();
+
+    if (!allowedPeriods.includes(dto.selectedPeriod)) {
+      throw new BadRequestException(
+        `Invalid selectedPeriod: ${dto.selectedPeriod}. Allowed: ${allowedPeriods}`,
+      );
+    }
+    if (dto.amount !== allowedAmount) {
+      throw new BadRequestException(`Invalid amount: ${dto.amount}. Allowed: ${allowedAmount}`);
+    }
+
     const savedMethod = await this.savedMethodRepo.findOneBy({
       userId: dto.userId,
       isActive: true,
@@ -224,5 +229,12 @@ export class YookassaController {
       return confirmation.confirmation_url;
     }
     return undefined;
+  }
+
+  private getAllowedPeriods() {
+    return (process.env.ALLOWED_PERIODS || '1')
+      .split(',')
+      .map((p) => Number(p.trim()))
+      .filter((p) => p > 0);
   }
 }

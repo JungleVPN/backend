@@ -10,21 +10,36 @@ export function mapToCorrectAmount(amountInCents: number): number {
 }
 
 /**
- * Maps a EUR amount string to the corresponding subscription period in months.
- * Uses environment variables for price tiers.
+ * Maps a EUR amount string (in cents) to the corresponding subscription
+ * period in months.  Uses environment variables for price tiers.
+ *
+ * Finding #12 fix: throws instead of returning a silent default when the
+ * amount does not match any configured tier.  Callers must handle the error
+ * and must never silently grant an unrecognised amount.
  */
 export function mapEURAmountToMonthsNumber(amount: string): number {
-  const priceMonth1 = process.env.PRICE_EUR_MONTH_1;
-  const priceMonth3 = process.env.PRICE_EUR_MONTH_3;
-  const priceMonth6 = process.env.PRICE_EUR_MONTH_6;
-
   const amountInEur = (Number(amount) / 100).toString();
 
-  if (amountInEur === priceMonth1) return 1;
-  if (amountInEur === priceMonth3) return 3;
-  if (amountInEur === priceMonth6) return 6;
+  const tiers: Array<{ envVar: string; months: number }> = [
+    { envVar: 'PRICE_EUR_MONTH_1', months: 1 },
+    { envVar: 'PRICE_EUR_MONTH_3', months: 3 },
+    { envVar: 'PRICE_EUR_MONTH_6', months: 6 },
+  ];
 
-  return 1;
+  for (const { envVar, months } of tiers) {
+    const price = process.env[envVar];
+    if (price && amountInEur === price) {
+      return months;
+    }
+  }
+
+  throw new Error(
+    `Unrecognized Stripe amount: ${amount} cents (${amountInEur} EUR). ` +
+      `No matching subscription tier found. ` +
+      `Configured tiers: PRICE_EUR_MONTH_1=${process.env.PRICE_EUR_MONTH_1}, ` +
+      `PRICE_EUR_MONTH_3=${process.env.PRICE_EUR_MONTH_3}, ` +
+      `PRICE_EUR_MONTH_6=${process.env.PRICE_EUR_MONTH_6}`,
+  );
 }
 
 export const customerToId = (

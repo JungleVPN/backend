@@ -1,5 +1,5 @@
 import * as process from 'node:process';
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
@@ -38,10 +38,8 @@ export class YookassaService {
   ) {}
 
   async handleWebhook(payload: PaymentWebhookNotification, ip: string) {
-    const isProd = process.env.NODE_ENV === 'production';
-    if (isProd) {
-      await this.validateWebhookPayload(payload, ip);
-    }
+    // Validation runs in every environment — never gated on NODE_ENV (finding #7).
+    await this.validateWebhookPayload(payload, ip);
 
     try {
       switch (payload.event) {
@@ -66,6 +64,13 @@ export class YookassaService {
       return;
     }
 
+    // Idempotency guard (finding #8): if this payment was already processed,
+    // ignore the duplicate webhook instead of extending the subscription again.
+    if (record.status === 'succeeded') {
+      this.logger.log(`Payment ${id} already processed — ignoring duplicate webhook`);
+      return;
+    }
+
     await this.yookassaPaymentRepo.update(id, {
       status,
       paidAt: captured_at ? new Date(captured_at) : new Date(),
@@ -85,7 +90,7 @@ export class YookassaService {
       } satisfies Payments.PaymentSucceededEventPayload);
 
       if (payment_method && isSavablePaymentMethod(payment_method) && payment_method.saved) {
-        await this.activatePaymentMethod(record.userId, record.telegramId ?? null, payment_method);
+        await this.activatePaymentMethod({ userId: record.userId, payment_method });
       }
     }
   }
@@ -123,30 +128,32 @@ export class YookassaService {
    * Emits `payment.method_saved` on success.
    * Errors are swallowed — this is best-effort and must not block webhook processing.
    */
-  private async activatePaymentMethod(
-    userId: string,
-    telegramId: number | null,
-    paymentMethod: IPaymentMethod & IGeneralPayMethod,
-  ): Promise<void> {
+  private async activatePaymentMethod({
+    userId,
+    payment_method,
+  }: {
+    userId: string;
+    payment_method: IPaymentMethod & IGeneralPayMethod;
+  }): Promise<void> {
     try {
       const existing = await this.savedMethodRepo.findOneBy({
-        paymentMethodId: paymentMethod.id,
+        paymentMethodId: payment_method.id,
       });
       if (existing) {
-        this.logger.log(`Payment method ${paymentMethod.id} already stored — skipping`);
+        this.logger.log(`Payment method ${payment_method.id} already stored — skipping`);
         return;
       }
 
       await this.savedMethodRepo.update({ userId, isActive: true }, { isActive: false });
 
-      const card = isBankCardPaymentMethod(paymentMethod) ? paymentMethod.card : undefined;
+      const card = isBankCardPaymentMethod(payment_method) ? payment_method.card : undefined;
 
       const method = this.savedMethodRepo.create({
         userId,
         provider: 'yookassa',
-        paymentMethodId: paymentMethod.id,
-        paymentMethodType: paymentMethod.type,
-        title: paymentMethod.title ?? null,
+        paymentMethodId: payment_method.id,
+        paymentMethodType: payment_method.type,
+        title: payment_method.title ?? null,
         card: card
           ? {
               last4: card.last4,
@@ -163,7 +170,7 @@ export class YookassaService {
       await this.savedMethodRepo.save(method);
 
       this.logger.log(
-        `Activated payment method ${paymentMethod.id} (${paymentMethod.type}) for user ${userId}`,
+        `Activated payment method ${payment_method.id} (${payment_method.type}) for user ${userId}`,
       );
     } catch (err: any) {
       this.logger.error(`Failed to activate payment method for user ${userId}: ${err.message}`);
@@ -202,26 +209,24 @@ export class YookassaService {
     );
   }
 
-  async validateWebhookPayload(payload: PaymentWebhookNotification, ip: string) {
-    const { paymentId, status: webhookStatus } = {
-      paymentId: payload.object.id,
-      status: payload.object.status,
-    };
-
+  async validateWebhookPayload(payload: PaymentWebhookNotification, ip: string): Promise<void> {
     const isIPRangeValid = await this.isIPRangeValid(ip);
-    if (!isIPRangeValid) return;
+    if (!isIPRangeValid) {
+      throw new BadRequestException(`Webhook request from unauthorized IP: ${ip}`);
+    }
 
     if (!this.isValidWebhookPayload(payload)) {
-      this.logger.warn('Invalid webhook payload structure');
-      return;
+      throw new BadRequestException('Invalid webhook payload structure');
     }
+
+    const paymentId = payload.object.id;
+    const webhookStatus = payload.object.status;
 
     const { status } = await this.yooKassaProvider.getPayment(paymentId);
     if (status !== webhookStatus) {
-      this.logger.warn(
-        `Payment ${paymentId} status mismatch! Webhook: ${webhookStatus}, API: ${status}. Possible fake webhook.`,
+      throw new BadRequestException(
+        `Payment status mismatch for ${paymentId}: webhook=${webhookStatus}, API=${status}`,
       );
-      return;
     }
   }
 }

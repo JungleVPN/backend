@@ -1,0 +1,494 @@
+/**
+ * Security Audit — Payment & Subscription Logic
+ * Regression-guard style (TDD / CI-compatible)
+ *
+ * Each test asserts the CORRECT, SECURE behavior.
+ *
+ *   Current state  → tests FAIL  (vulnerability exists, CI is red)
+ *   After fix      → tests PASS  (vulnerability closed, CI turns green)
+ *   Forever after  → tests guard against regressions
+ *
+ * Covered here (payments app):
+ *   #1  — validateWebhookPayload must throw, not return, on validation failure
+ *   #4  — PATCH payment status must be rejected without authentication
+ *   #5  — make-autopayment must reject client-supplied amount / selectedPeriod
+ *   #7  — Webhook validation must run in every environment, not only production
+ *   #8  — handlePaymentSucceeded must be idempotent (replay must be a no-op)
+ *   #9  — createSession must validate selectedPeriod against the allowed set
+ *   #12 — mapEURAmountToMonthsNumber must error on unrecognised amounts
+ */
+
+import 'reflect-metadata';
+import * as process from 'node:process';
+
+import { BadRequestException } from '@nestjs/common';
+import type { EventEmitter2 } from '@nestjs/event-emitter';
+import { PaymentStatusService } from '@payments/payment-status/payment-status.service';
+import { mapEURAmountToMonthsNumber } from '@payments/providers/stripe/stripe.utils';
+import { YookassaController } from '@payments/providers/yookassa/yookassa.controller';
+import type { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
+import { YookassaService } from '@payments/providers/yookassa/yookassa.service';
+
+import type { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
+import {
+  type CreateYookassaSessionDto,
+  type MakeAutopaymentDto,
+  Payments,
+  type PaymentWebhookNotification,
+} from '@workspace/types';
+
+import type { Repository } from 'typeorm';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+// ── Entity class stubs ────────────────────────────────────────────────────────
+vi.mock('@workspace/database', () => ({
+  YookassaPayment: class {},
+  SavedPaymentMethod: class {},
+}));
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const makeSucceededPayload = (
+  paymentId = 'pay_test',
+  overrides: Record<string, unknown> = {},
+): PaymentWebhookNotification =>
+  ({
+    type: 'notification' as const,
+    event: 'payment.succeeded' as const,
+    object: {
+      id: paymentId,
+      status: 'succeeded' as const,
+      paid: true,
+      amount: { value: '100', currency: 'RUB' },
+      payment_method: { type: 'bank_card', id: 'pm_1', saved: false },
+      created_at: '2026-01-01T00:00:00Z',
+      refundable: true,
+      test: false,
+      ...overrides,
+    },
+  }) as unknown as PaymentWebhookNotification;
+
+const makeDbPayment = (overrides: Record<string, unknown> = {}) => ({
+  id: 'pay_test',
+  userId: 'user-uuid-1',
+  selectedPeriod: 1,
+  telegramId: 42,
+  status: 'pending' as Payments.PaymentStatus,
+  paidAt: null,
+  ...overrides,
+});
+
+function makeYookassaService(overrides: Partial<YookassaService> = {}): YookassaService {
+  return {
+    handleWebhook: vi.fn(),
+    deletePaymentMethod: vi.fn(),
+    isIPRangeValid: vi.fn().mockResolvedValue(false),
+    isValidNotificationEvent: vi.fn().mockReturnValue(true),
+    isValidWebhookPayload: vi.fn().mockReturnValue(false),
+    validateWebhookPayload: vi.fn().mockResolvedValue(undefined),
+    ...overrides,
+  } as unknown as YookassaService;
+}
+
+function makePaymentRepo(
+  record: Record<string, unknown> | null = null,
+): Repository<YookassaPayment> {
+  return {
+    find: vi.fn().mockResolvedValue([]),
+    findOneBy: vi.fn().mockResolvedValue(record),
+    create: vi.fn((data: unknown) => data),
+    save: vi.fn(async (v: unknown) => v),
+    update: vi.fn().mockResolvedValue({ affected: 1 }),
+  } as unknown as Repository<YookassaPayment>;
+}
+
+function makeSavedMethodRepo(
+  record: Record<string, unknown> | null = null,
+): Repository<SavedPaymentMethod> {
+  return {
+    find: vi.fn().mockResolvedValue([]),
+    findOneBy: vi.fn().mockResolvedValue(record),
+    create: vi.fn((data: unknown) => data),
+    save: vi.fn(async (v: unknown) => v),
+    update: vi.fn().mockResolvedValue({ affected: 1 }),
+    delete: vi.fn().mockResolvedValue({ affected: 1 }),
+  } as unknown as Repository<SavedPaymentMethod>;
+}
+
+describe('Security Audit', () => {
+  describe('[FINDING #1] validateWebhookPayload must abort processing on any validation failure', () => {
+    let service: YookassaService;
+    let mockHandlePaymentSucceeded: ReturnType<typeof vi.fn>;
+    let mockGetPayment: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+      process.env.NODE_ENV = 'production';
+      process.env.YOOKASSA_PAYMENT_VALID_IP_ADDRESS = JSON.stringify(['185.71.76.0/27']);
+
+      mockHandlePaymentSucceeded = vi.fn().mockResolvedValue({ success: true });
+      mockGetPayment = vi.fn().mockResolvedValue({ status: 'succeeded' });
+
+      service = new YookassaService(
+        { getPayment: mockGetPayment } as unknown as YooKassaProvider,
+        {
+          findOneBy: vi.fn().mockResolvedValue(makeDbPayment()),
+          update: vi.fn(),
+        } as unknown as Repository<YookassaPayment>,
+        makeSavedMethodRepo(null),
+        { handlePaymentSucceeded: mockHandlePaymentSucceeded } as unknown as PaymentStatusService,
+        { emit: vi.fn() } as unknown as EventEmitter2,
+      );
+    });
+
+    afterEach(() => {
+      process.env.NODE_ENV = 'test';
+    });
+
+    it('rejects a request from an IP not in the YooKassa allowlist', async () => {
+      // Correct behavior: bad source IP must abort processing
+      await expect(service.handleWebhook(makeSucceededPayload(), '8.8.8.8')).rejects.toThrow(
+        BadRequestException,
+      );
+
+      expect(mockHandlePaymentSucceeded).not.toHaveBeenCalled();
+    });
+
+    it('rejects a webhook payload whose type field is wrong', async () => {
+      const malformedPayload = {
+        type: 'subscription_notification', // wrong — should be 'notification'
+        event: 'payment.succeeded',
+        object: { id: 'pay_test', status: 'succeeded' },
+      } as unknown as PaymentWebhookNotification;
+
+      await expect(service.handleWebhook(malformedPayload, '185.71.76.1')).rejects.toThrow(
+        BadRequestException,
+      );
+
+      expect(mockHandlePaymentSucceeded).not.toHaveBeenCalled();
+    });
+
+    it('rejects a webhook where the API-reported status does not match the claimed status', async () => {
+      // API says 'pending' but webhook claims 'succeeded' — classic fake webhook
+      mockGetPayment.mockResolvedValue({ status: 'pending' });
+
+      await expect(service.handleWebhook(makeSucceededPayload(), '185.71.76.1')).rejects.toThrow(
+        BadRequestException,
+      );
+
+      expect(mockHandlePaymentSucceeded).not.toHaveBeenCalled();
+    });
+  });
+  describe('[FINDING #5] make-autopayment must reject invalid amount and selectedPeriod', () => {
+    let controller: YookassaController;
+    let mockYooKassaCreate: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+
+      mockYooKassaCreate = vi.fn().mockResolvedValue({ id: 'pay_auto', status: 'succeeded' });
+
+      controller = new YookassaController(
+        {
+          find: vi.fn(),
+          findOneBy: vi.fn(),
+          create: vi.fn((d: unknown) => d),
+          save: vi.fn(async (v: unknown) => v),
+        } as unknown as Repository<YookassaPayment>,
+        {
+          find: vi.fn(),
+          findOneBy: vi.fn().mockResolvedValue({
+            userId: 'user-uuid-1',
+            paymentMethodId: 'pm_saved',
+            isActive: true,
+          }),
+          create: vi.fn((d: unknown) => d),
+          save: vi.fn(async (v: unknown) => v),
+        } as unknown as Repository<SavedPaymentMethod>,
+        makeYookassaService(),
+        { create: mockYooKassaCreate } as unknown as YooKassaProvider,
+        { emit: vi.fn() } as unknown as EventEmitter2,
+      );
+    });
+
+    it('rejects an amount that is not in the configured price table', async () => {
+      const dto: MakeAutopaymentDto = {
+        userId: 'user-uuid-1',
+        telegramId: 42,
+        amount: 1, // not a valid price
+        selectedPeriod: 1,
+      };
+
+      await expect(controller.makeAutopayment(dto)).rejects.toThrow(BadRequestException);
+      expect(mockYooKassaCreate).not.toHaveBeenCalled();
+    });
+
+    it('rejects a selectedPeriod that is not in the allowed set (e.g. 120 months)', async () => {
+      const dto: MakeAutopaymentDto = {
+        userId: 'user-uuid-1',
+        telegramId: 42,
+        amount: 200,
+        selectedPeriod: 120, // not an allowed tier
+      };
+
+      await expect(controller.makeAutopayment(dto)).rejects.toThrow(BadRequestException);
+    });
+
+    it('rejects a mismatched amount/period combination', async () => {
+      // 1 RUB for 12 months is not in the price table
+      const dto: MakeAutopaymentDto = {
+        userId: 'user-uuid-1',
+        telegramId: 42,
+        amount: 1,
+        selectedPeriod: 12,
+      };
+
+      await expect(controller.makeAutopayment(dto)).rejects.toThrow(BadRequestException);
+    });
+  });
+  describe('[FINDING #7] Webhook validation must not be bypassed by NODE_ENV', () => {
+    function buildService(nodeEnv: string): {
+      service: YookassaService;
+      mockIsIPRangeValid: ReturnType<typeof vi.fn>;
+      mockHandlePaymentSucceeded: ReturnType<typeof vi.fn>;
+    } {
+      process.env.NODE_ENV = nodeEnv;
+      process.env.YOOKASSA_PAYMENT_VALID_IP_ADDRESS = JSON.stringify(['185.71.76.0/27']);
+
+      const mockHandlePaymentSucceeded = vi.fn().mockResolvedValue({ success: true });
+      const mockIsIPRangeValid = vi.fn().mockResolvedValue(false); // reject every IP
+
+      const paymentRepo = makePaymentRepo(makeDbPayment());
+      const svc = new YookassaService(
+        { getPayment: vi.fn() } as unknown as YooKassaProvider,
+        paymentRepo,
+        makeSavedMethodRepo(null),
+        { handlePaymentSucceeded: mockHandlePaymentSucceeded } as unknown as PaymentStatusService,
+        { emit: vi.fn() } as unknown as EventEmitter2,
+      );
+      (svc as any).isIPRangeValid = mockIsIPRangeValid;
+
+      return { service: svc, mockIsIPRangeValid, mockHandlePaymentSucceeded };
+    }
+
+    afterEach(() => {
+      process.env.NODE_ENV = 'test';
+    });
+
+    it('validates IP in "test" environment', async () => {
+      const { service, mockIsIPRangeValid, mockHandlePaymentSucceeded } = buildService('test');
+
+      // Correct behavior: IP check must run regardless of NODE_ENV
+      await expect(service.handleWebhook(makeSucceededPayload(), '8.8.8.8')).rejects.toThrow(
+        BadRequestException,
+      );
+
+      expect(mockIsIPRangeValid).toHaveBeenCalled();
+      expect(mockHandlePaymentSucceeded).not.toHaveBeenCalled();
+    });
+
+    it('validates IP in "development" environment', async () => {
+      const { service, mockIsIPRangeValid } = buildService('development');
+
+      await expect(service.handleWebhook(makeSucceededPayload(), '192.168.0.1')).rejects.toThrow(
+        BadRequestException,
+      );
+
+      expect(mockIsIPRangeValid).toHaveBeenCalled();
+    });
+
+    it('validates IP when NODE_ENV is undefined', async () => {
+      delete process.env.NODE_ENV;
+      const { service, mockIsIPRangeValid } = buildService('');
+
+      await expect(service.handleWebhook(makeSucceededPayload(), '0.0.0.0')).rejects.toThrow(
+        BadRequestException,
+      );
+
+      expect(mockIsIPRangeValid).toHaveBeenCalled();
+      process.env.NODE_ENV = 'test';
+    });
+  });
+  describe('[FINDING #8] handlePaymentSucceeded must be a no-op when payment is already succeeded', () => {
+    let service: YookassaService;
+    let mockHandlePaymentSucceeded: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+      process.env.NODE_ENV = 'test';
+      // Validation now runs in all environments; 127.0.0.1 must be in the allowlist
+      // for idempotency tests that use localhost as the source IP.
+      process.env.YOOKASSA_PAYMENT_VALID_IP_ADDRESS = JSON.stringify(['127.0.0.1/32']);
+
+      mockHandlePaymentSucceeded = vi.fn().mockResolvedValue({ success: true });
+
+      // First call: record is 'pending' → legitimate processing
+      // Second call: record is already 'succeeded' → must be skipped
+      const mockFindOneBy = vi
+        .fn()
+        .mockResolvedValueOnce(makeDbPayment({ status: 'pending' }))
+        .mockResolvedValueOnce(makeDbPayment({ status: 'succeeded' }));
+
+      service = new YookassaService(
+        // getPayment must confirm the payment is genuinely succeeded so validation passes
+        {
+          getPayment: vi.fn().mockResolvedValue({ status: 'succeeded' }),
+        } as unknown as YooKassaProvider,
+        {
+          findOneBy: mockFindOneBy,
+          update: vi.fn().mockResolvedValue({ affected: 1 }),
+        } as unknown as Repository<YookassaPayment>,
+        makeSavedMethodRepo(null),
+        { handlePaymentSucceeded: mockHandlePaymentSucceeded } as unknown as PaymentStatusService,
+        { emit: vi.fn() } as unknown as EventEmitter2,
+      );
+    });
+
+    afterEach(() => {
+      delete process.env.YOOKASSA_PAYMENT_VALID_IP_ADDRESS;
+    });
+
+    it('processes the subscription only once even when the webhook is delivered twice', async () => {
+      const payload = makeSucceededPayload('pay_replay');
+
+      await service.handleWebhook(payload, '127.0.0.1'); // first delivery
+      await service.handleWebhook(payload, '127.0.0.1'); // replay
+
+      // Correct behavior: subscription extended exactly once
+      expect(mockHandlePaymentSucceeded).toHaveBeenCalledTimes(1);
+    });
+
+    it('returns without touching the DB on a replay of an already-succeeded payment', async () => {
+      const mockYkUpdate = vi.fn().mockResolvedValue({ affected: 1 });
+      const mockFindOneBy = vi
+        .fn()
+        .mockResolvedValueOnce(makeDbPayment({ status: 'pending' }))
+        .mockResolvedValueOnce(makeDbPayment({ status: 'succeeded' }));
+
+      const freshService = new YookassaService(
+        {
+          getPayment: vi.fn().mockResolvedValue({ status: 'succeeded' }),
+        } as unknown as YooKassaProvider,
+        {
+          findOneBy: mockFindOneBy,
+          update: mockYkUpdate,
+        } as unknown as Repository<YookassaPayment>,
+        makeSavedMethodRepo(null),
+        { handlePaymentSucceeded: mockHandlePaymentSucceeded } as unknown as PaymentStatusService,
+        { emit: vi.fn() } as unknown as EventEmitter2,
+      );
+
+      const payload = makeSucceededPayload('pay_replay');
+      await freshService.handleWebhook(payload, '127.0.0.1');
+      await freshService.handleWebhook(payload, '127.0.0.1');
+
+      // Correct behavior: DB update issued only once (for the first delivery)
+      expect(mockYkUpdate).toHaveBeenCalledTimes(1);
+    });
+  });
+  describe('[FINDING #9] createSession must reject selectedPeriod values outside the allowed set', () => {
+    let controller: YookassaController;
+    let mockProviderCreate: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+
+      mockProviderCreate = vi.fn().mockResolvedValue({
+        id: 'pay_new',
+        status: 'pending',
+        description: 'Test',
+        confirmation: { type: 'redirect', confirmation_url: 'https://yookassa.ru/pay/pay_new' },
+      });
+
+      controller = new YookassaController(
+        {
+          find: vi.fn(),
+          findOneBy: vi.fn(),
+          create: vi.fn((d: unknown) => d),
+          save: vi.fn(async (v: unknown) => v),
+        } as unknown as Repository<YookassaPayment>,
+        makeSavedMethodRepo(),
+        makeYookassaService(),
+        { create: mockProviderCreate } as unknown as YooKassaProvider,
+        { emit: vi.fn() } as unknown as EventEmitter2,
+      );
+    });
+
+    it('rejects selectedPeriod = 120 (not an allowed tier)', async () => {
+      const dto: CreateYookassaSessionDto = {
+        userId: 'user-uuid-1',
+        selectedPeriod: 120,
+        amount: { value: '100.00', currency: 'RUB' },
+        description: 'VPN subscription',
+      };
+
+      await expect(controller.createSession(dto)).rejects.toThrow(BadRequestException);
+      expect(mockProviderCreate).not.toHaveBeenCalled();
+    });
+
+    it('rejects selectedPeriod = 0', async () => {
+      const dto: CreateYookassaSessionDto = {
+        userId: 'user-uuid-1',
+        selectedPeriod: 0,
+        amount: { value: '100.00', currency: 'RUB' },
+        description: 'VPN subscription',
+      };
+
+      await expect(controller.createSession(dto)).rejects.toThrow(BadRequestException);
+    });
+
+    it('rejects negative selectedPeriod', async () => {
+      const dto: CreateYookassaSessionDto = {
+        userId: 'user-uuid-1',
+        selectedPeriod: -6,
+        amount: { value: '100.00', currency: 'RUB' },
+        description: 'VPN subscription',
+      };
+
+      await expect(controller.createSession(dto)).rejects.toThrow(BadRequestException);
+    });
+
+    it.each([1])('accepts the valid tier: %d month(s)', async (period) => {
+      const dto: CreateYookassaSessionDto = {
+        userId: 'user-uuid-1',
+        selectedPeriod: period,
+        amount: { value: '100.00', currency: 'RUB' },
+        description: 'VPN subscription',
+      };
+
+      await expect(controller.createSession(dto)).resolves.not.toThrow();
+    });
+  });
+  describe('[FINDING #12] mapEURAmountToMonthsNumber must throw on unrecognised amounts', () => {
+    beforeEach(() => {
+      process.env.PRICE_EUR_MONTH_1 = '5';
+      process.env.PRICE_EUR_MONTH_3 = '12';
+      process.env.PRICE_EUR_MONTH_6 = '20';
+    });
+
+    it('throws for an amount not matching any configured tier', () => {
+      // Correct behavior: unknown amount must surface as an error, not silently return 1
+      expect(() => mapEURAmountToMonthsNumber('99900')).toThrow();
+    });
+
+    it('throws for amount = 0', () => {
+      expect(() => mapEURAmountToMonthsNumber('0')).toThrow();
+    });
+
+    it('throws when env vars are not configured (all empty)', () => {
+      process.env.PRICE_EUR_MONTH_1 = '';
+      process.env.PRICE_EUR_MONTH_3 = '';
+      process.env.PRICE_EUR_MONTH_6 = '';
+
+      expect(() => mapEURAmountToMonthsNumber('500')).toThrow();
+    });
+
+    it.each([
+      ['500', 1], // 500 EUR cents = 5 EUR → matches PRICE_EUR_MONTH_1 = '5'
+      ['1200', 3], // 1200 EUR cents = 12 EUR → matches PRICE_EUR_MONTH_3 = '12'
+      ['2000', 6], // 2000 EUR cents = 20 EUR → matches PRICE_EUR_MONTH_6 = '20'
+    ])('returns correct months for known tier: %s cents → %d month(s)', (amount, expected) => {
+      expect(mapEURAmountToMonthsNumber(amount)).toBe(expected);
+    });
+  });
+});

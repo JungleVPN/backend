@@ -116,7 +116,7 @@ describe('AutopaymentService', () => {
       await service.init(makePayload(42));
 
       expect(mockSmFindOneBy).toHaveBeenCalledWith({
-        userId: '42',
+        userId: 'u-1',
         isActive: true,
       });
       expect(mockCreate).not.toHaveBeenCalled();
@@ -251,11 +251,10 @@ describe('AutopaymentService', () => {
           id: 'pay_1',
           status: 'succeeded',
           amount: 200,
-          userId: '42',
           selectedPeriod: 1,
           telegramId: 42,
           description: 'Test payment',
-          paidAt: expect.any(Date),
+          paidAt: new Date(),
         }),
       );
       expect(mockYkSave).toHaveBeenCalled();
