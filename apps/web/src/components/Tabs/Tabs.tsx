@@ -1,9 +1,15 @@
-import { FloatingIndicator, Tabs } from '@mantine/core';
-import { useCallback, useState } from 'react';
+import { FloatingIndicator, Tabs, ThemeIcon } from '@mantine/core';
+import { IconWallet } from '@tabler/icons-react';
+import React, { useCallback, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import css from './Tabs.module.css';
 
 type TabValue = 'subscription' | 'payment';
+interface Tab {
+  id: TabValue;
+  label: string;
+  icon: React.ReactNode;
+}
 
 const TAB_VALUES: TabValue[] = ['subscription', 'payment'];
 
@@ -11,6 +17,19 @@ function getActiveTab(pathname: string): TabValue {
   const segment = pathname.split('/').pop() as TabValue;
   return TAB_VALUES.includes(segment) ? segment : 'subscription';
 }
+
+const tabs: Array<Tab> = [
+  {
+    id: 'subscription',
+    label: 'Subscription',
+    icon: <IconWallet />,
+  },
+  {
+    id: 'payment',
+    label: 'Payment',
+    icon: <IconWallet />,
+  },
+];
 
 export const Navbar = () => {
   const navigate = useNavigate();
@@ -39,14 +58,24 @@ export const Navbar = () => {
   };
 
   return (
-    <Tabs className={css.tabs} variant='none' value={activeTab} onChange={handleChange}>
-      <Tabs.List ref={setRootRef} className={css.list}>
-        <Tabs.Tab value='subscription' ref={setControlRef('subscription')} className={css.tab}>
-          subscription
-        </Tabs.Tab>
-        <Tabs.Tab value='payment' ref={setControlRef('payment')} className={css.tab}>
-          payment
-        </Tabs.Tab>
+    <Tabs classNames={css} variant='none' value={activeTab} onChange={handleChange}>
+      <Tabs.List ref={setRootRef}>
+        {tabs.map((tab) => {
+          return (
+            <Tabs.Tab
+              key={tab.id}
+              value={tab.id}
+              ref={setControlRef(tab.id)}
+              leftSection={
+                <ThemeIcon className={css.tabIcon} variant='white' size={'sm'}>
+                  {tab.icon}
+                </ThemeIcon>
+              }
+            >
+              {tab.label}
+            </Tabs.Tab>
+          );
+        })}
 
         <FloatingIndicator
           target={controlsRefs[activeTab] ?? null}
