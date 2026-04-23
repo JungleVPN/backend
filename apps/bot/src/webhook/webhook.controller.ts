@@ -110,7 +110,10 @@ export class NotificationController {
 
   private validateSecret(secret: string) {
     const expected = process.env.BOT_NOTIFY_SECRET;
-    if (expected && secret !== expected) {
+    if (!expected) {
+      throw new UnauthorizedException('BOT_NOTIFY_SECRET is not configured');
+    }
+    if (secret !== expected) {
       throw new UnauthorizedException('Invalid notification secret');
     }
   }
