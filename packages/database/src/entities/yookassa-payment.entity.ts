@@ -1,16 +1,17 @@
 import { Payments } from '@workspace/types';
 import { Column, CreateDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import { bigintTransformer } from '../utils/transformers';
 
 @Entity('yookassa_payments')
 export class YookassaPayment {
   @PrimaryColumn()
   id: string;
 
-  @Column({ nullable: true, type: 'varchar' })
-  userId: string | null;
+  @Column({ nullable: false })
+  userId: string;
 
-  @Column({ type: 'int', nullable: true })
-  amount: number | null;
+  @Column({ nullable: false })
+  amount: string;
 
   @Column({ type: 'varchar', default: 'RUB' })
   currency: string;
@@ -24,10 +25,10 @@ export class YookassaPayment {
   @Column({ type: 'varchar', nullable: true })
   description: string | null;
 
-  @Column({ type: 'int', nullable: true })
-  selectedPeriod: number | null;
+  @Column({ nullable: false })
+  selectedPeriod: number;
 
-  @Column({ type: 'bigint', nullable: true })
+  @Column({ type: 'bigint', nullable: true, transformer: bigintTransformer })
   telegramId: number | null;
 
   @CreateDateColumn({ type: 'timestamptz' })

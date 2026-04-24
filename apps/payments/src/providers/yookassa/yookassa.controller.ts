@@ -1,6 +1,5 @@
 import * as process from 'node:process';
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -16,10 +15,11 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { YookassaService } from '@payments/providers/yookassa/yookassa.service';
+import { ValidatePaymentRequest } from '@payments/utils/utils';
 import { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
 import {
+  type CreateAutopaymentDto,
   type CreateYookassaSessionDto,
-  type MakeAutopaymentDto,
   PaymentSession,
   Payments,
   type PaymentWebhookNotification,
@@ -40,6 +40,7 @@ export class YookassaController {
     private readonly yookassaService: YookassaService,
     private readonly yookassaProvider: YooKassaProvider,
     private readonly eventEmitter: EventEmitter2,
+    private readonly validatePaymentRequest: ValidatePaymentRequest,
   ) {}
 
   /** Yookassa webhook endpoint — IP validated inside the provider */
@@ -100,13 +101,8 @@ export class YookassaController {
    */
   @Post('create-session')
   async createSession(@Body() body: CreateYookassaSessionDto): Promise<PaymentSession> {
-    const allowedPeriods = this.getAllowedPeriods();
-
-    if (!allowedPeriods.includes(body.selectedPeriod)) {
-      throw new BadRequestException(
-        `Invalid selectedPeriod: ${body.selectedPeriod}. Allowed values: ${allowedPeriods.join(', ')}`,
-      );
-    }
+    this.validatePaymentRequest.validateAmount(body.amount.value);
+    this.validatePaymentRequest.validatePeriod(body.selectedPeriod);
 
     const { userId, selectedPeriod, ...paymentFields } = body;
 
@@ -135,7 +131,7 @@ export class YookassaController {
       id: payment.id,
       url: confirmationUrl,
       status: payment.status,
-      amount: Number(request.amount.value),
+      amount: request.amount.value,
       currency: 'RUB',
       userId,
       selectedPeriod,
@@ -161,34 +157,25 @@ export class YookassaController {
    * 4. If failed — emit AUTOPAYMENT_FAILED so the bot can fall back to manual payment
    */
   @Post('make-autopayment')
-  async makeAutopayment(@Body() dto: MakeAutopaymentDto): Promise<Payments.IPayment> {
-    const allowedAmount = Number(process.env.AUTOPAYMENT_AMOUNT || '200');
-    const allowedPeriods = this.getAllowedPeriods();
-
-    if (!allowedPeriods.includes(dto.selectedPeriod)) {
-      throw new BadRequestException(
-        `Invalid selectedPeriod: ${dto.selectedPeriod}. Allowed: ${allowedPeriods}`,
-      );
-    }
-    if (dto.amount !== allowedAmount) {
-      throw new BadRequestException(`Invalid amount: ${dto.amount}. Allowed: ${allowedAmount}`);
-    }
+  async makeAutopayment(@Body() body: CreateAutopaymentDto): Promise<Payments.IPayment> {
+    this.validatePaymentRequest.validateAmount(body.amount.value);
+    this.validatePaymentRequest.validatePeriod(body.selectedPeriod);
 
     const savedMethod = await this.savedMethodRepo.findOneBy({
-      userId: dto.userId,
+      userId: body.userId,
       isActive: true,
     });
 
     if (!savedMethod) {
-      throw new NotFoundException(`No active saved payment method for user ${dto.userId}`);
+      throw new NotFoundException(`No active saved payment method for user ${body.userId}`);
     }
 
     const request: Payments.CreatePaymentRequest = {
-      amount: { value: String(dto.amount), currency: 'RUB' },
+      amount: body.amount,
       capture: true,
       payment_method_id: savedMethod.paymentMethodId,
       description:
-        dto.description || process.env.PAYMENT_DESCRIPTION || 'Happy to see you in the JUNGLE 🌴',
+        body.description || process.env.PAYMENT_DESCRIPTION || 'Happy to see you in the JUNGLE 🌴',
     };
 
     const payment = await this.yookassaProvider.create(request);
@@ -197,10 +184,10 @@ export class YookassaController {
     const record = this.yookassaPaymentRepo.create({
       id: payment.id,
       status: payment.status,
-      amount: dto.amount,
-      userId: dto.userId,
-      selectedPeriod: dto.selectedPeriod,
-      telegramId: dto.telegramId,
+      amount: body.amount.value,
+      userId: body.userId,
+      selectedPeriod: body.selectedPeriod,
+      telegramId: body.telegramId,
       description: request.description ?? null,
       paidAt: payment.status === 'succeeded' ? new Date() : null,
     });
@@ -209,13 +196,13 @@ export class YookassaController {
     // If the autopayment was immediately canceled, emit failure event
     if (payment.status === 'canceled' && payment.cancellation_details) {
       this.eventEmitter.emit(WebhookEventEnum['payment.autopayment_failed'], {
-        telegramId: Number(dto.userId),
+        telegramId: Number(body.userId),
         provider: 'yookassa',
         reason: payment.cancellation_details.reason,
       } satisfies Payments.PaymentFailedEventPayload);
 
       this.logger.warn(
-        `Autopayment failed for user ${dto.userId}: ${payment.cancellation_details.reason}`,
+        `Autopayment failed for user ${body.userId}: ${payment.cancellation_details.reason}`,
       );
     }
 
@@ -229,12 +216,5 @@ export class YookassaController {
       return confirmation.confirmation_url;
     }
     return undefined;
-  }
-
-  private getAllowedPeriods() {
-    return (process.env.ALLOWED_PERIODS || '1')
-      .split(',')
-      .map((p) => Number(p.trim()))
-      .filter((p) => p > 0);
   }
 }

@@ -33,7 +33,7 @@ export class PaymentsService {
   }
 
   async createYookassaSession(dto: CreateYookassaSessionDto): Promise<PaymentSession> {
-    const res = await this.backend.post('/payments/yookassa/create-session', dto);
+    const res = await this.backend.post('/api/payments/yookassa/create-session', dto);
 
     if (res.status >= 400) {
       this.logger.error(`Yookassa session failed: ${res.status} ${JSON.stringify(res.data)}`);

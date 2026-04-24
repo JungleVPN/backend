@@ -16,6 +16,7 @@
  *   #8  — handlePaymentSucceeded must be idempotent (replay must be a no-op)
  *   #9  — createSession must validate selectedPeriod against the allowed set
  *   #12 — mapEURAmountToMonthsNumber must error on unrecognised amounts
+ *   #13 — createSession must validate amount against ALLOWED_AMOUNTS
  */
 
 import 'reflect-metadata';
@@ -28,15 +29,14 @@ import { mapEURAmountToMonthsNumber } from '@payments/providers/stripe/stripe.ut
 import { YookassaController } from '@payments/providers/yookassa/yookassa.controller';
 import type { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
 import { YookassaService } from '@payments/providers/yookassa/yookassa.service';
-
+import { ValidatePaymentRequest } from '@payments/utils/utils';
 import type { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
 import {
+  type CreateAutopaymentDto,
   type CreateYookassaSessionDto,
-  type MakeAutopaymentDto,
   Payments,
   type PaymentWebhookNotification,
 } from '@workspace/types';
-
 import type { Repository } from 'typeorm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -77,6 +77,17 @@ const makeDbPayment = (overrides: Record<string, unknown> = {}) => ({
   paidAt: null,
   ...overrides,
 });
+
+/** Real validator backed by a ConfigService that reads from process.env.
+ *  Use when the test needs the actual BadRequestException to be thrown for
+ *  invalid input. ALLOWED_AMOUNTS and ALLOWED_PERIODS must be set in the
+ *  surrounding beforeEach / afterEach. */
+function makeRealValidatePaymentRequest(): ValidatePaymentRequest {
+  const configService = {
+    get: (key: string, defaultValue?: string): string => process.env[key] ?? defaultValue ?? '',
+  };
+  return new ValidatePaymentRequest(configService as any);
+}
 
 function makeYookassaService(overrides: Partial<YookassaService> = {}): YookassaService {
   return {
@@ -185,6 +196,8 @@ describe('Security Audit', () => {
 
     beforeEach(() => {
       vi.clearAllMocks();
+      process.env.ALLOWED_AMOUNTS = '200,600,1200';
+      process.env.ALLOWED_PERIODS = '1,3,6';
 
       mockYooKassaCreate = vi.fn().mockResolvedValue({ id: 'pay_auto', status: 'succeeded' });
 
@@ -208,14 +221,23 @@ describe('Security Audit', () => {
         makeYookassaService(),
         { create: mockYooKassaCreate } as unknown as YooKassaProvider,
         { emit: vi.fn() } as unknown as EventEmitter2,
+        makeRealValidatePaymentRequest(),
       );
     });
 
+    afterEach(() => {
+      delete process.env.ALLOWED_AMOUNTS;
+      delete process.env.ALLOWED_PERIODS;
+    });
+
     it('rejects an amount that is not in the configured price table', async () => {
-      const dto: MakeAutopaymentDto = {
+      const dto: CreateAutopaymentDto = {
         userId: 'user-uuid-1',
         telegramId: 42,
-        amount: 1, // not a valid price
+        amount: {
+          value: '1',
+          currency: 'RUB',
+        },
         selectedPeriod: 1,
       };
 
@@ -224,10 +246,13 @@ describe('Security Audit', () => {
     });
 
     it('rejects a selectedPeriod that is not in the allowed set (e.g. 120 months)', async () => {
-      const dto: MakeAutopaymentDto = {
+      const dto: CreateAutopaymentDto = {
         userId: 'user-uuid-1',
         telegramId: 42,
-        amount: 200,
+        amount: {
+          value: '200',
+          currency: 'RUB',
+        },
         selectedPeriod: 120, // not an allowed tier
       };
 
@@ -236,10 +261,13 @@ describe('Security Audit', () => {
 
     it('rejects a mismatched amount/period combination', async () => {
       // 1 RUB for 12 months is not in the price table
-      const dto: MakeAutopaymentDto = {
+      const dto: CreateAutopaymentDto = {
         userId: 'user-uuid-1',
         telegramId: 42,
-        amount: 1,
+        amount: {
+          value: '1',
+          currency: 'RUB',
+        },
         selectedPeriod: 12,
       };
 
@@ -392,6 +420,8 @@ describe('Security Audit', () => {
 
     beforeEach(() => {
       vi.clearAllMocks();
+      process.env.ALLOWED_AMOUNTS = '200,600,1200';
+      process.env.ALLOWED_PERIODS = '1,3,6';
 
       mockProviderCreate = vi.fn().mockResolvedValue({
         id: 'pay_new',
@@ -411,7 +441,13 @@ describe('Security Audit', () => {
         makeYookassaService(),
         { create: mockProviderCreate } as unknown as YooKassaProvider,
         { emit: vi.fn() } as unknown as EventEmitter2,
+        makeRealValidatePaymentRequest(),
       );
+    });
+
+    afterEach(() => {
+      delete process.env.ALLOWED_AMOUNTS;
+      delete process.env.ALLOWED_PERIODS;
     });
 
     it('rejects selectedPeriod = 120 (not an allowed tier)', async () => {
@@ -448,17 +484,122 @@ describe('Security Audit', () => {
       await expect(controller.createSession(dto)).rejects.toThrow(BadRequestException);
     });
 
-    it.each([1])('accepts the valid tier: %d month(s)', async (period) => {
+    it.each([
+      [1, '200'],
+      [3, '600'],
+      [6, '1200'],
+    ])('CONTROL: accepts period %d with a matching allowed amount', async (period, amount) => {
       const dto: CreateYookassaSessionDto = {
         userId: 'user-uuid-1',
         selectedPeriod: period,
-        amount: { value: '100.00', currency: 'RUB' },
+        amount: { value: amount, currency: 'RUB' },
         description: 'VPN subscription',
       };
 
       await expect(controller.createSession(dto)).resolves.not.toThrow();
     });
   });
+  describe('[FINDING #13] createSession must reject amounts not in ALLOWED_AMOUNTS', () => {
+    let controller: YookassaController;
+    let mockProviderCreate: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+      process.env.ALLOWED_AMOUNTS = '200,600,1200';
+      process.env.ALLOWED_PERIODS = '1,3,6';
+
+      mockProviderCreate = vi.fn().mockResolvedValue({
+        id: 'pay_new',
+        status: 'pending',
+        description: 'Test',
+        confirmation: { type: 'redirect', confirmation_url: 'https://yookassa.ru/pay/pay_new' },
+      });
+
+      controller = new YookassaController(
+        {
+          find: vi.fn(),
+          findOneBy: vi.fn(),
+          create: vi.fn((d: unknown) => d),
+          save: vi.fn(async (v: unknown) => v),
+        } as unknown as Repository<YookassaPayment>,
+        makeSavedMethodRepo(),
+        makeYookassaService(),
+        { create: mockProviderCreate } as unknown as YooKassaProvider,
+        { emit: vi.fn() } as unknown as EventEmitter2,
+        makeRealValidatePaymentRequest(),
+      );
+    });
+
+    afterEach(() => {
+      delete process.env.ALLOWED_AMOUNTS;
+      delete process.env.ALLOWED_PERIODS;
+    });
+
+    it('rejects an arbitrary amount (99 RUB) not in the allowed set', async () => {
+      const dto: CreateYookassaSessionDto = {
+        userId: 'user-uuid-1',
+        selectedPeriod: 1,
+        amount: { value: '99.00', currency: 'RUB' },
+        description: 'VPN subscription',
+      };
+
+      await expect(controller.createSession(dto)).rejects.toThrow(BadRequestException);
+      expect(mockProviderCreate).not.toHaveBeenCalled();
+    });
+
+    it('rejects amount = 0', async () => {
+      const dto: CreateYookassaSessionDto = {
+        userId: 'user-uuid-1',
+        selectedPeriod: 1,
+        amount: { value: '0', currency: 'RUB' },
+        description: 'VPN subscription',
+      };
+
+      await expect(controller.createSession(dto)).rejects.toThrow(BadRequestException);
+      expect(mockProviderCreate).not.toHaveBeenCalled();
+    });
+
+    it('rejects a negative amount', async () => {
+      const dto: CreateYookassaSessionDto = {
+        userId: 'user-uuid-1',
+        selectedPeriod: 1,
+        amount: { value: '-200', currency: 'RUB' },
+        description: 'VPN subscription',
+      };
+
+      await expect(controller.createSession(dto)).rejects.toThrow(BadRequestException);
+      expect(mockProviderCreate).not.toHaveBeenCalled();
+    });
+
+    it('rejects all amounts when ALLOWED_AMOUNTS is not configured', async () => {
+      delete process.env.ALLOWED_AMOUNTS;
+      const dto: CreateYookassaSessionDto = {
+        userId: 'user-uuid-1',
+        selectedPeriod: 1,
+        amount: { value: '200.00', currency: 'RUB' },
+        description: 'VPN subscription',
+      };
+
+      // When ALLOWED_AMOUNTS is absent, no amount should pass (fail-safe)
+      await expect(controller.createSession(dto)).rejects.toThrow(BadRequestException);
+      expect(mockProviderCreate).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['200.00', 1],
+    ])('CONTROL: accepts valid amount %s RUB for period %d month(s)', async (amountValue, period) => {
+      const dto: CreateYookassaSessionDto = {
+        userId: 'user-uuid-1',
+        selectedPeriod: period,
+        amount: { value: amountValue, currency: 'RUB' },
+        description: 'VPN subscription',
+      };
+
+      await expect(controller.createSession(dto)).resolves.not.toThrow();
+      expect(mockProviderCreate).toHaveBeenCalled();
+    });
+  });
+
   describe('[FINDING #12] mapEURAmountToMonthsNumber must throw on unrecognised amounts', () => {
     beforeEach(() => {
       process.env.PRICE_EUR_MONTH_1 = '5';

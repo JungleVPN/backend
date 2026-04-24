@@ -94,7 +94,12 @@ export class YooKassaConnector {
       } catch (err) {
         if (err instanceof YooKassaErr) {
           // 4xx mapped above — don't retry.
-          if (err.httpStatus && err.httpStatus >= 400 && err.httpStatus < 500 && err.httpStatus !== 429) {
+          if (
+            err.httpStatus &&
+            err.httpStatus >= 400 &&
+            err.httpStatus < 500 &&
+            err.httpStatus !== 429
+          ) {
             throw err;
           }
           lastError = err;

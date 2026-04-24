@@ -22,6 +22,6 @@ export const env = {
   supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY ?? '',
   subpageConfigUuid: '00000000-0000-0000-0000-000000000000',
   paymentDescription: import.meta.env.VITE_PAYMENT_DESCRIPTION ?? 'Happy to see you in the JUNGLE',
-  priceRub: import.meta.env.VITE_PRICE_RUB ?? '99',
+  priceRub: import.meta.env.VITE_PRICE_RUB,
   selectedPeriodMonths: Number(import.meta.env.VITE_SELECTED_PERIOD_MONTHS ?? 1),
 } as const;

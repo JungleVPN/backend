@@ -6,7 +6,7 @@ import { YookassaService } from '@payments/providers/yookassa/yookassa.service';
 import type { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
 import { PaymentWebhookNotification, WebhookEventEnum } from '@workspace/types';
 import type { Repository } from 'typeorm';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PaymentStatusService } from '../payment-status/payment-status.service';
 
 vi.mock('@workspace/database', () => {
@@ -72,6 +72,8 @@ describe('YookassaService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.NODE_ENV = 'test';
+    // Validation runs in every environment now — allow the localhost IP used in tests.
+    process.env.YOOKASSA_PAYMENT_VALID_IP_ADDRESS = JSON.stringify(['127.0.0.1/32']);
 
     mockYkUpdate = vi.fn();
     mockYkFindOneBy = vi.fn().mockResolvedValue({
@@ -95,7 +97,8 @@ describe('YookassaService', () => {
       update: mockSmUpdate,
     } as unknown as Repository<SavedPaymentMethod>;
 
-    mockGetPayment = vi.fn();
+    // Default: API confirms the payment status matches the webhook claim.
+    mockGetPayment = vi.fn().mockResolvedValue({ status: 'succeeded' });
     yooKassaProvider = {
       getPayment: mockGetPayment,
     } as unknown as YooKassaProvider;
@@ -119,11 +122,15 @@ describe('YookassaService', () => {
     );
   });
 
+  afterEach(() => {
+    delete process.env.YOOKASSA_PAYMENT_VALID_IP_ADDRESS;
+  });
+
   // ─────────────────────────────────────────────────────────
   // handleWebhook
   // ─────────────────────────────────────────────────────────
   describe('handleWebhook', () => {
-    it('processes payment.succeeded in non-prod (no IP/API validation)', async () => {
+    it('processes payment.succeeded and updates DB + notifies bot', async () => {
       mockSmFindOneBy.mockResolvedValue(null); // no existing record
 
       const payload = makeSucceededPayload();
@@ -148,6 +155,9 @@ describe('YookassaService', () => {
     });
 
     it('routes payment.canceled to handlePaymentCanceled, not handlePaymentSucceeded', async () => {
+      // API must confirm the canceled status so the status-check passes.
+      mockGetPayment.mockResolvedValue({ status: 'canceled' });
+
       const payload: any = {
         type: 'notification',
         event: 'payment.canceled',
@@ -292,7 +302,6 @@ describe('YookassaService', () => {
 
   describe('isIPRangeValid', () => {
     beforeEach(() => {
-      // Re-instantiate with a valid IP set (read from env at construction time).
       process.env.YOOKASSA_PAYMENT_VALID_IP_ADDRESS = JSON.stringify([
         '185.71.76.0/27',
         '185.71.77.0/27',
@@ -304,6 +313,10 @@ describe('YookassaService', () => {
         paymentStatusService,
         eventEmitter,
       );
+    });
+
+    afterEach(() => {
+      delete process.env.YOOKASSA_PAYMENT_VALID_IP_ADDRESS;
     });
 
     it('returns true for an IP inside the allowed CIDR', async () => {

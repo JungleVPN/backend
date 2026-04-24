@@ -4,6 +4,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BotNotificationService } from '@payments/notifications/bot-notification.service';
 import { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
+import { ValidatePaymentRequest } from '@payments/utils/utils';
 import { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
 import { Payments, RemnawebhookPayload, WebhookEventEnum } from '@workspace/types';
 import { Repository } from 'typeorm';
@@ -23,10 +24,11 @@ export class AutopaymentService {
     private readonly yookassaProvider: YooKassaProvider,
     private readonly eventEmitter: EventEmitter2,
     private readonly botNotificationService: BotNotificationService,
+    private readonly validatePaymentRequest: ValidatePaymentRequest,
   ) {}
 
-  private get autopaymentAmount(): number {
-    return Number(process.env.AUTOPAYMENT_AMOUNT || '200');
+  private get autopaymentAmount(): string {
+    return process.env.AUTOPAYMENT_AMOUNT || '200';
   }
 
   private get autopaymentPeriod(): number {
@@ -129,6 +131,11 @@ export class AutopaymentService {
   }): Promise<Payments.IPayment> {
     const amount = this.autopaymentAmount;
     const selectedPeriod = this.autopaymentPeriod;
+
+    // Validate that the env-configured amount and period are in the allowed set.
+    // This catches misconfiguration before any money moves.
+    this.validatePaymentRequest.validateAmount(amount);
+    this.validatePaymentRequest.validatePeriod(selectedPeriod);
     const description = process.env.PAYMENT_DESCRIPTION || 'Happy to see you in the JUNGLE 🌴';
 
     const request: Payments.CreatePaymentRequest = {

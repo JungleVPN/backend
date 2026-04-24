@@ -4,6 +4,7 @@ import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { YookassaController } from '@payments/providers/yookassa/yookassa.controller';
 import type { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
 import type { YookassaService } from '@payments/providers/yookassa/yookassa.service';
+import { ValidatePaymentRequest } from '@payments/utils/utils';
 import type { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
 import { type CreateYookassaSessionDto, WebhookEventEnum } from '@workspace/types';
 import type { Repository } from 'typeorm';
@@ -24,6 +25,7 @@ describe('YookassaController', () => {
   let YookassaService: YookassaService;
   let yookassaProvider: YooKassaProvider;
   let eventEmitter: EventEmitter2;
+  let validatePaymentRequest: ValidatePaymentRequest;
 
   let mockYkFind: any;
   let mockYkFindOneBy: any;
@@ -37,6 +39,8 @@ describe('YookassaController', () => {
   let mockHandleWebhook: any;
   let mockCreate: any;
   let mockEmit: any;
+  let mockValidateAmount: any;
+  let mockValidatePeriod: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -78,12 +82,20 @@ describe('YookassaController', () => {
       emit: mockEmit,
     } as unknown as EventEmitter2;
 
+    mockValidateAmount = vi.fn();
+    mockValidatePeriod = vi.fn();
+    validatePaymentRequest = {
+      validateAmount: mockValidateAmount,
+      validatePeriod: mockValidatePeriod,
+    } as unknown as ValidatePaymentRequest;
+
     controller = new YookassaController(
       yookassaPaymentRepo,
       savedMethodRepo,
       YookassaService,
       yookassaProvider,
       eventEmitter,
+      validatePaymentRequest,
     );
   });
 
@@ -178,8 +190,9 @@ describe('YookassaController', () => {
           id: 'sess-1',
           url: 'https://yk/sess-1',
           status: 'pending',
-          amount: 100,
+          amount: '100.00',
           currency: 'RUB',
+          paidAt: null,
           userId: 'user-1',
           selectedPeriod: 1,
           description: 'test',
@@ -223,7 +236,7 @@ describe('YookassaController', () => {
     const dto = {
       telegramId: 123,
       userId: 'user-1',
-      amount: 500,
+      amount: { value: '500', currency: 'RUB' },
       selectedPeriod: 1,
       description: 'autopay',
     };
@@ -264,11 +277,12 @@ describe('YookassaController', () => {
         expect.objectContaining({
           id: 'pay_1',
           status: 'succeeded',
-          amount: 500,
+          amount: '500',
           userId: 'user-1',
           selectedPeriod: 1,
           telegramId: 123,
-          paidAt: expect.any(Date),
+          description: 'autopay',
+          paidAt: new Date(),
         }),
       );
       expect(mockYkSave).toHaveBeenCalled();

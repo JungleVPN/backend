@@ -12,3 +12,4 @@ DOCS.md
 credentials.json
 *.tsbuildinfo
 _tmp*
+AGENTS.md

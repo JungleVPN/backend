@@ -1,12 +1,8 @@
-/**
- * Domain DTOs for our autopayment flow.
- * These are NOT part of the YooKassa API — they're our internal contracts
- * between webhook → payments service → bot.
- */
-export interface MakeAutopaymentDto {
+import type { Payments } from './payment';
+
+export interface CreateAutopaymentDto
+  extends Omit<Payments.CreatePaymentRequest, 'metadata' | 'capture'> {
   userId: string;
   telegramId: number | null;
-  amount: number;
   selectedPeriod: number;
-  description?: string;
 }

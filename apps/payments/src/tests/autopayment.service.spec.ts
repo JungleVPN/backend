@@ -4,6 +4,7 @@ import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { AutopaymentService } from '@payments/autopayment/autopayment.service';
 import { BotNotificationService } from '@payments/notifications/bot-notification.service';
 import type { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
+import { ValidatePaymentRequest } from '@payments/utils/utils';
 import type { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
 import { RemnawebhookPayload, WebhookEventEnum } from '@workspace/types';
 import type { Repository } from 'typeorm';
@@ -43,6 +44,7 @@ describe('AutopaymentService', () => {
   let yookassaProvider: YooKassaProvider;
   let eventEmitter: EventEmitter2;
   let botNotificationService: BotNotificationService;
+  let validatePaymentRequest: ValidatePaymentRequest;
 
   let mockSmFindOneBy: ReturnType<typeof vi.fn>;
   let mockYkCreate: ReturnType<typeof vi.fn>;
@@ -50,7 +52,8 @@ describe('AutopaymentService', () => {
   let mockCreate: ReturnType<typeof vi.fn>;
   let mockEmit: ReturnType<typeof vi.fn>;
   let mockPaymentNotify: ReturnType<typeof vi.fn>;
-  let mockSmSave: any;
+  let mockValidateAmount: any;
+  let mockValidatePeriod: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -65,8 +68,6 @@ describe('AutopaymentService', () => {
     savedMethodRepo = {
       findOneBy: mockSmFindOneBy,
     } as unknown as Repository<SavedPaymentMethod>;
-
-    mockSmSave = vi.fn(async (v: any) => v);
 
     mockYkCreate = vi.fn((data: any) => data);
     mockYkSave = vi.fn(async (v: any) => v);
@@ -88,12 +89,20 @@ describe('AutopaymentService', () => {
       notify: mockPaymentNotify,
     } as unknown as BotNotificationService;
 
+    mockValidateAmount = vi.fn();
+    mockValidatePeriod = vi.fn();
+    validatePaymentRequest = {
+      validateAmount: mockValidateAmount,
+      validatePeriod: mockValidatePeriod,
+    } as unknown as ValidatePaymentRequest;
+
     service = new AutopaymentService(
       savedMethodRepo,
       yookassaPaymentRepo,
       yookassaProvider,
       eventEmitter,
       botNotificationService,
+      validatePaymentRequest,
     );
 
     // Stub delay to make tests fast
@@ -250,7 +259,8 @@ describe('AutopaymentService', () => {
         expect.objectContaining({
           id: 'pay_1',
           status: 'succeeded',
-          amount: 200,
+          amount: '200',
+          userId: 'u-1',
           selectedPeriod: 1,
           telegramId: 42,
           description: 'Test payment',
