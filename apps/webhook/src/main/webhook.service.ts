@@ -1,4 +1,3 @@
-import * as crypto from 'node:crypto';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -24,21 +23,12 @@ export class WebhookService {
     return this.configService.get<string>('PAYMENTS_URL', 'http://localhost:3001');
   }
 
-  async validateAndProcessRemna(signature: string, payload: TRemnawaveWebhookEvent) {
-    const isProd = this.configService.get<string>('NODE_ENV') === 'production';
-
-    if (isProd) {
-      const secret = this.configService.get<string>('REMNAWAVE_WEBHOOK_SECRET', '');
-      const expected = crypto
-        .createHmac('sha256', secret)
-        .update(JSON.stringify(payload))
-        .digest('hex');
-
-      if (expected !== signature) {
-        throw new BadRequestException('Invalid signature');
-      }
-    }
-
+  /**
+   * Processes a Remnawave event that has already been signature-verified by
+   * RemnaSignatureGuard.  Do not call this directly without first validating
+   * the HMAC signature.
+   */
+  async processRemnaEvent(payload: TRemnawaveWebhookEvent): Promise<void> {
     if (PAYMENT_FORWARDED_EVENTS.has(payload.event)) {
       await this.forwardRemnaEventToPayments(payload);
     }
@@ -90,15 +80,10 @@ export class WebhookService {
   }
 
   async forwardYookassaWebhook(payload: PaymentWebhookNotification, ip: string): Promise<void> {
-    try {
-      await axios.post(`${this.paymentsBaseUrl}/payments/yookassa/webhook`, payload, {
-        headers: {
-          'x-forwarded-for': ip,
-        },
-      });
-    } catch (error) {
-      this.logger.error('Failed to forward Yookassa webhook to payments service', error);
-      throw error;
-    }
+    await axios.post(`${this.paymentsBaseUrl}/payments/yookassa/webhook`, payload, {
+      headers: {
+        'x-forwarded-for': ip,
+      },
+    });
   }
 }

@@ -29,13 +29,18 @@ export class BotNotificationService {
   }
 
   @OnEvent(WebhookEventEnum['payment.autopayment_failed'])
-  async onAutopaymentFailed(event: Payments.PaymentSucceededEventPayload): Promise<void> {
+  async onAutopaymentFailed(event: Payments.PaymentFailedEventPayload): Promise<void> {
     await this.notify('payment.autopayment_failed', event);
   }
 
   @OnEvent(WebhookEventEnum['payment.canceled'])
-  async onCancel(event: Payments.PaymentSucceededEventPayload): Promise<void> {
+  async onCancel(event: Payments.PaymentFailedEventPayload): Promise<void> {
     await this.notify('payment.canceled', event);
+  }
+
+  @OnEvent(WebhookEventEnum['payment.no_active_method'])
+  async onNoActiveMethods(event: Payments.PaymentFailedEventPayload): Promise<void> {
+    await this.notify('payment.no_active_method', event);
   }
 
   /**
@@ -62,10 +67,10 @@ export class BotNotificationService {
         },
       );
 
-      this.logger.log(`Bot notified: ${eventType} for telegramId=${payload.telegramId}`);
+      this.logger.log(`Bot notified: ${eventType} for userId=${payload.userId}`);
     } catch (err: any) {
       this.logger.warn(
-        `Failed to notify bot about ${eventType} for telegramId=${payload.telegramId}: ${err.message} ${err.data}`,
+        `Failed to notify bot about ${eventType} for userId=${payload.userId}: ${err.message} ${err.data}`,
       );
     }
   }

@@ -4,6 +4,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WebHookEvent } from '@remna/remna.model';
 import { Payments } from '@shared/payments';
 import { UserDto } from '@shared/user.types';
+import { WebhookEvent } from '@workspace/types';
 
 /**
  * Receives pre-processed notifications from the backend services.
@@ -45,14 +46,7 @@ export class NotificationController {
     @Headers('x-bot-secret') secret: string,
     @Body()
     payload: {
-      event:
-        | 'payment.succeeded'
-        | 'payment.waiting_for_capture'
-        | 'payment.canceled'
-        | 'payment.method_saved'
-        | 'payment.autopayment_failed'
-        | 'payment.autopayment_exhausted'
-        | 'payment.no_active_method';
+      event: WebhookEvent;
       telegramId: number;
       provider: 'stripe' | 'yookassa';
       locale?: string;
