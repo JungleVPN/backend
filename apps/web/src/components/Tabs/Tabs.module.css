@@ -15,7 +15,6 @@
 .list {
   position: relative;
   border-radius: var(--mantine-radius-xl);
-  margin-bottom: var(--mantine-spacing-md);
   align-items: flex-start;
   align-self: stretch;
   display: flex;
@@ -52,17 +51,18 @@
   flex-direction: column;
   justify-content: center;
   padding-inline: 0;
-  width: 100px;
+  width: 124px;
   will-change: transform;
   z-index: 3;
   padding-block: 5px;
 }
 
 .indicator {
-  background-color: var(--mantine-color-white);
   border-radius: var(--mantine-radius-xl);
   border: 1px solid var(--mantine-color-gray-2);
   box-shadow: var(--mantine-shadow-sm);
+  background-color: rgb(from rgb(255, 255, 255) r g b / 10%);
+  border-color: transparent;
 }
 
 .tab {
@@ -91,4 +91,5 @@
   font-size: 12px;
   font-weight: 400;
   line-height: 14px;
+  color: var(--mantine-color-gray-5);
 }

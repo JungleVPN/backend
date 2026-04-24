@@ -11,7 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import * as Remnawave from '@workspace/types';
-import { InterServiceGuard } from '../common/inter-service.guard';
+import { InterServiceGuard } from '@workspace/types';
 import { UserService } from './user.service';
 
 @Controller('users')

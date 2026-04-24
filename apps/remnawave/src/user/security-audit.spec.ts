@@ -1,26 +1,10 @@
 import 'reflect-metadata';
 import * as process from 'node:process';
-
+import { InterServiceGuard } from '@workspace/types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-
-import { InterServiceGuard } from '../common/inter-service.guard';
 import { UserController } from './user.controller';
-import { UserService } from './user.service';
 
 vi.mock('./user.service');
-
-function makeUserService(): UserService {
-  return {
-    getAllUsers: vi.fn().mockResolvedValue([]),
-    getUserByTgId: vi.fn().mockResolvedValue(null),
-    getUserByEmail: vi.fn().mockResolvedValue(null),
-    getUserByUuid: vi.fn().mockResolvedValue(null),
-    createUser: vi.fn().mockResolvedValue({ uuid: 'new-uuid', subscriptionUrl: 'https://vpn/new' }),
-    updateUser: vi.fn().mockResolvedValue({ uuid: 'u-1' }),
-    deleteUser: vi.fn().mockResolvedValue({ uuid: 'u-1', deleted: true }),
-    revokeSubscription: vi.fn().mockResolvedValue('https://vpn/new-sub'),
-  } as unknown as UserService;
-}
 
 describe('Security Audit', () => {
   describe('UserController — every route must have an authentication guard', () => {

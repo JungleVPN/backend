@@ -2,6 +2,6 @@ export * from './datasource';
 export * from './entities/broadcast.entity';
 export * from './entities/broadcast-message.entity';
 export * from './entities/referral.entity';
-export * from './entities/stripe-payment.entity';
 export * from './entities/saved-payment-method.entity';
+export * from './entities/stripe-payment.entity';
 export * from './entities/yookassa-payment.entity';

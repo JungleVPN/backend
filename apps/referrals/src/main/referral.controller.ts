@@ -1,7 +1,18 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { InterServiceGuard } from '@workspace/types';
 import { ReferralService } from './referral.service';
 
 @Controller('referrals')
+@UseGuards(InterServiceGuard)
 export class ReferralController {
   constructor(private readonly referralService: ReferralService) {}
 

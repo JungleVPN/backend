@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { InterServiceGuard } from '../common/inter-service.guard';
+import { InterServiceGuard } from '@workspace/types';
 import { RemnaPanelClient } from '../common/remna-panel.client';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';

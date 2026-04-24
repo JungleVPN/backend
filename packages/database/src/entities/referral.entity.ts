@@ -1,12 +1,7 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { bigintTransformer } from '../utils/transformers';
 
 type ReferralStatus = 'FIRST_REWARD' | 'COMPLETED';
-
-/** TypeORM returns bigint as string — this converts it back to number on read. */
-const bigintTransformer = {
-  to: (value: number) => value,
-  from: (value: string | null) => (value === null ? null : Number(value)),
-};
 
 @Entity('referrals')
 export class Referral {
