@@ -84,7 +84,7 @@ export class YookassaService {
 
     if (result.success) {
       this.eventEmitter.emit(WebhookEventEnum['payment.succeeded'], {
-        telegramId: record.telegramId ?? null,
+        userId: record.userId,
         provider: 'yookassa',
         selectedPeriod: record.selectedPeriod,
       } satisfies Payments.PaymentSucceededEventPayload);
@@ -101,9 +101,9 @@ export class YookassaService {
     const record = await this.yookassaPaymentRepo.findOneBy({ id });
     await this.yookassaPaymentRepo.update(id, { status, url: null });
 
-    if (cancellation_details) {
+    if (cancellation_details && record) {
       this.eventEmitter.emit(WebhookEventEnum['payment.canceled'], {
-        telegramId: record?.telegramId ?? null,
+        userId: record.userId,
         provider: 'yookassa',
         selectedPeriod: record?.selectedPeriod ?? 0,
         reason: cancellation_details.reason,

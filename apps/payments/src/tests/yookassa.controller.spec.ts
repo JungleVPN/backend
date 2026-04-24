@@ -319,7 +319,7 @@ describe('YookassaController', () => {
       expect(mockEmit).toHaveBeenCalledWith(
         WebhookEventEnum['payment.autopayment_failed'],
         expect.objectContaining({
-          telegramId: Number(dto.userId),
+          userId: 'user-1',
           provider: 'yookassa',
           reason: 'insufficient_funds',
         }),

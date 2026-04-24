@@ -150,7 +150,7 @@ describe('YookassaService', () => {
       });
       expect(mockEmit).toHaveBeenCalledWith(
         WebhookEventEnum['payment.succeeded'],
-        expect.objectContaining({ telegramId: 42, provider: 'yookassa', selectedPeriod: 1 }),
+        expect.objectContaining({ userId: 'user-1', provider: 'yookassa', selectedPeriod: 1 }),
       );
     });
 
@@ -222,7 +222,7 @@ describe('YookassaService', () => {
       expect(mockEmit).toHaveBeenCalledWith(
         WebhookEventEnum['payment.succeeded'],
         expect.objectContaining({
-          telegramId: 42,
+          userId: 'user-1',
           provider: 'yookassa',
           selectedPeriod: 1,
         }),

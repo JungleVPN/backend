@@ -55,7 +55,7 @@ export class StripeWebhookService {
 
     if (result.success) {
       this.eventEmitter.emit(WebhookEventEnum['payment.succeeded'], {
-        telegramId: telegramId ?? null,
+        userId: payload.userId,
         provider: 'stripe',
         metadata: {
           selectedPeriod,

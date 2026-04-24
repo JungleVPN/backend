@@ -196,7 +196,7 @@ export class YookassaController {
     // If the autopayment was immediately canceled, emit failure event
     if (payment.status === 'canceled' && payment.cancellation_details) {
       this.eventEmitter.emit(WebhookEventEnum['payment.autopayment_failed'], {
-        telegramId: Number(body.userId),
+        userId: body.userId,
         provider: 'yookassa',
         reason: payment.cancellation_details.reason,
       } satisfies Payments.PaymentFailedEventPayload);

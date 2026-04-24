@@ -27,7 +27,7 @@ const makePayload = (telegramId?: number | null) =>
     scope: 'user',
     event: 'user.expires_in_24_hours',
     data: {
-      uuid: 'u-1',
+      uuid: 'user-1',
       username: 'test',
       status: 'ACTIVE',
       telegramId: telegramId === undefined ? null : telegramId,
@@ -125,14 +125,14 @@ describe('AutopaymentService', () => {
       await service.init(makePayload(42));
 
       expect(mockSmFindOneBy).toHaveBeenCalledWith({
-        userId: 'u-1',
+        userId: 'user-1',
         isActive: true,
       });
       expect(mockCreate).not.toHaveBeenCalled();
       expect(mockPaymentNotify).toHaveBeenCalledWith(
         'payment.no_active_method',
         expect.objectContaining({
-          telegramId: 42,
+          userId: 'user-1',
           provider: 'yookassa',
           reason: 'no_active_method',
         }),
@@ -193,12 +193,12 @@ describe('AutopaymentService', () => {
       expect(mockEmit).toHaveBeenCalledTimes(3);
       expect(mockEmit).toHaveBeenCalledWith(
         WebhookEventEnum['payment.autopayment_failed'],
-        expect.objectContaining({ telegramId: 42, reason: 'insufficient_funds' }),
+        expect.objectContaining({ userId: 'user-1', reason: 'insufficient_funds' }),
       );
       // Final bot notification
       expect(mockPaymentNotify).toHaveBeenCalledWith(
         'payment.autopayment_exhausted',
-        expect.objectContaining({ telegramId: 42, provider: 'yookassa' }),
+        expect.objectContaining({ userId: 'user-1', provider: 'yookassa' }),
       );
     });
 
@@ -210,7 +210,7 @@ describe('AutopaymentService', () => {
       expect(mockCreate).toHaveBeenCalledTimes(3);
       expect(mockPaymentNotify).toHaveBeenCalledWith(
         'payment.autopayment_exhausted',
-        expect.objectContaining({ telegramId: 42, provider: 'yookassa' }),
+        expect.objectContaining({ userId: 'user-1', provider: 'yookassa' }),
       );
     });
 
@@ -260,7 +260,7 @@ describe('AutopaymentService', () => {
           id: 'pay_1',
           status: 'succeeded',
           amount: '200',
-          userId: 'u-1',
+          userId: 'user-1',
           selectedPeriod: 1,
           telegramId: 42,
           description: 'Test payment',
@@ -295,7 +295,7 @@ describe('AutopaymentService', () => {
       await service.init(makePayload(42));
 
       expect(mockPaymentNotify).toHaveBeenCalledWith('payment.no_active_method', {
-        telegramId: 42,
+        userId: 'user-1',
         provider: 'yookassa',
         reason: 'no_active_method',
       });

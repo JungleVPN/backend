@@ -56,7 +56,7 @@ export class AutopaymentService {
         `No active saved payment method for user ${telegramId} — notifying bot for manual payment`,
       );
       await this.botNotificationService.notify('payment.no_active_method', {
-        telegramId,
+        userId,
         provider: 'yookassa',
         reason: 'no_active_method',
       });
@@ -110,7 +110,7 @@ export class AutopaymentService {
       `All ${MAX_RETRIES} autopayment attempts failed for user ${telegramId} — falling back to manual payment`,
     );
     await this.botNotificationService.notify('payment.autopayment_exhausted', {
-      telegramId: telegramId ?? null,
+      userId,
       provider: 'yookassa',
       reason: 'autopayment_exhausted',
     });
@@ -161,7 +161,7 @@ export class AutopaymentService {
 
     if (payment.status === 'canceled' && payment.cancellation_details) {
       this.eventEmitter.emit(WebhookEventEnum['payment.autopayment_failed'], {
-        telegramId: telegramId ?? null,
+        userId,
         provider: 'yookassa',
         reason: payment.cancellation_details.reason,
       } satisfies Payments.PaymentFailedEventPayload);

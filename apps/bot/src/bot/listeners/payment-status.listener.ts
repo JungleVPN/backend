@@ -102,8 +102,16 @@ export class PaymentStatusListener {
     }
   }
 
+  @OnEvent('notify.payment.no_active_method')
+  handleNoActiveMethod(payload: PaymentCanceledNotification): Promise<void> {
+    return this.commonPaymentFailed(payload);
+  }
   @OnEvent('notify.payment.canceled')
-  async handlePaymentFailed(payload: PaymentCanceledNotification): Promise<void> {
+  handlePaymentCanceled(payload: PaymentCanceledNotification): Promise<void> {
+    return this.commonPaymentFailed(payload);
+  }
+
+  async commonPaymentFailed(payload: PaymentCanceledNotification): Promise<void> {
     const { telegramId, locale: rawLocale, reason } = payload;
     const locale = rawLocale || process.env.DEFAULT_LOCALE || 'en';
     const i18n = this.localService.i18n;
