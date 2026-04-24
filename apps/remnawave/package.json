@@ -8,7 +8,9 @@
     "start": "node dist/main.js",
     "start:prod": "node dist/main.js",
     "lint": "biome lint ./src",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -25,6 +27,7 @@
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^10.1.2",
     "@workspace/shared-config": "workspace:*",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vitest": "^4.1.2"
   }
 }
