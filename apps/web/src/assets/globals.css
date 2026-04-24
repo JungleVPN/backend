@@ -5,12 +5,23 @@ body {
   background-color: oklch(0.1448 0 0);
   background-size: 60px 60px;
   background-attachment: fixed;
-  position: relative;
-  /*min-height: 100vh;*/
+  inset: 0;
+  position: fixed;
+  transform: translateZ(0);
+  height: 100dvh;
+  overflow: clip;
+  touch-action: none;
 }
 
 #root {
-  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: clip auto;
+  overscroll-behavior-x: none;
+  position: relative;
+  scrollbar-width: none;
+  width: 100%;
 }
 
 input:-webkit-autofill,
@@ -24,17 +35,10 @@ input:focus {
   border-color: oklch(0.6009 0.043 129.98);
 }
 
-.animated-background {
-  /*position: fixed;*/
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(ellipse 60% 40% at 25% 40%, rgba(151, 117, 250, 0.08), transparent 50%),
-    radial-gradient(ellipse 50% 50% at 85% 85%, rgba(34, 211, 238, 0.06), transparent 50%);
+.app-container {
+  position: relative;
+  padding-bottom: var(--toolbar-safe-height);
+  --toolbar-safe-height: 82px;
 }
 
 .step-card {

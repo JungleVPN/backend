@@ -19,7 +19,7 @@ export function RootLayout() {
         <Notifications />
         <ErrorBoundary>
           <AuthProvider>
-            <Container size={'sm'} p={24}>
+            <Container size={'sm'} p={24} className={'app-container'}>
               <Header />
               <Outlet />
             </Container>

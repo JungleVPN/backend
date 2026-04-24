@@ -19,8 +19,8 @@ export function ProfileLayout() {
 
   return (
     <>
-      <Navbar />
       <Outlet />
+      <Navbar />
     </>
   );
 }

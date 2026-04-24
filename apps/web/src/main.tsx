@@ -9,7 +9,7 @@ import '@/utils/initDayjs';
 
 import { router } from '@/router.ts';
 
-createRoot(document.getElementById('app')!).render(
+createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <RouterProvider router={router} />
   </StrictMode>,
