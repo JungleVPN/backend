@@ -118,9 +118,7 @@ export class PaymentStatusListener {
 
     const i18nKey = this.resolveFailureI18nKey(reason);
 
-    this.logger.log(
-      `Payment canceled for telegramId=${telegramId}, reason=${reason ?? 'unknown'}, key=${i18nKey}`,
-    );
+    this.logger.log(`Notifying telegramId=${telegramId}, reason=${reason ?? 'unknown'}`);
 
     const text = i18n.t(locale, i18nKey);
     const menu = new InlineKeyboard()

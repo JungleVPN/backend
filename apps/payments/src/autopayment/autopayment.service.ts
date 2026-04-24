@@ -44,19 +44,18 @@ export class AutopaymentService {
       return;
     }
 
-    this.logger.log(`User ${telegramId} expires in 24h — checking saved payment methods`);
-
     const savedMethod = await this.savedMethodRepo.findOneBy({
       userId,
       isActive: true,
     });
 
     if (!savedMethod) {
-      this.logger.log(
+      this.logger.warn(
         `No active saved payment method for user ${telegramId} — notifying bot for manual payment`,
       );
       await this.botNotificationService.notify('payment.no_active_method', {
         userId,
+        telegramId,
         provider: 'yookassa',
         reason: 'no_active_method',
       });
@@ -111,6 +110,7 @@ export class AutopaymentService {
     );
     await this.botNotificationService.notify('payment.autopayment_exhausted', {
       userId,
+      telegramId,
       provider: 'yookassa',
       reason: 'autopayment_exhausted',
     });
