@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { dataSourceOptions, Referral } from '@workspace/database';
-import { InterServiceGuard } from '@workspace/types';
+import { InterServiceGuard } from './guards/inter-service.guard';
 import { ReferralController } from './main/referral.controller';
 import { ReferralService } from './main/referral.service';
 import { RemnaClient } from './main/remna.client';

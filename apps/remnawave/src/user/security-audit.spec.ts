@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import * as process from 'node:process';
-import { InterServiceGuard } from '@workspace/types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { InterServiceGuard } from '../guards/inter-service.guard';
 import { UserController } from './user.controller';
 
 vi.mock('./user.service');

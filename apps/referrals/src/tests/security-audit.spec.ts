@@ -19,12 +19,12 @@ import 'reflect-metadata';
 import * as process from 'node:process';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { Referral } from '@workspace/database';
-import { InterServiceGuard } from '@workspace/types';
 import type { Repository } from 'typeorm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ReferralController } from './referral.controller';
-import { ReferralService } from './referral.service';
-import type { RemnaClient } from './remna.client';
+import { InterServiceGuard } from '../guards/inter-service.guard';
+import { ReferralController } from '../main/referral.controller';
+import { ReferralService } from '../main/referral.service';
+import type { RemnaClient } from '../main/remna.client';
 
 // ── Entity stub ───────────────────────────────────────────────────────────────
 vi.mock('@workspace/database', () => ({ Referral: class {} }));

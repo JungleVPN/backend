@@ -5,6 +5,5 @@
  * so consumers can still do `import { ... } from '@workspace/types'`.
  */
 
-export * from './guards';
 export * from './payments';
 export * from './remnawave';

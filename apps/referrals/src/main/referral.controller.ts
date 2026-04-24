@@ -8,7 +8,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { InterServiceGuard } from '@workspace/types';
+import { InterServiceGuard } from '../guards/inter-service.guard';
 import { ReferralService } from './referral.service';
 
 @Controller('referrals')
