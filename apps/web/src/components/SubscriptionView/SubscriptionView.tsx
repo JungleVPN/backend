@@ -1,186 +1,77 @@
-import { Box, Center, Container, Stack, Title } from '@mantine/core';
-import { useOs } from '@mantine/hooks';
-import { ApiClientError } from '@workspace/core/api';
-import {
-  SubscriptionPageRawConfigSchema,
-  type TSubscriptionPagePlatformKey,
-} from '@workspace/types';
-import { useEffect, useState } from 'react';
-import { useTranslation as useI18nextTranslation } from 'react-i18next';
-
-import '@/utils/initDayjs';
+import { Card, Surface } from '@heroui/react';
 import {
   useIsConfigLoaded,
   useSubscriptionConfig,
-  useSubscriptionConfigStoreActions,
-  useSubscriptionInfoStoreActions,
   useSubscriptionInfoStoreInfo,
 } from '@workspace/core/stores';
-import { remnawaveApi } from '@/api/remnawave.ts';
-import { ErrorConnection } from '@/components/ErrorConnection/ErrorConnection';
-import {
-  AccordionBlockRenderer,
-  CardsBlockRenderer,
-  InstallationGuideConnector,
-  MinimalBlockRenderer,
-  TimelineBlockRenderer,
-} from '@/components/InstallationGuide';
+import type { TSubscriptionPagePlatformKey } from '@workspace/types';
+import { useTranslation } from 'react-i18next';
+
+import '@/utils/initDayjs';
+import { InstallationGuideConnector } from '@/components/InstallationGuide';
 import { Loading } from '@/components/Loading/Loading';
 import {
   SubscriptionInfoCards,
   SubscriptionInfoCollapsed,
   SubscriptionInfoExpanded,
 } from '@/components/SubscriptionInfo';
-import { env } from '@/config/env.ts';
+import { detectOs } from '@/utils/detectOs';
+import { ErrorView } from './components/ErrorView';
+import { useSubscriptionData } from './hooks/useSubscriptionData';
 
-function osToPlatform(os: string): TSubscriptionPagePlatformKey | undefined {
-  switch (os) {
-    case 'android':
-      return 'android';
-    case 'ios':
-      return 'ios';
-    case 'linux':
-      return 'linux';
-    case 'macos':
-      return 'macos';
-    case 'windows':
-      return 'windows';
-    default:
-      return undefined;
+const OS_TO_PLATFORM: Record<string, TSubscriptionPagePlatformKey> = {
+  android: 'android',
+  ios: 'ios',
+  linux: 'linux',
+  macos: 'macos',
+  windows: 'windows',
+};
+
+function subscriptionInfoSection(
+  activeSubscription: boolean,
+  blockType: 'cards' | 'collapsed' | 'expanded' | 'hidden',
+) {
+  const effectiveType = activeSubscription ? blockType : 'expanded';
+  switch (effectiveType) {
+    case 'cards':
+      return <SubscriptionInfoCards />;
+    case 'collapsed':
+      return <SubscriptionInfoCollapsed />;
+    case 'hidden':
+      return null;
+    case 'expanded':
+      return <SubscriptionInfoExpanded />;
   }
 }
 
-const BLOCK_RENDERERS = {
-  cards: CardsBlockRenderer,
-  timeline: TimelineBlockRenderer,
-  accordion: AccordionBlockRenderer,
-  minimal: MinimalBlockRenderer,
-} as const;
-
-const SUBSCRIPTION_INFO_BLOCK_RENDERERS = {
-  cards: SubscriptionInfoCards,
-  collapsed: SubscriptionInfoCollapsed,
-  expanded: SubscriptionInfoExpanded,
-  hidden: null,
-} as const;
-
-export function SubscriptionView(props: { shortUuid: string }) {
-  const { shortUuid } = props;
-  const { t } = useI18nextTranslation();
+export function SubscriptionView({ shortUuid }: { shortUuid: string }) {
+  const { t } = useTranslation();
   const config = useSubscriptionConfig();
-  const subscriptionActions = useSubscriptionInfoStoreActions();
-  const configActions = useSubscriptionConfigStoreActions();
-  const os = useOs({ getValueInEffect: false });
   const { subscription } = useSubscriptionInfoStoreInfo();
-
-  const [errorConnect, setErrorConnect] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
   const isConfigLoaded = useIsConfigLoaded();
-  const activeSubscription = subscription?.user?.userStatus === 'ACTIVE';
 
-  useEffect(() => {
-    if (!shortUuid) {
-      setIsLoading(false);
-      return;
-    }
+  const { error, isLoading } = useSubscriptionData(shortUuid);
 
-    setIsLoading(true);
+  if (error) return <ErrorView errorCode={error} />;
+  if (isLoading || !isConfigLoaded) return <Loading />;
 
-    const fetchSubscription = async () => {
-      try {
-        const subscriptionInfo = await remnawaveApi.getSubscriptionInfoByShortUuid(shortUuid);
-
-        subscriptionActions.setSubscriptionInfo({
-          subscription: {
-            ...subscriptionInfo,
-          },
-        });
-      } catch (error) {
-        if (error instanceof ApiClientError && error.status === 404) {
-          setErrorConnect('ERR_GET_SUB_LINK');
-        } else {
-          setErrorConnect('ERR_FATCH_USER');
-        }
-        console.error('Failed to fetch subscription:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchSubscription();
-  }, [shortUuid, subscriptionActions]);
-
-  useEffect(() => {
-    const configUuid = env.subpageConfigUuid;
-
-    const fetchConfig = async () => {
-      try {
-        const { config: rawConfig } = await remnawaveApi.getSubscriptionPageConfig(configUuid);
-
-        const parsedConfig = await SubscriptionPageRawConfigSchema.safeParseAsync(rawConfig);
-        if (!parsedConfig.success) {
-          setErrorConnect('ERR_PARSE_APPCONFIG');
-          return;
-        }
-
-        configActions.setConfig(parsedConfig.data);
-      } catch {
-        setErrorConnect('ERR_PARSE_APPCONFIG');
-      }
-    };
-
-    fetchConfig();
-  }, [configActions]);
-
-  // Error state (checked before config-loaded to avoid infinite loading on fetch failure)
-  if (errorConnect) {
-    return (
-      <Container my='xl' size='xl'>
-        <Center>
-          <Stack gap='xl'>
-            <Title style={{ textAlign: 'center' }} order={4}>
-              {errorConnect === 'ERR_FATCH_USER'
-                ? t('main.page.component.ERR_FATCH_USER')
-                : errorConnect === 'ERR_GET_SUB_LINK'
-                  ? t('main.page.component.ERR_GET_SUB_LINK')
-                  : errorConnect === 'ERR_PARSE_APPCONFIG'
-                    ? t('main.page.component.ERR_PARSE_APPCONFIG')
-                    : JSON.stringify(errorConnect)}
-            </Title>
-            <ErrorConnection />
-          </Stack>
-        </Center>
-      </Container>
-    );
-  }
-
-  // Loading state
-  if (isLoading || !isConfigLoaded) {
-    return <Loading />;
-  }
-
-  // Missing ID state
   if (!shortUuid) {
     return (
-      <Box
-        style={{
-          height: '100vh',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
+      <Surface
+        className='flex min-h-screen w-full items-center justify-center p-4'
+        variant='transparent'
       >
-        <Container size='xl'>
-          <Title style={{ textAlign: 'center' }} order={4}>
-            {t('main.page.component.missing_id')}
-          </Title>
-        </Container>
-      </Box>
+        <Card className='max-w-4xl' variant='default'>
+          <Card.Header>
+            <Card.Title className='text-center text-lg'>
+              {t('main.page.component.missing_id')}
+            </Card.Title>
+          </Card.Header>
+        </Card>
+      </Surface>
     );
   }
 
-  // Final render (guaranteed that config is loaded)
   const hasPlatformApps: Record<TSubscriptionPagePlatformKey, boolean> = {
     ios: Boolean(config.platforms.ios?.apps.length),
     android: Boolean(config.platforms.android?.apps.length),
@@ -191,25 +82,22 @@ export function SubscriptionView(props: { shortUuid: string }) {
     appleTV: Boolean(config.platforms.appleTV?.apps.length),
   };
 
-  const atLeastOnePlatformApp = Object.values(hasPlatformApps).some((value) => value);
-  const SubscriptionInfoBlockRenderer =
-    SUBSCRIPTION_INFO_BLOCK_RENDERERS[
-      activeSubscription ? config.uiConfig.subscriptionInfoBlockType : 'expanded'
-    ];
+  const atLeastOnePlatformApp = Object.values(hasPlatformApps).some(Boolean);
+  const activeSubscription = subscription?.user?.userStatus === 'ACTIVE';
 
   return (
-    <Box style={{ position: 'relative' }}>
-      <Stack style={{ zIndex: 2 }} gap='xl'>
-        {SubscriptionInfoBlockRenderer && <SubscriptionInfoBlockRenderer />}
+    <Surface className='relative' variant='transparent'>
+      <Surface className='z-2 flex flex-col gap-8' variant='transparent'>
+        {subscriptionInfoSection(activeSubscription, config.uiConfig.subscriptionInfoBlockType)}
 
-        {atLeastOnePlatformApp && activeSubscription && (
+        {atLeastOnePlatformApp && activeSubscription ? (
           <InstallationGuideConnector
-            BlockRenderer={BLOCK_RENDERERS[config.uiConfig.installationGuidesBlockType]}
+            type={config.uiConfig.installationGuidesBlockType}
             hasPlatformApps={hasPlatformApps}
-            platform={osToPlatform(os)}
+            platform={OS_TO_PLATFORM[detectOs()]}
           />
-        )}
-      </Stack>
-    </Box>
+        ) : null}
+      </Surface>
+    </Surface>
   );
 }

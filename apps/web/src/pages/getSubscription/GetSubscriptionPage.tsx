@@ -1,4 +1,4 @@
-import { Badge, Button, Grid, Input, Stack, Text, TextInput } from '@mantine/core';
+import { Button, Chip, Description, Form, Input, Label, TextField } from '@heroui/react';
 import { IconArrowRight, IconCheck, IconMail } from '@tabler/icons-react';
 import { type FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -37,7 +37,7 @@ export default function GetSubscriptionPage() {
       const data = await initUser({ email });
 
       navigate(`/subscription/${data.shortUuid}`);
-    } catch (err) {
+    } catch {
       setError(t('getSubscription.error_failed_to_create'));
     } finally {
       setIsLoading(false);
@@ -51,114 +51,78 @@ export default function GetSubscriptionPage() {
   ];
 
   return (
-    <form className={styles.form}>
-      <Grid
-        type='container'
-        breakpoints={{
-          xs: '325px',
-          sm: '425px',
-          md: '768px',
-          lg: '1200px',
-          xl: '1500px',
-        }}
-      >
-        <Grid.Col span={{ base: 12, md: 7, lg: 3 }}>
-          <Block>
-            <Stack gap='xs'>
-              <Text size='md' fw={500}>
-                {t('getSubscription.enter_email')}
-              </Text>
-              <TextInput
-                type='email'
-                size='md'
-                placeholder={t('getSubscription.email_placeholder')}
-                error={error}
-                value={email}
-                required
-                inputWrapperOrder={['label', 'input', 'error', 'description']}
-                description={t('getSubscription.email_description')}
-                rightSection={
-                  email !== '' ? <Input.ClearButton onClick={() => setEmail('')} /> : undefined
-                }
-                rightSectionPointerEvents='auto'
-                leftSection={<IconMail size={20} stroke={1.5} />}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (error) setError('');
-                }}
-                autoComplete='email'
-                styles={{
-                  input: {
-                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                  },
-                }}
-              />
-            </Stack>
-          </Block>
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, md: 5, lg: 3 }}>
-          <Block>
-            <Stack gap='xl'>
-              <div className={styles.orderSummary}>
-                <Text className={styles.summaryTitle}>{t('getSubscription.order_summary')}</Text>
-
-                <div className={styles.itemRow}>
-                  <div className={styles.itemLabel}>
-                    <Stack gap={2}>
-                      <Text className={styles.itemName}>{t('getSubscription.item_name')}</Text>
-                      <Badge
-                        size='sm'
-                        variant='gradient'
-                        gradient={{
-                          from: 'oklch(0.6009 0.043 129.98)',
-                          to: 'rgb(26, 27, 30)',
-                          deg: 90,
-                        }}
-                      >
-                        {t('getSubscription.discount')}
-                      </Badge>
-                    </Stack>
-                  </div>
-                  <div className={styles.priceColumn}>
-                    <Text className={styles.currentPrice}>€0.00</Text>
-                    <Text className={styles.oldPrice}>€1.99</Text>
-                  </div>
-                </div>
-
-                <div className={styles.divider} />
-
-                <Button size={'md'} type='submit' onClick={handleSubmit} disabled={isLoading}>
-                  {isLoading ? (
-                    <span className={styles.spinner} />
-                  ) : (
-                    <>
-                      {t('getSubscription.submit_button')}
-                      <IconArrowRight size={20} stroke={2} />
-                    </>
-                  )}
-                </Button>
-
-                <Stack gap='md'>
-                  <Text className={styles.featuresTitle}>
-                    {t('getSubscription.features_title')}
-                  </Text>
-                  <div className={styles.featuresList}>
-                    {features.map((feature) => (
-                      <div key={feature} className={styles.featureItem}>
-                        <div className={styles.featureIcon}>
-                          <IconCheck size={18} stroke={3} />
-                        </div>
-                        <Text size='sm'>{feature}</Text>
-                      </div>
-                    ))}
-                  </div>
-                </Stack>
+    <Form className={styles.form} onSubmit={(ev) => void handleSubmit(ev)}>
+      <div className='mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2'>
+        <Block>
+          <div className='flex flex-col gap-2'>
+            <Label className='text-base font-medium text-foreground'>
+              {t('getSubscription.enter_email')}
+            </Label>
+            <TextField isRequired name='email' type='email'>
+              <div className='relative w-full'>
+                <span className={styles.inputIcon}>
+                  <IconMail size={20} stroke={1.5} />
+                </span>
+                <Input
+                  autoComplete='email'
+                  className={styles.input}
+                  placeholder={t('getSubscription.email_placeholder')}
+                  value={email}
+                  variant='secondary'
+                  onChange={(v) => {
+                    setEmail(v);
+                    if (error) setError('');
+                  }}
+                />
               </div>
-            </Stack>
-          </Block>
-        </Grid.Col>
-      </Grid>
-    </form>
+              <Description>{t('getSubscription.email_description')}</Description>
+              {error ? <Description className='text-danger'>{error}</Description> : null}
+            </TextField>
+          </div>
+        </Block>
+
+        <Block>
+          <div className={styles.orderSummary}>
+            <p className={styles.summaryTitle}>{t('getSubscription.order_summary')}</p>
+
+            <div className={styles.itemRow}>
+              <div className={styles.itemLabel}>
+                <div className='flex flex-col gap-0.5'>
+                  <p className={styles.itemName}>{t('getSubscription.item_name')}</p>
+                  <Chip color='accent' size='sm' variant='soft'>
+                    <Chip.Label>{t('getSubscription.discount')}</Chip.Label>
+                  </Chip>
+                </div>
+              </div>
+              <div className={styles.priceColumn}>
+                <p className={styles.currentPrice}>€0.00</p>
+                <p className={styles.oldPrice}>€1.99</p>
+              </div>
+            </div>
+
+            <div className={styles.divider} />
+
+            <Button className={styles.submitButton} isPending={isLoading} type='submit'>
+              {t('getSubscription.submit_button')}
+              <IconArrowRight size={20} stroke={2} />
+            </Button>
+
+            <div className='flex flex-col gap-4'>
+              <p className={styles.featuresTitle}>{t('getSubscription.features_title')}</p>
+              <div className={styles.featuresList}>
+                {features.map((feature) => (
+                  <div key={feature} className={styles.featureItem}>
+                    <div className={styles.featureIcon}>
+                      <IconCheck size={18} stroke={3} />
+                    </div>
+                    <p className='text-sm text-foreground/80'>{feature}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Block>
+      </div>
+    </Form>
   );
 }

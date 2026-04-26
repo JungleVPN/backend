@@ -1,8 +1,8 @@
-import { Button, Group } from '@mantine/core';
-import { useNavigate, useLocation } from 'react-router';
+import { Button } from '@heroui/react';
 import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate } from 'react-router';
 import { createClient } from '@/lib/supabase/client';
-import { useAuthStoreInfo, useAuthStoreActions } from '@/store/auth';
+import { useAuthStoreActions, useAuthStoreInfo } from '@/store/auth';
 
 export function AuthButtons() {
   const { authUser, loading } = useAuthStoreInfo();
@@ -29,19 +29,15 @@ export function AuthButtons() {
 
   if (authUser) {
     return (
-      <Group gap="xs">
-        <Button variant="outline" color="red" onClick={handleLogout}>
+      <div className='flex gap-2'>
+        <Button variant='outline' onPress={() => void handleLogout()}>
           {t('header.logout')}
         </Button>
-      </Group>
+      </div>
     );
   }
 
   if (location.pathname.includes('login')) return null;
 
-  return (
-    <Button variant="filled" onClick={handleLogin}>
-      {t('header.login')}
-    </Button>
-  );
+  return <Button onPress={handleLogin}>{t('header.login')}</Button>;
 }

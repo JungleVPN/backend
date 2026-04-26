@@ -1,4 +1,4 @@
-import { Box } from '@mantine/core';
+import { Surface } from '@heroui/react';
 import { useParams } from 'react-router';
 import { SubscriptionView } from '@/components/SubscriptionView/SubscriptionView';
 
@@ -10,8 +10,8 @@ export default function SubscriptionPage() {
   }
 
   return (
-    <Box mt={36}>
+    <Surface className='mt-9' variant='transparent'>
       <SubscriptionView shortUuid={shortUuid} />
-    </Box>
+    </Surface>
   );
 }

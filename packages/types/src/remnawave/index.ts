@@ -17,7 +17,11 @@ export {
 
 export {
   SubscriptionPageRawConfigSchema,
+  type TSubscriptionPageAppConfig,
+  type TSubscriptionPageBlockConfig,
+  type TSubscriptionPageButtonConfig,
   type TSubscriptionPageLanguageCode,
+  type TSubscriptionPageLocalizedText,
   type TSubscriptionPagePlatformKey,
   type TSubscriptionPageRawConfig,
 } from '@remnawave/subscription-page-types';

@@ -7,5 +7,5 @@
   -webkit-backdrop-filter: blur(12px);
   background: rgba(22, 27, 35, 0.8);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 0 0 var(--mantine-radius-lg) var(--mantine-radius-lg);
+  border-radius: 0 0 0.75rem 0.75rem;
 }

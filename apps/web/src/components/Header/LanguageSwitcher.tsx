@@ -1,7 +1,7 @@
-import { Menu, UnstyledButton } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { useSubscriptionConfigStoreActions } from '@workspace/core/stores';
+import { Button, Dropdown, Label } from '@heroui/react';
 import type { TSubscriptionPageLanguageCode } from '@remnawave/subscription-page-types';
+import { useSubscriptionConfigStoreActions } from '@workspace/core/stores';
+import { useTranslation } from 'react-i18next';
 
 export function LanguageSwitcher() {
   const { i18n } = useTranslation();
@@ -12,18 +12,27 @@ export function LanguageSwitcher() {
     setLanguage(newLocale as TSubscriptionPageLanguageCode);
   };
 
-  return (
-    <Menu shadow="md" width={100}>
-      <Menu.Target>
-        <UnstyledButton style={{ textTransform: 'uppercase', fontWeight: 600, fontSize: '14px' }}>
-          {i18n.language?.split('-')[0] || 'ru'}
-        </UnstyledButton>
-      </Menu.Target>
+  const code = i18n.language?.split('-')[0] || 'ru';
 
-      <Menu.Dropdown>
-        <Menu.Item onClick={() => handleLanguageChange('ru')}>Русский</Menu.Item>
-        <Menu.Item onClick={() => handleLanguageChange('en')}>English</Menu.Item>
-      </Menu.Dropdown>
-    </Menu>
+  return (
+    <Dropdown>
+      <Button className='min-w-10 uppercase' size='sm' variant='ghost'>
+        {code}
+      </Button>
+      <Dropdown.Popover>
+        <Dropdown.Menu
+          onAction={(key) => {
+            handleLanguageChange(String(key));
+          }}
+        >
+          <Dropdown.Item id='ru' textValue='Русский'>
+            <Label>Русский</Label>
+          </Dropdown.Item>
+          <Dropdown.Item id='en' textValue='English'>
+            <Label>English</Label>
+          </Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown.Popover>
+    </Dropdown>
   );
 }

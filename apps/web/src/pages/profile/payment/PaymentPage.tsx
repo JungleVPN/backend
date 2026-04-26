@@ -1,11 +1,14 @@
-import { Button, Loader, Stack, Text } from '@mantine/core';
-import { useCreatePaymentSession, useDeleteSavedMethod, useSavedMethods } from '@workspace/core/hooks';
-import { SavedMethodCard } from '@workspace/ui';
-import { useEffect } from 'react';
+import { Button, Card, Spinner } from '@heroui/react';
+import {
+  useCreatePaymentSession,
+  useDeleteSavedMethod,
+  useSavedMethods,
+} from '@workspace/core/hooks';
+import { Fragment, useEffect } from 'react';
 import { paymentsApi } from '@/api/payments';
+import { SavedMethodRow } from '@/components/payment/SavedMethodRow';
 import { env } from '@/config/env';
 import { useAuthStoreInfo } from '@/store/auth';
-import { Block } from '@/ui/Block/Block';
 
 export default function PaymentPage() {
   const { authUser, rmnUser } = useAuthStoreInfo();
@@ -34,6 +37,7 @@ export default function PaymentPage() {
   };
 
   const handlePay = async () => {
+    console.log('Initiating payment process...');
     if (!authUser?.email || !rmnUser) return;
 
     const session = await createSession({
@@ -54,47 +58,53 @@ export default function PaymentPage() {
   };
 
   return (
-    <Stack gap='md'>
-      <Block>
-        <Text size='sm' fw={600} c='dimmed'>
+    <div className='flex flex-col gap-4'>
+      <div className='flex flex-col gap-2'>
+        <h2 className='px-1 text-xs font-semibold tracking-[0.06em] text-muted uppercase'>
           Saved payment methods
-        </Text>
+        </h2>
 
-        {loadingMethods ? (
-          <Loader size='sm' />
-        ) : savedMethods && savedMethods.length > 0 ? (
-          <Stack gap='sm'>
-            {savedMethods.map((method) => (
-              <SavedMethodCard
-                key={method.id}
-                method={method}
-                onDelete={handleDelete}
-                isDeleting={isDeleting}
-              />
-            ))}
-          </Stack>
-        ) : (
-          <Text size='sm' c='dimmed'>
-            No saved payment methods yet. Complete a payment to save one.
-          </Text>
-        )}
-      </Block>
+        <Card className='w-full overflow-hidden p-0' variant='default'>
+          <Card.Content className='flex flex-col gap-0 p-0'>
+            {loadingMethods ? (
+              <div className='flex min-h-[120px] items-center justify-center py-8'>
+                <Spinner color='accent' size='sm' />
+              </div>
+            ) : savedMethods && savedMethods.length > 0 ? (
+              savedMethods.map((method, index) => (
+                <Fragment key={method.id}>
+                  <SavedMethodRow
+                    isDeleting={isDeleting}
+                    method={method}
+                    showSeparatorAbove={index > 0}
+                    onDelete={handleDelete}
+                  />
+                </Fragment>
+              ))
+            ) : (
+              <p className='px-4 py-4 text-sm text-muted'>
+                No saved payment methods yet. Complete a payment to save one.
+              </p>
+            )}
+          </Card.Content>
+        </Card>
+      </div>
 
       {hasActiveMethod ? (
-        <Text size='xs' c='dimmed' ta='center'>
+        <p className='text-center text-xs text-muted'>
           Autopayment is active. To pay manually, remove your saved card first.
-        </Text>
+        </p>
       ) : (
         <Button
-          size='md'
           fullWidth
+          isDisabled={!authUser?.email}
+          isPending={isPaying}
+          size='lg'
           onClick={handlePay}
-          loading={isPaying}
-          disabled={!authUser?.email}
         >
           Pay {env.priceRub} ₽
         </Button>
       )}
-    </Stack>
+    </div>
   );
 }

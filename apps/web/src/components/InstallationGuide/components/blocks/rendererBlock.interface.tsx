@@ -2,8 +2,11 @@ import type {
   TSubscriptionPageBlockConfig,
   TSubscriptionPageButtonConfig,
   TSubscriptionPageLanguageCode,
-} from '@remnawave/subscription-page-types';
-import type { ButtonVariant } from '@mantine/core';
+} from '@workspace/types';
+import type { ReactNode } from 'react';
+
+/** Visual style for block action buttons (maps to HeroUI `Button` variants). */
+export type BlockButtonVariant = 'light' | 'subtle';
 
 export interface IBlockRendererProps {
   blocks: TSubscriptionPageBlockConfig[];
@@ -11,7 +14,7 @@ export interface IBlockRendererProps {
   getIconFromLibrary: (iconKey: string) => string;
   renderBlockButtons: (
     buttons: TSubscriptionPageButtonConfig[],
-    variant: ButtonVariant,
-  ) => React.ReactNode;
+    variant: BlockButtonVariant,
+  ) => ReactNode;
   svgLibrary: Record<string, string>;
 }

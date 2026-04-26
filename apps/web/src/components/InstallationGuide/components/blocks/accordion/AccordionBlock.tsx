@@ -1,13 +1,10 @@
-import { Accordion, Group, Stack, Text } from '@mantine/core';
-import { IconChevronDown } from '@tabler/icons-react';
+import { Button, Disclosure, DisclosureGroup, Separator, Surface } from '@heroui/react';
 import { useState } from 'react';
-
-import type { IBlockRendererProps } from '../rendererBlock.interface';
-import classes from './AccordionBlock.module.css';
-import { vibrate } from '@/utils/vibrate';
+import { ThemeIconComponent } from '@/components/ThemeIcon/ThemeIcon';
 import { getColorGradient } from '@/utils/colorParser';
 import { getLocalizedText } from '@/utils/configParser';
-import { ThemeIconComponent } from '@/components/ThemeIcon/ThemeIcon';
+import { vibrate } from '@/utils/vibrate';
+import type { IBlockRendererProps } from '../rendererBlock.interface';
 
 export const AccordionBlockRenderer = ({
   blocks,
@@ -15,74 +12,71 @@ export const AccordionBlockRenderer = ({
   renderBlockButtons,
   getIconFromLibrary,
 }: IBlockRendererProps) => {
-  const [openedAccordion, setOpenedAccordion] = useState<null | string>('0');
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(() => new Set(['0']));
 
   return (
-    <Accordion
-      chevron={<IconChevronDown size={18} />}
-      classNames={{
-        item: classes.accordionItem,
-        control: classes.accordionControl,
-        chevron: classes.accordionChevron,
-        content: classes.accordionContent,
-        label: classes.accordionLabel,
-      }}
-      onChange={(value) => {
+    <DisclosureGroup
+      allowsMultipleExpanded={false}
+      className='z-[3]'
+      expandedKeys={expandedKeys}
+      onExpandedChange={(keys) => {
         vibrate('tap');
-        setOpenedAccordion(value);
+        setExpandedKeys(keys as Set<string>);
       }}
-      radius="lg"
-      style={{ zIndex: 3 }}
-      transitionDuration={200}
-      value={openedAccordion}
-      variant="separated"
     >
-      {blocks.map((block, index) => {
-        const gradientStyle = getColorGradient(block.svgIconColor);
+      <Surface className='flex flex-col gap-0' variant='transparent'>
+        {blocks.map((block, index) => {
+          const id = String(index);
+          const gradientStyle = getColorGradient(block.svgIconColor);
+          const isOpen = expandedKeys.has(id);
 
-        return (
-          <Accordion.Item key={index} value={String(index)}>
-            <Accordion.Control>
-              <Group gap="sm" wrap="nowrap">
-                <ThemeIconComponent
-                  getIconFromLibrary={getIconFromLibrary}
-                  gradientStyle={gradientStyle}
-                  svgIconColor={block.svgIconColor}
-                  svgIconKey={block.svgIconKey}
-                />
-                <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-                  <Text
-                    c="white"
-                    dangerouslySetInnerHTML={{
-                      __html: getLocalizedText(block.title, currentLang),
-                    }}
-                    fw={600}
-                    size={'sm'}
-                    style={{
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  />
-                </Stack>
-              </Group>
-            </Accordion.Control>
-            <Accordion.Panel>
-              <Text
-                c="dimmed"
-                dangerouslySetInnerHTML={{
-                  __html: getLocalizedText(block.description, currentLang),
-                }}
-                size={'xs'}
-                style={{ lineHeight: 1.7 }}
-              />
-              <Group gap="xs" mt="sm" wrap="wrap">
-                {renderBlockButtons(block.buttons, 'light')}
-              </Group>
-            </Accordion.Panel>
-          </Accordion.Item>
-        );
-      })}
-    </Accordion>
+          return (
+            <div key={id}>
+              {index > 0 ? <Separator variant='secondary' /> : null}
+              <Disclosure id={id}>
+                <Disclosure.Heading>
+                  <Button
+                    className='h-auto w-full justify-between gap-2 px-3 py-2 text-start'
+                    slot='trigger'
+                    variant={isOpen ? 'secondary' : 'ghost'}
+                  >
+                    <span className='flex min-w-0 flex-1 items-center gap-2'>
+                      <ThemeIconComponent
+                        getIconFromLibrary={getIconFromLibrary}
+                        gradientStyle={gradientStyle}
+                        svgIconColor={block.svgIconColor}
+                        svgIconKey={block.svgIconKey}
+                      />
+                      <span
+                        className='truncate text-sm font-semibold text-foreground'
+                        // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+                        dangerouslySetInnerHTML={{
+                          __html: getLocalizedText(block.title, currentLang),
+                        }}
+                      />
+                    </span>
+                    <Disclosure.Indicator className='text-muted' />
+                  </Button>
+                </Disclosure.Heading>
+                <Disclosure.Content>
+                  <Disclosure.Body className='px-3 pb-3'>
+                    <p
+                      className='text-xs leading-relaxed text-muted'
+                      // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+                      dangerouslySetInnerHTML={{
+                        __html: getLocalizedText(block.description, currentLang),
+                      }}
+                    />
+                    <div className='mt-2 flex flex-wrap gap-2'>
+                      {renderBlockButtons(block.buttons, 'light')}
+                    </div>
+                  </Disclosure.Body>
+                </Disclosure.Content>
+              </Disclosure>
+            </div>
+          );
+        })}
+      </Surface>
+    </DisclosureGroup>
   );
 };

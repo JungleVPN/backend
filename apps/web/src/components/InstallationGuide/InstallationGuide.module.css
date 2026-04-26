@@ -2,7 +2,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: var(--mantine-spacing-md);
+  margin-bottom: 1rem;
 }
 
 .appButton {
@@ -17,7 +17,7 @@
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-left: 3px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--mantine-radius-md);
+  border-radius: 0.5rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -31,19 +31,6 @@
   opacity: 0.3;
 }
 
-.appButtonActive,
-.appButtonActive:hover {
-  background: linear-gradient(90deg, oklch(0.6 0.04 129.98) 0%, transparent 100%);
-  border-color: oklch(0.6009 0.043 129.98);
-  box-shadow:
-    inset 4px 0 12px -4px oklch(0.6009 0.043 129.98),
-    0 0 12px rgba(34, 211, 238, 0.1);
-}
-
-.appButtonActive .appName {
-  color: #fff;
-}
-
 .appButtonActive .bgIcon,
 .appButtonActive:hover .bgIcon {
   opacity: 0.25;
@@ -51,11 +38,11 @@
 
 .bgIcon {
   position: absolute;
-  right: -12px;
+  right: 2px;
   top: 50%;
   transform: translateY(-50%);
-  width: 56px;
-  height: 56px;
+  width: 24px;
+  height: 24px;
   opacity: 0.25;
   pointer-events: none;
   transition: all 0.3s ease;
@@ -83,15 +70,15 @@
   position: relative;
   z-index: 1;
   color: rgba(255, 255, 255, 0.85);
-  font-size: var(--mantine-font-size-md);
+  font-size: 1rem;
   font-weight: 600;
   white-space: nowrap;
 }
 
 .featuredBadge {
   position: absolute;
-  top: 4px;
-  left: 4px;
+  top: 12px;
+  left: 12px;
   width: 8px;
   height: 8px;
   display: inline-block;

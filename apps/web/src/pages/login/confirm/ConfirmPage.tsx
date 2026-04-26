@@ -1,14 +1,22 @@
-import { Box, Button, Flex, PinInput, Text, Title } from '@mantine/core';
-import { useSearchParams, useNavigate } from 'react-router';
-import { useTranslation } from 'react-i18next';
+import {
+  Button,
+  Description,
+  Form,
+  InputOTP,
+  Label,
+  REGEXP_ONLY_DIGITS,
+  Surface,
+} from '@heroui/react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate, useSearchParams } from 'react-router';
 import { createClient } from '@/lib/supabase/client';
 import { Block } from '@/ui/Block/Block';
 
 export default function ConfirmPage() {
   const [searchParams] = useSearchParams();
   const email = searchParams.get('email');
-  const [otp, setOtp] = useState<string | undefined>(undefined);
+  const [otp, setOtp] = useState('');
   const [timer, setTimer] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const { t } = useTranslation();
@@ -16,14 +24,10 @@ export default function ConfirmPage() {
 
   useEffect(() => {
     if (timer > 0) {
-      const interval = setInterval(() => setTimer((t) => t - 1), 1000);
+      const interval = setInterval(() => setTimer((v) => v - 1), 1000);
       return () => clearInterval(interval);
     }
   }, [timer]);
-
-  const handleChange = (value: string) => {
-    setOtp(value);
-  };
 
   const handleConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +43,11 @@ export default function ConfirmPage() {
     });
 
     if (verifyError) {
-      setError(t('confirm.error_invalid_code', { defaultValue: 'The code is incorrect. Please try again.' }));
+      setError(
+        t('confirm.error_invalid_code', {
+          defaultValue: 'The code is incorrect. Please try again.',
+        }),
+      );
     } else {
       navigate('/profile/subscription');
     }
@@ -65,58 +73,60 @@ export default function ConfirmPage() {
   };
 
   return (
-    <Box w={'fit-content'} m={'100px auto'}>
-      <form onSubmit={handleConfirm}>
+    <Surface className='mx-auto w-fit max-w-md pt-24' variant='transparent'>
+      <Form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void handleConfirm(e);
+        }}
+      >
         <Block>
-          <Flex direction={'column'} gap={'md'}>
-            <Title order={1} ta="center">
+          <div className='flex flex-col gap-4'>
+            <h1 className='text-center text-2xl font-semibold text-foreground'>
               {t('confirm.title')}
-            </Title>
+            </h1>
 
-            {error && (
-              <Text c="red" ta="center" size="sm">
-                {error}
-              </Text>
-            )}
+            {error ? <Description className='text-center text-danger'>{error}</Description> : null}
 
-            <PinInput
-              size="md"
-              gap={'xs'}
-              length={6}
-              m={'auto'}
-              type="number"
-              value={otp}
-              onChange={handleChange}
-              oneTimeCode
-            />
+            <div className='mx-auto flex w-full max-w-xs flex-col gap-2'>
+              <Label className='sr-only'>One-time code</Label>
+              <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={otp} onChange={setOtp}>
+                <InputOTP.Group>
+                  <InputOTP.Slot index={0} />
+                  <InputOTP.Slot index={1} />
+                  <InputOTP.Slot index={2} />
+                </InputOTP.Group>
+                <InputOTP.Separator />
+                <InputOTP.Group>
+                  <InputOTP.Slot index={3} />
+                  <InputOTP.Slot index={4} />
+                  <InputOTP.Slot index={5} />
+                </InputOTP.Group>
+              </InputOTP>
+            </div>
+
             <Button
-              size={'md'}
-              type={'submit'}
-              w={'100%'}
-              maw={300}
-              m={'auto'}
-              disabled={!otp || otp.length < 6}
+              fullWidth
+              className='mx-auto max-w-xs'
+              isDisabled={!otp || otp.length < 6}
+              type='submit'
             >
               {t('confirm.submit')}
             </Button>
             <Button
-              variant="subtle"
-              size="sm"
-              maw={300}
-              m={'auto'}
-              c={'oklch(0.6009 0.043 129.98)'}
-              onClick={handleResend}
-              disabled={timer > 0}
-              w="100%"
+              className='mx-auto max-w-xs text-accent'
+              isDisabled={timer > 0}
+              variant='ghost'
+              onPress={() => void handleResend()}
             >
               {timer > 0 ? t('confirm.resend_in', { timer }) : t('confirm.resend_otp')}
             </Button>
-            <Text c="dimmed" size="xs" ta="center">
+            <Description className='text-center text-muted text-xs'>
               {t('confirm.hint')}
-            </Text>
-          </Flex>
+            </Description>
+          </div>
         </Block>
-      </form>
-    </Box>
+      </Form>
+    </Surface>
   );
 }

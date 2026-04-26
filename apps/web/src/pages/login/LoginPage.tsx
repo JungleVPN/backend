@@ -1,4 +1,4 @@
-import { Alert, Button, Container, TextInput, Title } from '@mantine/core';
+import { Alert, Button, Form, Input, Label, Surface, TextField } from '@heroui/react';
 import { type FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router';
@@ -38,35 +38,43 @@ export default function LoginPage() {
   };
 
   return (
-    <Container size='xs' mt={100}>
-      <Block radius='md' p='xl'>
-        <Title order={1} className={css.title} ta='center' mb='xs'>
-          {t('login.title')}
-        </Title>
+    <Surface className='mx-auto mt-24 max-w-sm' variant='transparent'>
+      <Block>
+        <h1 className={`text-center text-2xl font-semibold ${css.title}`}>{t('login.title')}</h1>
 
-        {(message || error) && (
-          <Alert color={message?.includes('Check email') ? 'green' : 'red'} mb='lg'>
-            {error || message}
-          </Alert>
-        )}
+        <div className='mt-2 flex flex-col gap-4'>
+          {(message || error) && (
+            <Alert status={message?.includes('Check email') ? 'success' : 'danger'}>
+              <Alert.Indicator />
+              <Alert.Content>
+                <Alert.Description>{error || message}</Alert.Description>
+              </Alert.Content>
+            </Alert>
+          )}
 
-        <form onSubmit={handleSubmit}>
-          <TextInput
-            label={t('login.email_label')}
-            name='email'
-            className={css.input}
-            placeholder={t('login.email_placeholder')}
-            required
-            type='email'
-            mb='md'
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <Button type='submit' fullWidth loading={loading}>
-            {t('login.submit')}
-          </Button>
-        </form>
+          <Form
+            className='flex flex-col gap-4'
+            onSubmit={(e) => {
+              e.preventDefault();
+              void handleSubmit(e);
+            }}
+          >
+            <TextField isRequired name='email' type='email'>
+              <Label>{t('login.email_label')}</Label>
+              <Input
+                className={css.input}
+                placeholder={t('login.email_placeholder')}
+                value={email}
+                variant='secondary'
+                onChange={setEmail}
+              />
+            </TextField>
+            <Button fullWidth isPending={loading} type='submit'>
+              {t('login.submit')}
+            </Button>
+          </Form>
+        </div>
       </Block>
-    </Container>
+    </Surface>
   );
 }

@@ -1,10 +1,9 @@
-import { Box, Group, Stack, Text } from '@mantine/core';
-
-import type { IBlockRendererProps } from '../rendererBlock.interface';
-import classes from './minimalBlock.module.css';
+import { Surface } from '@heroui/react';
 import { ThemeIconComponent } from '@/components/ThemeIcon/ThemeIcon';
 import { getColorGradient } from '@/utils/colorParser';
 import { getLocalizedText } from '@/utils/configParser';
+import type { IBlockRendererProps } from '../rendererBlock.interface';
+import classes from './minimalBlock.module.css';
 
 export const MinimalBlockRenderer = ({
   blocks,
@@ -13,44 +12,38 @@ export const MinimalBlockRenderer = ({
   getIconFromLibrary,
 }: IBlockRendererProps) => {
   return (
-    <Stack gap="md" style={{ zIndex: 3 }}>
+    <Surface className='z-[3] flex flex-col gap-4' variant='transparent'>
       {blocks.map((block, index) => {
         const gradientStyle = getColorGradient(block.svgIconColor);
 
         return (
-          <Box className={classes.stepBlock} key={index}>
-            <Group gap="sm" mb="xs" wrap="nowrap">
+          <Surface key={index} className={classes.stepBlock} variant='transparent'>
+            <div className='mb-2 flex flex-nowrap items-start gap-2'>
               <ThemeIconComponent
                 getIconFromLibrary={getIconFromLibrary}
                 gradientStyle={gradientStyle}
                 svgIconColor={block.svgIconColor}
                 svgIconKey={block.svgIconKey}
               />
-              <Text
-                c="white"
+              <p
+                className='text-sm font-medium text-foreground'
                 dangerouslySetInnerHTML={{
                   __html: getLocalizedText(block.title, currentLang),
                 }}
-                fw={500}
-                size={'sm'}
               />
-            </Group>
-            <Text
-              c="dimmed"
+            </div>
+            <p
+              className='text-xs leading-relaxed text-muted'
               dangerouslySetInnerHTML={{
                 __html: getLocalizedText(block.description, currentLang),
               }}
-              size={'xs'}
-              style={{ lineHeight: 1.6 }}
             />
-            {block.buttons.length > 0 && (
-              <Box style={{ marginTop: 8 }}>
-                {renderBlockButtons(block.buttons, 'subtle')}
-              </Box>
-            )}
-          </Box>
+            {block.buttons.length > 0 ? (
+              <div className='mt-2'>{renderBlockButtons(block.buttons, 'subtle')}</div>
+            ) : null}
+          </Surface>
         );
       })}
-    </Stack>
+    </Surface>
   );
 };

@@ -1,9 +1,8 @@
-import { Card, Group, Stack, Text, Title } from '@mantine/core';
-
-import type { IBlockRendererProps } from '../rendererBlock.interface';
+import { Card } from '@heroui/react';
 import { ThemeIconComponent } from '@/components/ThemeIcon/ThemeIcon';
 import { getColorGradient } from '@/utils/colorParser';
 import { getLocalizedText } from '@/utils/configParser';
+import type { IBlockRendererProps } from '../rendererBlock.interface';
 
 export const CardsBlockRenderer = ({
   blocks,
@@ -12,55 +11,45 @@ export const CardsBlockRenderer = ({
   getIconFromLibrary,
 }: IBlockRendererProps) => {
   return (
-    <Stack gap="sm" style={{ zIndex: 3 }}>
+    <div className='z-[3] flex flex-col gap-2'>
       {blocks.map((block, index) => {
         const gradientStyle = getColorGradient(block.svgIconColor);
 
         return (
-          <Card
-            className="step-card"
-            key={index}
-            p={{ base: 'sm', xs: 'md', sm: 'lg' }}
-            radius="lg"
-          >
-            <Group align="flex-start" gap={'sm'} wrap="nowrap">
+          // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+          <Card key={index} className='step-card' variant='default'>
+            <Card.Content className='flex flex-row items-start gap-2'>
               <ThemeIconComponent
                 getIconFromLibrary={getIconFromLibrary}
                 gradientStyle={gradientStyle}
                 svgIconColor={block.svgIconColor}
                 svgIconKey={block.svgIconKey}
               />
-              <Stack gap={'xs'} style={{ flex: 1, minWidth: 0 }}>
-                <Title
-                  c="white"
-                  fw={600}
-                  order={6}
-                  style={{ wordBreak: 'break-word' }}
-                >
+              <div className='min-w-0 flex-1'>
+                <Card.Title className='break-words text-base'>
                   <span
+                    // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
                     dangerouslySetInnerHTML={{
                       __html: getLocalizedText(block.title, currentLang),
                     }}
                   />
-                </Title>
+                </Card.Title>
 
-                <Text
-                  size={'xs'}
-                  style={{ whiteSpace: 'pre-line', lineHeight: 1.6 }}
-                >
+                <Card.Description className='mt-1 whitespace-pre-line text-xs leading-relaxed'>
                   <span
+                    // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
                     dangerouslySetInnerHTML={{
                       __html: getLocalizedText(block.description, currentLang),
                     }}
                   />
-                </Text>
+                </Card.Description>
 
-                {renderBlockButtons(block.buttons, 'light')}
-              </Stack>
-            </Group>
+                <div className='mt-2'>{renderBlockButtons(block.buttons, 'light')}</div>
+              </div>
+            </Card.Content>
           </Card>
         );
       })}
-    </Stack>
+    </div>
   );
 };

@@ -1,4 +1,4 @@
-import { ThemeIcon } from '@mantine/core';
+import { Surface } from '@heroui/react';
 import type { ColorGradientStyle } from '@/utils/colorParser';
 
 interface IProps {
@@ -7,28 +7,27 @@ interface IProps {
   svgIconColor: string;
   svgIconKey: string;
 }
+
 export const ThemeIconComponent = (props: IProps) => {
   const { svgIconColor, gradientStyle, svgIconKey, getIconFromLibrary } = props;
 
   return (
-    <ThemeIcon
-      color={svgIconColor}
-      radius="xl"
-      size={36}
+    <Surface
+      className='size-9 shrink-0 rounded-full'
       style={{
         background: gradientStyle.background,
         border: gradientStyle.border,
         boxShadow: gradientStyle.boxShadow,
-        flexShrink: 0,
+        color: svgIconColor,
       }}
-      variant="light"
+      variant='transparent'
     >
       <span
+        className='flex size-full items-center justify-center [&_svg]:size-[18px]'
         dangerouslySetInnerHTML={{
           __html: getIconFromLibrary(svgIconKey),
         }}
-        style={{ display: 'flex', alignItems: 'center' }}
       />
-    </ThemeIcon>
+    </Surface>
   );
 };

@@ -2,7 +2,7 @@
   left: 50%;
   transform: translateX(-50%);
   backface-visibility: hidden;
-  border-radius: 100px;
+  border-radius: 1rem;
   bottom: 16px;
   position: fixed;
   will-change: transform;
@@ -14,7 +14,7 @@
 
 .list {
   position: relative;
-  border-radius: var(--mantine-radius-xl);
+  border-radius: 1rem;
   align-items: flex-start;
   align-self: stretch;
   display: flex;
@@ -44,8 +44,8 @@
 
 .tab {
   position: relative;
-  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
-  font-size: var(--mantine-font-size-sm);
+  padding: 0.25rem 1rem;
+  font-size: 0.875rem;
   white-space: nowrap;
   display: flex;
   gap: 2px;
@@ -63,9 +63,9 @@
 }
 
 .indicator {
-  border-radius: var(--mantine-radius-xl);
-  border: 1px solid var(--mantine-color-gray-2);
-  box-shadow: var(--mantine-shadow-sm);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
   background-color: rgb(from rgb(255, 255, 255) r g b / 10%);
   border-color: transparent;
 }
@@ -74,11 +74,11 @@
   z-index: 1;
   font-weight: 600;
   transition: color 100ms ease;
-  color: var(--mantine-color-gray-7);
+  color: rgba(255, 255, 255, 0.55);
+}
 
-  &[data-active] {
-    color: var(--mantine-color-black);
-  }
+.tab[aria-selected="true"] {
+  color: #fff;
 }
 
 .tabSection {
@@ -96,5 +96,9 @@
   font-size: 12px;
   font-weight: 400;
   line-height: 14px;
-  color: var(--mantine-color-gray-5);
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.tab[aria-selected="true"] .tabLabel {
+  color: rgba(255, 255, 255, 0.85);
 }

@@ -1,29 +1,18 @@
-import {
-  Card,
-  Collapse,
-  Group,
-  SimpleGrid,
-  Stack,
-  Text,
-  ThemeIcon,
-  UnstyledButton,
-} from '@mantine/core';
+import { Button, Disclosure, Surface } from '@heroui/react';
 import {
   IconAlertCircle,
   IconArrowsUpDown,
   IconCalendar,
   IconCheck,
-  IconChevronDown,
   IconUserScan,
   IconX,
 } from '@tabler/icons-react';
+import { useSubscription } from '@workspace/core/stores';
 import { useState } from 'react';
 import { InfoBlock } from '@/components/InfoBlock/InfoBlock';
 import { useTranslation } from '@/hooks/useTranslations';
-import { useSubscription } from '@workspace/core/stores';
 import { getColorGradientSolid } from '@/utils/colorParser';
 import { formatDate, getExpirationTextUtil } from '@/utils/configParser';
-import { vibrate } from '@/utils/vibrate';
 
 export const SubscriptionInfoCollapsed = () => {
   const { t, currentLang, baseTranslations } = useTranslation();
@@ -46,81 +35,42 @@ export const SubscriptionInfoCollapsed = () => {
   const gradientColor = getColorGradientSolid(status.color);
 
   return (
-    <Card
-      p={'xs'}
-      radius="lg"
-      style={{
-        overflow: 'hidden',
-        zIndex: 3,
-        backgroundColor: 'rgb(26, 27, 30)',
-        border: '1px solid oklch(0.4676 0 0)',
-        gap: '0',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      <UnstyledButton
-        onClick={() => {
-          vibrate('tap');
-          setIsExpanded(!isExpanded);
-        }}
-        p={{ base: 'xs', sm: 'sm' }}
-        style={{ width: '100%' }}
-      >
-        <Group gap="sm" justify="space-between" wrap="nowrap">
-          <Group gap="xs" style={{ minWidth: 0, flex: 1 }} wrap="nowrap">
-            <ThemeIcon
-              color={status.color}
-              radius="xl"
-              size={28}
+    <Disclosure isExpanded={isExpanded} onExpandedChange={setIsExpanded}>
+      <Disclosure.Heading>
+        <Button
+          className='h-auto w-full justify-between gap-2 px-4 py-2'
+          slot='trigger'
+          variant='primary'
+        >
+          <span className='flex min-w-0 flex-1 items-center gap-2'>
+            <Surface
+              className='flex size-7 shrink-0 items-center justify-center rounded-full'
               style={{
                 background: gradientColor.background,
                 border: gradientColor.border,
                 boxShadow: gradientColor.boxShadow,
-                flexShrink: 0,
               }}
-              variant="light"
+              variant='transparent'
             >
               {status.icon}
-            </ThemeIcon>
-
-            <Stack gap={0} style={{ minWidth: 0, flex: 1 }}>
-              <Text
-                c="white"
-                fw={600}
-                size="sm"
-                style={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
+            </Surface>
+            <span className='flex min-w-0 flex-1 flex-col items-start gap-0'>
+              <span className='truncate text-sm font-semibold text-foreground'>
                 {user.username}
-              </Text>
-              <Text c="dimmed" size="xs" style={{ whiteSpace: 'nowrap' }}>
+              </span>
+              <span className='truncate text-xs'>
                 {getExpirationTextUtil(user.expiresAt, currentLang, baseTranslations)}
-              </Text>
-            </Stack>
-          </Group>
-
-          <Group gap="xs" style={{ flexShrink: 0 }} wrap="nowrap">
-            <IconChevronDown
-              color="var(--mantine-color-dimmed)"
-              size={18}
-              style={{
-                transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 150ms ease',
-              }}
-            />
-          </Group>
-        </Group>
-      </UnstyledButton>
-
-      <Collapse in={isExpanded} keepMounted>
-        <Stack gap="xs" pb={{ base: 'xs', sm: 'sm' }} px={{ base: 'xs', sm: 'sm' }}>
-          <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs">
+              </span>
+            </span>
+          </span>
+          <Disclosure.Indicator className='text-muted' />
+        </Button>
+      </Disclosure.Heading>
+      <Disclosure.Content>
+        <Disclosure.Body className='px-2 pb-2'>
+          <div className='grid grid-cols-2 gap-2'>
             <InfoBlock
-              color="blue"
+              color='blue'
               icon={<IconUserScan size={16} />}
               title={t(baseTranslations.name)}
               value={user.username}
@@ -138,21 +88,21 @@ export const SubscriptionInfoCollapsed = () => {
             />
 
             <InfoBlock
-              color="red"
+              color='red'
               icon={<IconCalendar size={16} />}
               title={t(baseTranslations.expires)}
               value={formatDate(user.expiresAt, currentLang, baseTranslations)}
             />
 
             <InfoBlock
-              color="yellow"
+              color='yellow'
               icon={<IconArrowsUpDown size={16} />}
               title={t(baseTranslations.bandwidth)}
               value={`${user.trafficUsed} / ${user.trafficLimit === '0' ? '∞' : user.trafficLimit}`}
             />
-          </SimpleGrid>
-        </Stack>
-      </Collapse>
-    </Card>
+          </div>
+        </Disclosure.Body>
+      </Disclosure.Content>
+    </Disclosure>
   );
 };

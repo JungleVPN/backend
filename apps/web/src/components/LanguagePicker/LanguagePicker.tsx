@@ -1,8 +1,8 @@
+import { Button, Dropdown, Label } from '@heroui/react';
 import {
   getLanguageInfo,
   type TSubscriptionPageLanguageCode,
 } from '@remnawave/subscription-page-types';
-import { ActionIcon, Menu, Text, useDirection } from '@mantine/core';
 import { IconLanguage } from '@tabler/icons-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,64 +18,53 @@ export function LanguagePicker(props: IProps) {
   const { locales, currentLang, onLanguageChange } = props;
   const { i18n } = useTranslation();
 
-  const { toggleDirection, dir } = useDirection();
-
   useEffect(() => {
-    if (currentLang === 'fa' && dir === 'ltr') {
-      toggleDirection();
-    }
-    if (currentLang !== 'fa' && dir === 'rtl') {
-      toggleDirection();
+    const nextDir = currentLang === 'fa' ? 'rtl' : 'ltr';
+    if (document.documentElement.dir !== nextDir) {
+      document.documentElement.dir = nextDir;
     }
   }, [currentLang]);
 
   useEffect(() => {
     i18n.changeLanguage(currentLang);
-  }, []);
+  }, [currentLang, i18n]);
 
   const changeLanguage = (value: TSubscriptionPageLanguageCode) => {
     onLanguageChange(value);
     i18n.changeLanguage(value);
   };
 
-  const items = locales.map((item) => {
-    const localeInfo = getLanguageInfo(item);
-    if (!localeInfo) return null;
-    return (
-      <Menu.Item
-        key={item}
-        leftSection={<Text>{localeInfo.emoji}</Text>}
-        onClick={() => {
-          vibrate('doubleTap');
-          changeLanguage(item);
-        }}
-      >
-        {localeInfo.nativeName}
-      </Menu.Item>
-    );
-  });
-
   if (locales.length === 1) return null;
 
   return (
-    <Menu position="bottom" width={150} withArrow={false} withinPortal>
-      <Menu.Target>
-        <ActionIcon
-          color="gray"
-          radius="md"
-          size="xl"
-          style={{
-            background: 'rgba(255, 255, 255, 0.02)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+    <Dropdown>
+      <Button
+        aria-label='Language'
+        className='border border-white/10 bg-white/[0.02]'
+        isIconOnly
+        variant='secondary'
+      >
+        <IconLanguage size={22} />
+      </Button>
+      <Dropdown.Popover className='max-h-64 overflow-y-auto'>
+        <Dropdown.Menu
+          onAction={(key) => {
+            vibrate('doubleTap');
+            changeLanguage(key as TSubscriptionPageLanguageCode);
           }}
-          variant="default"
         >
-          <IconLanguage size={22} />
-        </ActionIcon>
-      </Menu.Target>
-      <Menu.Dropdown mah={250} style={{ overflowY: 'auto' }}>
-        {items}
-      </Menu.Dropdown>
-    </Menu>
+          {locales.map((item) => {
+            const localeInfo = getLanguageInfo(item);
+            if (!localeInfo) return null;
+            return (
+              <Dropdown.Item key={item} id={item} textValue={localeInfo.nativeName}>
+                <span className='text-base'>{localeInfo.emoji}</span>
+                <Label>{localeInfo.nativeName}</Label>
+              </Dropdown.Item>
+            );
+          })}
+        </Dropdown.Menu>
+      </Dropdown.Popover>
+    </Dropdown>
   );
 }

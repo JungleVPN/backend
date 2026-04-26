@@ -1,26 +1,26 @@
 /* Timeline styles */
 .timelineRoot {
-    --tl-line-color: rgba(255, 255, 255, 0.08);
+  --tl-line-color: rgba(255, 255, 255, 0.08);
 }
 
 .timelineItem {
-    padding-bottom: var(--mantine-spacing-md);
+  padding-bottom: 1rem;
 }
 
 .timelineItemBullet {
-    background: transparent !important;
-    border: none !important;
+  background: transparent !important;
+  border: none !important;
 }
 
 .bulletIconSvg {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
 }
 
 .bulletIconSvg svg {
-    width: 18px;
-    height: 18px;
+  width: 18px;
+  height: 18px;
 }

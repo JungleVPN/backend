@@ -1,4 +1,4 @@
-import { Box, Group, SimpleGrid, Stack, Text, ThemeIcon } from '@mantine/core';
+import { Surface } from '@heroui/react';
 import {
   IconArrowsUpDown,
   IconCalendar,
@@ -6,8 +6,9 @@ import {
   IconUserScan,
   IconX,
 } from '@tabler/icons-react';
-import { useTranslation } from '@/hooks/useTranslations';
 import { useSubscription } from '@workspace/core/stores';
+import type { ReactNode } from 'react';
+import { useTranslation } from '@/hooks/useTranslations';
 import { Block } from '@/ui/Block/Block';
 import { formatDate } from '@/utils/configParser';
 import classes from './subscriptionInfoCards.module.css';
@@ -27,35 +28,27 @@ const iconColorClasses: Record<ColorVariant, string> = {
 
 interface CardItemProps {
   color: ColorVariant;
-  icon: React.ReactNode;
+  icon: ReactNode;
   label: string;
   value: string;
 }
 
 const CardItem = ({ icon, label, value, color }: CardItemProps) => {
   return (
-    <Box className={classes.cardItem}>
-      <Group gap="xs" wrap="nowrap">
-        <ThemeIcon
-          className={iconColorClasses[color]}
-          color={color}
-          radius="md"
-          size={36}
-          style={{ flexShrink: 0 }}
-          variant="light"
+    <Surface className={classes.cardItem} variant='transparent'>
+      <div className='flex flex-nowrap items-start gap-2'>
+        <Surface
+          className={`flex size-9 shrink-0 items-center justify-center rounded-md ${iconColorClasses[color]}`}
+          variant='secondary'
         >
           {icon}
-        </ThemeIcon>
-        <Stack gap={2} style={{ minWidth: 0, flex: 1 }}>
-          <Text c="dimmed" className={classes.label} fw={500} lh={1} size="xs" tt="uppercase">
-            {label}
-          </Text>
-          <Text c="white" className={classes.value} fw={600} size="sm">
-            {value}
-          </Text>
-        </Stack>
-      </Group>
-    </Box>
+        </Surface>
+        <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
+          <p className={`${classes.label} text-xs font-medium uppercase text-muted`}>{label}</p>
+          <p className={`${classes.value} text-sm font-semibold text-foreground`}>{value}</p>
+        </div>
+      </div>
+    </Surface>
   );
 };
 
@@ -75,14 +68,9 @@ export const SubscriptionInfoCards = () => {
 
   return (
     <Block>
-      <SimpleGrid
-        cols={{ base: 1, xs: 1, sm: 2 }}
-        spacing="xs"
-        verticalSpacing="xs"
-        style={{ zIndex: 3 }}
-      >
+      <div className='z-[3] grid grid-cols-1 gap-2 sm:grid-cols-2'>
         <CardItem
-          color="blue"
+          color='blue'
           icon={<IconUserScan size={18} />}
           label={t(baseTranslations.name)}
           value={user.username}
@@ -96,19 +84,19 @@ export const SubscriptionInfoCards = () => {
         />
 
         <CardItem
-          color="orange"
+          color='orange'
           icon={<IconCalendar size={18} />}
           label={t(baseTranslations.expires)}
           value={formatDate(user.expiresAt, currentLang, baseTranslations)}
         />
 
         <CardItem
-          color="cyan"
+          color='cyan'
           icon={<IconArrowsUpDown size={18} />}
           label={t(baseTranslations.bandwidth)}
           value={bandwidthValue}
         />
-      </SimpleGrid>
+      </div>
     </Block>
   );
 };

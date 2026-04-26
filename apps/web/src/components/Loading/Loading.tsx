@@ -1,27 +1,13 @@
-import '@gfazioli/mantine-spinner/styles.css';
+import { Spinner, Surface } from '@heroui/react';
 
-import { Center, Stack } from '@mantine/core';
-import { Spinner } from '@gfazioli/mantine-spinner';
-
-export function Loading({
-  height = '100vh',
-}: {
-  height?: string;
-  text?: string;
-  value?: number;
-}) {
+export function Loading({ height = '100vh' }: { height?: string; text?: string; value?: number }) {
   return (
-    <Center h={height}>
-      <Stack align="center" gap="xs" w="100%">
-        <Spinner
-          inner={50}
-          segments={30}
-          size={150}
-          speed={1_900}
-          strokeLinecap="butt"
-          thickness={2}
-        />
-      </Stack>
-    </Center>
+    <Surface
+      className='flex w-full flex-col items-center justify-center gap-2'
+      style={{ minHeight: height }}
+      variant='transparent'
+    >
+      <Spinner color='accent' size='lg' />
+    </Surface>
   );
 }

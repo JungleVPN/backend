@@ -1,4 +1,106 @@
-@layer mantine, mantine-datatable;
+@import "tailwindcss";
+@import "@heroui/styles";
+
+.dark,
+[data-theme="dark"] {
+  --tg-theme-section-separator-color: #252229;
+  --tg-theme-bottom-bar-bg-color: #161419;
+  --tg-color-scheme: dark;
+  --tg-theme-bg-color: #1f1c22;
+  --tg-theme-link-color: #71608b;
+  --tg-theme-button-color: #71608b;
+  --tg-theme-section-bg-color: #1f1c22;
+  --tg-theme-secondary-bg-color: #141216;
+  --tg-theme-button-text-color: #ffffff;
+  --tg-theme-header-bg-color: #141216;
+  --tg-theme-hint-color: #b1c3d5;
+  --tg-theme-text-color: #ffffff;
+  --tg-theme-destructive-text-color: #ef5b5b;
+  --tg-theme-subtitle-text-color: #b1c3d5;
+  --tg-theme-section-header-text-color: #b1c3d5;
+  --tg-theme-accent-text-color: #71608b;
+  --tg-viewport-height: 100vh;
+  --tg-viewport-stable-height: 100vh;
+  --tg-safe-area-inset-top: 0px;
+  --tg-safe-area-inset-bottom: 0px;
+  --tg-safe-area-inset-left: 0px;
+  --tg-safe-area-inset-right: 0px;
+  --deprecated-separator-color: rgba(61, 61, 63, 1);
+  --second-button-color: rgb(113 96 139 / 10%);
+  --text-confirm-color: #35ca5b;
+  --button-confirm-color: #35ca5b;
+  --button-main-disabled-color: #2f2f2f;
+  --text-main-disabled-color: #606060;
+  --button-destructive-color: rgb(239 91 91 / 10%);
+  --highlight-default: rgba(152, 152, 157, 0.24);
+  --quick-menu-background: rgba(0, 0, 0, 0.78);
+  --quick-menu-foreground: #ffffff;
+  --toast-background: rgba(45, 45, 45, 0.8);
+  --text-overlay: #ffffff;
+  --toast-link: #5ac8fa;
+  --tertiary-fill-background: rgba(118, 118, 128, 0.24);
+  --quaternary-fill-background: rgba(116, 116, 128, 0.18);
+  --separator-non-opaque-color: rgba(84, 84, 88, 0.65);
+  --accent-orange: #ff9f0a;
+  --segmented-control-active-background: #636366;
+  --tooltip-background: #3a3a3c;
+  --border-color: oklch(from #b1c3d5 l c h / 40%);
+  --accent-cyan: #64d2ff;
+  --dpr: 2;
+  --main-card-content-height: 192px;
+  --tabbar-height: 88px;
+  --tabbar-current-height: var(--tabbar-height);
+  --has-tabbar: 1;
+  --overscroll-top: var(--tg-theme-bg-color);
+  --overscroll-bottom: var(--tg-theme-bg-color);
+
+  /* ─── HeroUI semantic tokens → TG variables ──────────────────────────────
+     These map HeroUI's design system to Telegram's theme variables.
+     When TG updates CSS vars at runtime (via Mini App init data),
+     all HeroUI components automatically reflect the new theme. */
+  --accent: var(--tg-theme-button-color);
+  --accent-foreground: var(--tg-theme-button-text-color);
+  --background: var(--tg-theme-bg-color);
+  --foreground: var(--tg-theme-text-color);
+  --surface: var(--tg-theme-section-bg-color);
+  --surface-foreground: var(--tg-theme-text-color);
+  --muted: var(--tg-theme-hint-color);
+  --link: var(--tg-theme-link-color);
+  --focus: var(--tg-theme-button-color);
+  --danger: var(--tg-theme-destructive-text-color);
+}
+
+@theme inline {
+  /* ─── Expose TG variables as Tailwind utility classes ────────────────────
+     Usage: bg-tg-button, text-tg-text, border-tg-hint, etc.
+     These are additive — they don't override HeroUI's own @theme mappings. */
+  --color-tg-button: var(--tg-theme-button-color);
+  --color-tg-button-text: var(--tg-theme-button-text-color);
+  --color-tg-bg: var(--tg-theme-bg-color);
+  --color-tg-text: var(--tg-theme-text-color);
+  --color-tg-hint: var(--tg-theme-hint-color);
+  --color-tg-link: var(--tg-theme-link-color);
+  --color-tg-secondary-bg: var(--tg-theme-secondary-bg-color);
+  --color-tg-section-bg: var(--tg-theme-section-bg-color);
+  --color-tg-header-bg: var(--tg-theme-header-bg-color);
+  --color-tg-accent-text: var(--tg-theme-accent-text-color);
+  --color-tg-subtitle-text: var(--tg-theme-subtitle-text-color);
+  --color-tg-destructive: var(--tg-theme-destructive-text-color);
+  --color-tg-bottom-bar: var(--tg-theme-bottom-bar-bg-color);
+  --color-tg-separator: var(--tg-theme-section-separator-color);
+}
+
+@layer components {
+  .button--primary {
+    /* bg-accent resolves to --tg-theme-button-color (via --accent mapping above).
+       text-accent-foreground resolves to --tg-theme-button-text-color. */
+    @apply bg-accent text-accent-foreground;
+  }
+
+  .button--icon-only {
+    @apply rounded-lg bg-blue-500;
+  }
+}
 
 html,
 body {
@@ -31,10 +133,6 @@ input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 30px oklch(0.19 0 0) inset !important;
 }
 
-input:focus {
-  border-color: oklch(0.6009 0.043 129.98);
-}
-
 .app-container {
   position: relative;
   padding-bottom: var(--toolbar-safe-height);
@@ -59,7 +157,7 @@ input:focus {
 }
 
 .logo-text-highlight {
-  color: var(--mantine-color-cyan-4);
+  color: oklch(0.78 0.12 195);
 }
 
 .logo-text-normal {

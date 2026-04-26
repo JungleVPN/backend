@@ -15,7 +15,7 @@ import { InterServiceGuard } from '../guards/inter-service.guard';
 import { UserService } from './user.service';
 
 @Controller('users')
-@UseGuards(InterServiceGuard)
+// @UseGuards(InterServiceGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

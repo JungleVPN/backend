@@ -1,10 +1,9 @@
-import { Stack, Text, Timeline } from '@mantine/core';
-
-import type { IBlockRendererProps } from '../rendererBlock.interface';
-import classes from './timelineBlock.module.css';
+import { Surface } from '@heroui/react';
 import { ThemeIconComponent } from '@/components/ThemeIcon/ThemeIcon';
 import { getColorGradientSolid } from '@/utils/colorParser';
 import { getLocalizedText } from '@/utils/configParser';
+import type { IBlockRendererProps } from '../rendererBlock.interface';
+import classes from './timelineBlock.module.css';
 
 export const TimelineBlockRenderer = ({
   blocks,
@@ -13,57 +12,50 @@ export const TimelineBlockRenderer = ({
   getIconFromLibrary,
 }: IBlockRendererProps) => {
   return (
-    <Timeline
-      active={blocks.length}
-      bulletSize={36}
-      classNames={{
-        root: classes.timelineRoot,
-        item: classes.timelineItem,
-        itemBullet: classes.timelineItemBullet,
-      }}
-      color="cyan"
-      lineWidth={2}
-      style={{ zIndex: 3 }}
-    >
-      {blocks.map((block, index) => {
-        const gradientStyle = getColorGradientSolid(block.svgIconColor);
+    <Surface className={`z-[3] ${classes.timelineRoot}`} variant='transparent'>
+      <div className='flex flex-col'>
+        {blocks.map((block, index) => {
+          const gradientStyle = getColorGradientSolid(block.svgIconColor);
+          const isLast = index === blocks.length - 1;
 
-        return (
-          <Timeline.Item
-            bullet={
-              <ThemeIconComponent
-                getIconFromLibrary={getIconFromLibrary}
-                gradientStyle={gradientStyle}
-                svgIconColor={block.svgIconColor}
-                svgIconKey={block.svgIconKey}
-              />
-            }
-            key={index}
-            title={
-              <Text
-                c="white"
-                dangerouslySetInnerHTML={{
-                  __html: getLocalizedText(block.title, currentLang),
-                }}
-                fw={600}
-                size={'sm'}
-              />
-            }
-          >
-            <Stack gap="xs">
-              <Text
-                c="dimmed"
-                dangerouslySetInnerHTML={{
-                  __html: getLocalizedText(block.description, currentLang),
-                }}
-                size={'xs'}
-                style={{ lineHeight: 1.6 }}
-              />
-              {renderBlockButtons(block.buttons, 'light')}
-            </Stack>
-          </Timeline.Item>
-        );
-      })}
-    </Timeline>
+          return (
+            <div key={index} className={`relative flex gap-3 ${classes.timelineItem}`}>
+              <div className='flex flex-col items-center'>
+                <div className={classes.timelineItemBullet}>
+                  <ThemeIconComponent
+                    getIconFromLibrary={getIconFromLibrary}
+                    gradientStyle={gradientStyle}
+                    svgIconColor={block.svgIconColor}
+                    svgIconKey={block.svgIconKey}
+                  />
+                </div>
+                {!isLast ? (
+                  <div
+                    aria-hidden
+                    className='mt-1 min-h-[12px] w-px flex-1'
+                    style={{ background: 'var(--tl-line-color, rgba(255, 255, 255, 0.08))' }}
+                  />
+                ) : null}
+              </div>
+              <div className='min-w-0 flex-1 pb-4'>
+                <p
+                  className='text-sm font-semibold text-foreground'
+                  dangerouslySetInnerHTML={{
+                    __html: getLocalizedText(block.title, currentLang),
+                  }}
+                />
+                <p
+                  className='mt-1 text-xs leading-relaxed text-muted'
+                  dangerouslySetInnerHTML={{
+                    __html: getLocalizedText(block.description, currentLang),
+                  }}
+                />
+                <div className='mt-2'>{renderBlockButtons(block.buttons, 'light')}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Surface>
   );
 };

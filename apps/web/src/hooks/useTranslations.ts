@@ -1,7 +1,7 @@
-import type { TSubscriptionPageLocalizedText } from '@remnawave/subscription-page-types';
+import type { TSubscriptionPageLocalizedText } from '@workspace/types';
+import { useCurrentLang, useSubscriptionConfig } from '@workspace/core/stores';
 import { useCallback } from 'react';
 import { useTranslation as useI18nextTranslation } from 'react-i18next';
-import { useSubscriptionConfig, useCurrentLang } from '@workspace/core/stores';
 import { getLocalizedText } from '@/utils/configParser';
 
 export const useTranslation = () => {

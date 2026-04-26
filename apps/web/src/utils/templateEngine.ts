@@ -9,7 +9,7 @@ export class TemplateEngine {
     template: string,
     metaInfo: { subscriptionUrl: string; username: string },
   ): string {
-    return this.replace(template, {
+    return TemplateEngine.replace(template, {
       USERNAME: metaInfo.username,
       SUBSCRIPTION_LINK: metaInfo.subscriptionUrl,
       HAPP_CRYPT3_LINK: undefined,

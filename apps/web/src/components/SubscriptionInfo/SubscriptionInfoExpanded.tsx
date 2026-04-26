@@ -1,4 +1,4 @@
-import { Card, Group, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core';
+import { Card, Surface } from '@heroui/react';
 import {
   IconAlertCircle,
   IconArrowsUpDown,
@@ -7,9 +7,10 @@ import {
   IconUserScan,
   IconX,
 } from '@tabler/icons-react';
+import { useSubscription } from '@workspace/core/stores';
+import type { ReactNode } from 'react';
 import { InfoBlock } from '@/components/InfoBlock/InfoBlock';
 import { useTranslation } from '@/hooks/useTranslations';
-import { useSubscription } from '@workspace/core/stores';
 import { getColorGradientSolid } from '@/utils/colorParser';
 import { formatDate, getExpirationTextUtil } from '@/utils/configParser';
 
@@ -21,7 +22,7 @@ export const SubscriptionInfoExpanded = () => {
 
   const getStatusAndIcon = (): {
     color: string;
-    icon: React.ReactNode;
+    icon: ReactNode;
     status: string;
   } => {
     if (user.userStatus === 'ACTIVE' && user.daysLeft > 0) {
@@ -52,60 +53,38 @@ export const SubscriptionInfoExpanded = () => {
   const gradientColor = getColorGradientSolid(statusInfo.color);
 
   return (
-    <Card
-      p={'xs'}
-      radius="lg"
-      style={{
-        overflow: 'hidden',
-        zIndex: 3,
-        backgroundColor: 'rgb(26, 27, 30)',
-        border: '1px solid oklch(0.4676 0 0)',
-        gap: '0',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      <Stack gap="sm">
-        <Group gap="sm" justify="space-between">
-          <Group gap="xs" style={{ minWidth: 0, flex: 1 }} wrap="nowrap">
-            <ThemeIcon
-              color={statusInfo.color}
-              radius="xl"
-              size="36"
+    <Card className='z-[3] overflow-hidden border border-divider' variant='default'>
+      <Card.Content className='gap-3 p-2'>
+        <div className='flex items-center justify-between gap-2'>
+          <div className='flex min-w-0 flex-1 items-center gap-2'>
+            <Surface
+              className='flex size-9 shrink-0 items-center justify-center rounded-full'
               style={{
                 background: gradientColor.background,
                 border: gradientColor.border,
                 boxShadow: gradientColor.boxShadow,
-                flexShrink: 0,
               }}
-              variant="light"
+              variant='transparent'
             >
               {statusInfo.icon}
-            </ThemeIcon>
+            </Surface>
 
-            <Stack gap={2} style={{ minWidth: 0, flex: 1 }}>
-              <Title
-                c="white"
-                fw={600}
-                order={5}
-                style={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
+            <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
+              <Card.Title className='truncate text-base'>{user.username}</Card.Title>
+              <Card.Description
+                className={
+                  user.daysLeft === 0 ? 'font-semibold text-danger' : 'font-semibold text-muted'
+                }
               >
-                {user.username}
-              </Title>
-              <Text c={user.daysLeft === 0 ? 'red' : 'dimmed'} fw={600} size="xs">
                 {getExpirationTextUtil(user.expiresAt, currentLang, baseTranslations)}
-              </Text>
-            </Stack>
-          </Group>
-        </Group>
+              </Card.Description>
+            </div>
+          </div>
+        </div>
 
-        <SimpleGrid cols={{ base: 2, xs: 2, sm: 2 }} spacing="xs" verticalSpacing="xs">
+        <div className='grid grid-cols-2 gap-2'>
           <InfoBlock
-            color="blue"
+            color='blue'
             icon={<IconUserScan size={16} />}
             title={t(baseTranslations.name)}
             value={user.username}
@@ -123,20 +102,20 @@ export const SubscriptionInfoExpanded = () => {
           />
 
           <InfoBlock
-            color="red"
+            color='red'
             icon={<IconCalendar size={16} />}
             title={t(baseTranslations.expires)}
             value={formatDate(user.expiresAt, currentLang, baseTranslations)}
           />
 
           <InfoBlock
-            color="yellow"
+            color='yellow'
             icon={<IconArrowsUpDown size={16} />}
             title={t(baseTranslations.bandwidth)}
             value={`${user.trafficUsed} / ${user.trafficLimit === '0' ? '∞' : user.trafficLimit}`}
           />
-        </SimpleGrid>
-      </Stack>
+        </div>
+      </Card.Content>
     </Card>
   );
 };
