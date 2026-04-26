@@ -59,7 +59,7 @@ describe('Utils', () => {
     it('should format date string correctly to Russian locale', () => {
       // Testing a fixed date. Note: behavior depends on system time zone if not strictly mocked,
       // but the util uses 'Europe/Moscow', so we expect Moscow time.
-      const dateStr = '2023-10-25T12:00:00Z';
+      const dateStr = new Date('2023-10-25T12:00:00Z');
       const result = toDateString(dateStr);
       // 12:00 UTC is 15:00 Moscow (UTC+3)
       expect(result).toMatch(/25\.10\.2023, 15:00/);

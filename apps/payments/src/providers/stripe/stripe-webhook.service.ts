@@ -57,9 +57,7 @@ export class StripeWebhookService {
       this.eventEmitter.emit(WebhookEventEnum['payment.succeeded'], {
         userId: payload.userId,
         provider: 'stripe',
-        metadata: {
-          selectedPeriod,
-        },
+        selectedPeriod,
         invoiceUrl: payload.invoiceUrl ?? undefined,
       } satisfies Payments.PaymentSucceededEventPayload);
     }

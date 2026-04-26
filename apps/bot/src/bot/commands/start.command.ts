@@ -85,7 +85,7 @@ export class StartCommand {
     await this.analyticsService.addData({
       channel,
       userId,
-      dateAndTime: toDateString(new Date().toISOString(), true),
+      dateAndTime: toDateString(new Date(), true),
       sheetId: `${process.env.GOOGLE_SHEET_TITLE}!A2`,
     });
   }

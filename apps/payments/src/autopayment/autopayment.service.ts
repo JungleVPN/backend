@@ -2,7 +2,6 @@ import * as process from 'node:process';
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BotNotificationService } from '@payments/notifications/bot-notification.service';
 import { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
 import { ValidatePaymentRequest } from '@payments/utils/utils';
 import { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
@@ -23,7 +22,6 @@ export class AutopaymentService {
     private readonly yookassaPaymentRepo: Repository<YookassaPayment>,
     private readonly yookassaProvider: YooKassaProvider,
     private readonly eventEmitter: EventEmitter2,
-    private readonly botNotificationService: BotNotificationService,
     private readonly validatePaymentRequest: ValidatePaymentRequest,
   ) {}
 
@@ -53,12 +51,12 @@ export class AutopaymentService {
       this.logger.warn(
         `No active saved payment method for user ${telegramId} — notifying bot for manual payment`,
       );
-      await this.botNotificationService.notify('payment.no_active_method', {
+
+      this.eventEmitter.emit(WebhookEventEnum['payment.no_active_method'], {
         userId,
-        telegramId,
         provider: 'yookassa',
         reason: 'no_active_method',
-      });
+      } satisfies Payments.PaymentFailedEventPayload);
       return;
     }
 
@@ -108,12 +106,12 @@ export class AutopaymentService {
     this.logger.warn(
       `All ${MAX_RETRIES} autopayment attempts failed for user ${telegramId} — falling back to manual payment`,
     );
-    await this.botNotificationService.notify('payment.autopayment_exhausted', {
+
+    this.eventEmitter.emit(WebhookEventEnum['payment.autopayment_exhausted'], {
       userId,
-      telegramId,
       provider: 'yookassa',
       reason: 'autopayment_exhausted',
-    });
+    } satisfies Payments.PaymentFailedEventPayload);
   }
 
   /**
@@ -165,6 +163,7 @@ export class AutopaymentService {
         provider: 'yookassa',
         reason: payment.cancellation_details.reason,
       } satisfies Payments.PaymentFailedEventPayload);
+      throw new Error(`Autopayment failed: ${payment.cancellation_details.reason}`);
     }
 
     return payment;

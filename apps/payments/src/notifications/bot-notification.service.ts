@@ -1,8 +1,13 @@
 import * as process from 'node:process';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { Payments, WebhookEvent, WebhookEventEnum } from '@workspace/types';
-import axios from 'axios';
+import {
+  GetUserByUuidResponseDto,
+  Payments,
+  WebhookEvent,
+  WebhookEventEnum,
+} from '@workspace/types';
+import axios, { isAxiosError } from 'axios';
 
 /**
  * Listens for payment events and dispatches notifications to external receivers.
@@ -23,9 +28,44 @@ export class BotNotificationService {
     return process.env.BOT_NOTIFY_SECRET || '';
   }
 
+  private get remnawareBaseUrl(): string {
+    return process.env.REMNAWAVE_URL || 'http://localhost:3002';
+  }
+
+  private async getUserByUuid(uuid: string): Promise<GetUserByUuidResponseDto> {
+    if (!uuid) {
+      throw new NotFoundException('User id is required to notify bot');
+    }
+
+    try {
+      const { data } = await axios.get<GetUserByUuidResponseDto | null>(
+        `${this.remnawareBaseUrl}/api/users/${uuid}`,
+      );
+      if (!data) {
+        throw new NotFoundException(`User not found: ${uuid}`);
+      }
+      return data;
+    } catch (err: unknown) {
+      if (err instanceof NotFoundException) {
+        throw err;
+      }
+      if (isAxiosError(err) && err.response?.status === 404) {
+        throw new NotFoundException(`User not found: ${uuid}`);
+      }
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error(`Failed to fetch user by uuid ${uuid}: ${message}`);
+      throw err;
+    }
+  }
+
   @OnEvent(WebhookEventEnum['payment.succeeded'])
   async onPaymentSucceeded(event: Payments.PaymentSucceededEventPayload): Promise<void> {
     await this.notify('payment.succeeded', event);
+  }
+
+  @OnEvent(WebhookEventEnum['payment.autopayment_exhausted'])
+  async onAutopaymentExhausted(event: Payments.PaymentFailedEventPayload): Promise<void> {
+    await this.notify('payment.autopayment_exhausted', event);
   }
 
   @OnEvent(WebhookEventEnum['payment.autopayment_failed'])
@@ -45,18 +85,29 @@ export class BotNotificationService {
 
   /**
    * Sends payment notification to the bot's /notify/payment endpoint.
-   * Best-effort: failures are logged but do not affect payment processing.
+   * Loads the user from remnawave and includes it in the body. Throws if the user does not exist.
+   * HTTP errors from the bot are logged and do not propagate.
    */
   public async notify(
     eventType: WebhookEvent,
     payload: Payments.PaymentSucceededEventPayload | Payments.PaymentFailedEventPayload,
   ): Promise<void> {
+    const user = await this.getUserByUuid(payload.userId);
+
+    if (!user.telegramId) {
+      this.logger.warn(
+        `No telegram id found. Skipping bot notification for userId=${payload.userId}`,
+      );
+      return;
+    }
+
     try {
       await axios.post(
         `${this.botBaseUrl}/notify/payment`,
         {
-          event: eventType,
-          ...payload,
+          eventType,
+          payload,
+          user,
         },
         {
           headers: {
@@ -68,11 +119,16 @@ export class BotNotificationService {
       );
 
       this.logger.log(
-        `Bot notified telegramId=${payload.telegramId}, reason=${eventType ?? 'unknown'}`,
+        `Bot notified userId=${payload.userId} telegramId=${user.telegramId ?? 'n/a'}, reason=${eventType ?? 'unknown'}`,
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const detail = isAxiosError(err)
+        ? `${err.message} ${err.response?.data != null ? JSON.stringify(err.response.data) : ''}`
+        : err instanceof Error
+          ? err.message
+          : String(err);
       this.logger.warn(
-        `Failed to notify bot about ${eventType} for userId=${payload.userId}: ${err.message} ${err.data}`,
+        `Failed to notify bot about ${eventType} for userId=${payload.userId}: ${detail}`,
       );
     }
   }

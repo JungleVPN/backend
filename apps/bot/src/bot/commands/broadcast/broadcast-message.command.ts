@@ -4,7 +4,7 @@ import { safeReplyMessage, safeSendMessage, safeSendPhoto } from '@bot/utils/uti
 import { BroadcastDto, BroadcastsService } from '@broadcasts/broadcasts.service';
 import { Injectable } from '@nestjs/common';
 import { RemnaService } from '@remna/remna.service';
-import { UserDto } from '@shared/user.types';
+import { UserDto } from '@workspace/types';
 import { Bot } from 'grammy';
 
 @Injectable()

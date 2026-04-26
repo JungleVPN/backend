@@ -61,13 +61,8 @@ export namespace Payments {
   interface PaymentResultEventPayload {
     userId: string;
     provider: 'stripe' | 'yookassa';
-    telegramId?: number;
     invoiceUrl?: string;
     selectedPeriod?: number;
-    metadata?: {
-      expireAt?: string;
-      selectedPeriod?: number;
-    };
   }
 
   export interface PaymentSucceededEventPayload extends PaymentResultEventPayload {}

@@ -1,8 +1,8 @@
 import * as process from 'node:process';
 import { Injectable, Logger } from '@nestjs/common';
 import { RemnaError } from '@remna/remna.error';
-import { CreateUserResponseDto, UpdateUserRequestDto, UserDto } from '@shared/user.types';
 import { createBackendClient } from '@utils/http-client';
+import { CreateUserResponseDto, UpdateUserRequestDto, UserDto } from '@workspace/types';
 import { AxiosInstance } from 'axios';
 
 @Injectable()

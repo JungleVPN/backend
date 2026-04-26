@@ -2,9 +2,7 @@ import * as process from 'node:process';
 import { Body, Controller, Headers, HttpCode, Post, UnauthorizedException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WebHookEvent } from '@remna/remna.model';
-import { Payments } from '@shared/payments';
-import { UserDto } from '@shared/user.types';
-import { WebhookEvent } from '@workspace/types';
+import { Payments, UserDto, WebhookEvent } from '@workspace/types';
 
 /**
  * Receives pre-processed notifications from the backend services.
@@ -45,20 +43,14 @@ export class NotificationController {
   async handlePaymentNotification(
     @Headers('x-bot-secret') secret: string,
     @Body()
-    payload: {
-      event: WebhookEvent;
-      telegramId: number;
-      provider: 'stripe' | 'yookassa';
-      locale?: string;
-      expireAt?: string;
-      invoiceUrl?: string;
-      subscriptionUrl?: string;
-      selectedPeriod?: number;
-      reason?: Payments.CancelReason | string;
+    body: {
+      eventType: WebhookEvent;
+      payload: Payments.PaymentSucceededEventPayload | Payments.PaymentFailedEventPayload;
+      user: UserDto;
     },
   ) {
     this.validateSecret(secret);
-    this.eventEmitter.emit(`notify.${payload.event}`, payload);
+    this.eventEmitter.emit(`notify.${body.eventType}`, body);
     return { ok: true };
   }
 

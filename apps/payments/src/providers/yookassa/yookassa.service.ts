@@ -64,8 +64,6 @@ export class YookassaService {
       return;
     }
 
-    // Idempotency guard (finding #8): if this payment was already processed,
-    // ignore the duplicate webhook instead of extending the subscription again.
     if (record.status === 'succeeded') {
       this.logger.log(`Payment ${id} already processed — ignoring duplicate webhook`);
       return;

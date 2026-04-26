@@ -9,7 +9,7 @@ import {
 } from '@broadcasts/broadcasts.service';
 import { RemnaService } from '@remna/remna.service';
 import { mockBroadcastUserDto } from '@shared/mock-data';
-import { UserDto } from '@shared/user.types';
+import { UserDto } from '@workspace/types';
 
 export abstract class BroadcastBase {
   protected successCount = 0;

@@ -6,20 +6,8 @@ import { safeSendMessage, toDateString } from '@bot/utils/utils';
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Payments } from '@shared/payments';
+import { UserDto } from '@workspace/types';
 import { Bot, InlineKeyboard } from 'grammy';
-
-/**
- * Payload delivered by the backend to `/notify/payment` and re-emitted
- * internally as `notify.payment.canceled`.
- *
- * Mirrors `Payments.PaymentFailedEventPayload` plus the transport fields
- * added by the bot's webhook controller (`event`, `locale`).
- */
-type PaymentCanceledNotification = Payments.PaymentFailedEventPayload & {
-  event: 'payment.canceled';
-  locale?: string;
-  reason?: Payments.CancelReason | string;
-};
 
 /**
  * Mapping from YooKassa `CancelReason` to the localisation key we show the
@@ -70,55 +58,56 @@ export class PaymentStatusListener {
   }
 
   @OnEvent('notify.payment.succeeded')
-  async handlePaymentSucceeded(payload: {
-    event: string;
-    telegramId: number;
-    provider: 'stripe' | 'yookassa';
-    locale: string;
-    expireAt?: string;
-    invoiceUrl?: string;
-    subscriptionUrl?: string;
+  async handlePaymentSucceeded(body: {
+    payload: Payments.PaymentSucceededEventPayload | Payments.PaymentFailedEventPayload;
+    user: UserDto;
   }) {
-    const {
-      telegramId,
-      provider,
-      locale: rawLocale,
-      expireAt,
-      invoiceUrl,
-      subscriptionUrl,
-    } = payload;
-    const locale = rawLocale || process.env.DEFAULT_LOCALE || 'en';
+    const { user, payload } = body;
+    const locale = user.description || process.env.DEFAULT_LOCALE || 'en';
 
-    if (provider === 'stripe' && expireAt) {
-      await this.sendStripeSuccessMessage(
-        telegramId,
-        locale,
-        expireAt,
-        invoiceUrl,
-        subscriptionUrl,
-      );
-    } else {
-      await this.sendYookassaSuccessMessage(telegramId, locale);
+    if (user.telegramId) {
+      if (payload.provider === 'stripe') {
+        await this.sendStripeSuccessMessage({
+          telegramId: user.telegramId,
+          invoiceUrl: payload.invoiceUrl,
+          subscriptionUrl: user.subscriptionUrl,
+          expireAt: user.expireAt,
+          locale,
+        });
+      } else {
+        await this.sendYookassaSuccessMessage(user.telegramId, locale);
+      }
     }
   }
 
   @OnEvent('notify.payment.no_active_method')
-  handleNoActiveMethod(payload: PaymentCanceledNotification): Promise<void> {
-    return this.commonPaymentFailed(payload);
+  handleNoActiveMethod(body: {
+    payload: Payments.PaymentFailedEventPayload;
+    user: UserDto;
+  }): Promise<void> {
+    return this.commonPaymentFailed(body);
   }
   @OnEvent('notify.payment.canceled')
-  handlePaymentCanceled(payload: PaymentCanceledNotification): Promise<void> {
-    return this.commonPaymentFailed(payload);
+  handlePaymentCanceled(body: {
+    payload: Payments.PaymentFailedEventPayload;
+    user: UserDto;
+  }): Promise<void> {
+    return this.commonPaymentFailed(body);
   }
 
-  async commonPaymentFailed(payload: PaymentCanceledNotification): Promise<void> {
-    const { telegramId, locale: rawLocale, reason } = payload;
-    const locale = rawLocale || process.env.DEFAULT_LOCALE || 'en';
+  async commonPaymentFailed(body: {
+    payload: Payments.PaymentFailedEventPayload;
+    user: UserDto;
+  }): Promise<void> {
+    const { payload, user } = body;
+    const locale = user.description || process.env.DEFAULT_LOCALE || 'en';
     const i18n = this.localService.i18n;
 
-    const i18nKey = this.resolveFailureI18nKey(reason);
+    const i18nKey = this.resolveFailureI18nKey(payload.reason);
 
-    this.logger.log(`Notifying telegramId=${telegramId}, reason=${reason ?? 'unknown'}`);
+    this.logger.log(
+      `Notifying telegramId=${user.telegramId}, reason=${payload.reason ?? 'unknown'}`,
+    );
 
     const text = i18n.t(locale, i18nKey);
     const menu = new InlineKeyboard()
@@ -126,10 +115,12 @@ export class PaymentStatusListener {
       .row()
       .text(i18n.t(locale, 'profile-button-label'), 'navigate_to_profile');
 
-    await safeSendMessage(this.bot, telegramId, text, {
-      reply_markup: menu,
-      parse_mode: 'HTML',
-    });
+    if (user.telegramId) {
+      await safeSendMessage(this.bot, user.telegramId, text, {
+        reply_markup: menu,
+        parse_mode: 'HTML',
+      });
+    }
   }
 
   /**
@@ -154,13 +145,19 @@ export class PaymentStatusListener {
     });
   }
 
-  private async sendStripeSuccessMessage(
-    telegramId: number,
-    locale: string,
-    expireAt: string,
-    invoiceUrl?: string,
-    subscriptionUrl?: string,
-  ) {
+  private async sendStripeSuccessMessage({
+    telegramId,
+    locale,
+    expireAt,
+    invoiceUrl,
+    subscriptionUrl,
+  }: {
+    telegramId: number;
+    locale: string;
+    expireAt: Date;
+    invoiceUrl?: string;
+    subscriptionUrl?: string;
+  }) {
     const i18n = this.localService.i18n;
     const formattedDate = toDateString(expireAt);
 

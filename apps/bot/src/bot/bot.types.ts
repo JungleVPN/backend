@@ -1,6 +1,7 @@
 import { I18nFlavor } from '@grammyjs/i18n';
 import { PaymentPeriod, PaymentProvider } from '@shared/payments';
-import { UserDevice, UserDto } from '@shared/user.types';
+import { UserDevice } from '@shared/user.types';
+import { UserDto } from '@workspace/types';
 import { Context, SessionFlavor as GrammySessionFlavor } from 'grammy';
 
 export type BotContext = Context & SessionFlavor & I18nFlavor;

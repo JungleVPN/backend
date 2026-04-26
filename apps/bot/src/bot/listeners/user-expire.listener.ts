@@ -7,7 +7,7 @@ import { mapPeriodLabelToPriceLabel, safeSendMessage, toDateString } from '@bot/
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { WebHookEvent } from '@remna/remna.model';
-import { UserDto } from '@shared/user.types';
+import { UserDto } from '@workspace/types';
 import { AxiosError } from 'axios';
 import { Bot, InlineKeyboard } from 'grammy';
 

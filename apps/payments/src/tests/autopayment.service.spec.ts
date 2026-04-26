@@ -2,7 +2,6 @@ import 'reflect-metadata';
 import * as process from 'node:process';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { AutopaymentService } from '@payments/autopayment/autopayment.service';
-import { BotNotificationService } from '@payments/notifications/bot-notification.service';
 import type { YooKassaProvider } from '@payments/providers/yookassa/yookassa.provider';
 import { ValidatePaymentRequest } from '@payments/utils/utils';
 import type { SavedPaymentMethod, YookassaPayment } from '@workspace/database';
@@ -43,7 +42,6 @@ describe('AutopaymentService', () => {
   let yookassaPaymentRepo: Repository<YookassaPayment>;
   let yookassaProvider: YooKassaProvider;
   let eventEmitter: EventEmitter2;
-  let botNotificationService: BotNotificationService;
   let validatePaymentRequest: ValidatePaymentRequest;
 
   let mockSmFindOneBy: ReturnType<typeof vi.fn>;
@@ -51,7 +49,6 @@ describe('AutopaymentService', () => {
   let mockYkSave: ReturnType<typeof vi.fn>;
   let mockCreate: ReturnType<typeof vi.fn>;
   let mockEmit: ReturnType<typeof vi.fn>;
-  let mockPaymentNotify: ReturnType<typeof vi.fn>;
   let mockValidateAmount: any;
   let mockValidatePeriod: any;
 
@@ -84,11 +81,6 @@ describe('AutopaymentService', () => {
     mockEmit = vi.fn();
     eventEmitter = { emit: mockEmit } as unknown as EventEmitter2;
 
-    mockPaymentNotify = vi.fn();
-    botNotificationService = {
-      notify: mockPaymentNotify,
-    } as unknown as BotNotificationService;
-
     mockValidateAmount = vi.fn();
     mockValidatePeriod = vi.fn();
     validatePaymentRequest = {
@@ -101,7 +93,6 @@ describe('AutopaymentService', () => {
       yookassaPaymentRepo,
       yookassaProvider,
       eventEmitter,
-      botNotificationService,
       validatePaymentRequest,
     );
 
@@ -116,7 +107,7 @@ describe('AutopaymentService', () => {
       await service.init(makePayload(undefined));
 
       expect(mockSmFindOneBy).not.toHaveBeenCalled();
-      expect(mockPaymentNotify).not.toHaveBeenCalled();
+      expect(mockEmit).not.toHaveBeenCalled();
     });
 
     it('notifies bot for manual payment when no saved method exists', async () => {
@@ -129,8 +120,8 @@ describe('AutopaymentService', () => {
         isActive: true,
       });
       expect(mockCreate).not.toHaveBeenCalled();
-      expect(mockPaymentNotify).toHaveBeenCalledWith(
-        'payment.no_active_method',
+      expect(mockEmit).toHaveBeenCalledWith(
+        WebhookEventEnum['payment.no_active_method'],
         expect.objectContaining({
           userId: 'user-1',
           provider: 'yookassa',
@@ -176,7 +167,7 @@ describe('AutopaymentService', () => {
       await service.init(makePayload(42));
 
       expect(mockCreate).toHaveBeenCalledTimes(1);
-      expect(mockPaymentNotify).not.toHaveBeenCalled();
+      expect(mockEmit).not.toHaveBeenCalled();
     });
 
     it('retries up to 3 times on canceled status, then notifies bot', async () => {
@@ -189,16 +180,11 @@ describe('AutopaymentService', () => {
       await service.init(makePayload(42));
 
       expect(mockCreate).toHaveBeenCalledTimes(3);
-      // Each failed attempt emits AUTOPAYMENT_FAILED
-      expect(mockEmit).toHaveBeenCalledTimes(3);
+      // Each failed attempt emits AUTOPAYMENT_FAILED; then AUTOPAYMENT_EXHAUSTED
+      expect(mockEmit).toHaveBeenCalledTimes(4);
       expect(mockEmit).toHaveBeenCalledWith(
         WebhookEventEnum['payment.autopayment_failed'],
         expect.objectContaining({ userId: 'user-1', reason: 'insufficient_funds' }),
-      );
-      // Final bot notification
-      expect(mockPaymentNotify).toHaveBeenCalledWith(
-        'payment.autopayment_exhausted',
-        expect.objectContaining({ userId: 'user-1', provider: 'yookassa' }),
       );
     });
 
@@ -208,7 +194,7 @@ describe('AutopaymentService', () => {
       await service.init(makePayload(42));
 
       expect(mockCreate).toHaveBeenCalledTimes(3);
-      expect(mockPaymentNotify).toHaveBeenCalledWith(
+      expect(mockEmit).toHaveBeenCalledWith(
         'payment.autopayment_exhausted',
         expect.objectContaining({ userId: 'user-1', provider: 'yookassa' }),
       );
@@ -231,8 +217,6 @@ describe('AutopaymentService', () => {
       expect(mockCreate).toHaveBeenCalledTimes(2);
       // Only 1 AUTOPAYMENT_FAILED event (from first attempt)
       expect(mockEmit).toHaveBeenCalledTimes(1);
-      // No bot manual payment notification
-      expect(mockPaymentNotify).not.toHaveBeenCalled();
     });
   });
 
@@ -294,11 +278,14 @@ describe('AutopaymentService', () => {
 
       await service.init(makePayload(42));
 
-      expect(mockPaymentNotify).toHaveBeenCalledWith('payment.no_active_method', {
-        userId: 'user-1',
-        provider: 'yookassa',
-        reason: 'no_active_method',
-      });
+      expect(mockEmit).toHaveBeenCalledWith(
+        'payment.no_active_method',
+        expect.objectContaining({
+          userId: 'user-1',
+          provider: 'yookassa',
+          reason: 'no_active_method',
+        }),
+      );
     });
   });
 });
