@@ -10,7 +10,7 @@ export default function SubscriptionPage() {
   }
 
   return (
-    <Surface className='mt-9' variant='transparent'>
+    <Surface variant='transparent'>
       <SubscriptionView shortUuid={shortUuid} />
     </Surface>
   );

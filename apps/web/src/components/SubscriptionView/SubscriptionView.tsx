@@ -86,18 +86,16 @@ export function SubscriptionView({ shortUuid }: { shortUuid: string }) {
   const activeSubscription = subscription?.user?.userStatus === 'ACTIVE';
 
   return (
-    <Surface className='relative' variant='transparent'>
-      <Surface className='z-2 flex flex-col gap-8' variant='transparent'>
-        {subscriptionInfoSection(activeSubscription, config.uiConfig.subscriptionInfoBlockType)}
+    <Surface className='z-2 flex flex-col gap-8' variant='transparent'>
+      {subscriptionInfoSection(activeSubscription, config.uiConfig.subscriptionInfoBlockType)}
 
-        {atLeastOnePlatformApp && activeSubscription ? (
-          <InstallationGuideConnector
-            type={config.uiConfig.installationGuidesBlockType}
-            hasPlatformApps={hasPlatformApps}
-            platform={OS_TO_PLATFORM[detectOs()]}
-          />
-        ) : null}
-      </Surface>
+      {atLeastOnePlatformApp && activeSubscription ? (
+        <InstallationGuideConnector
+          type={config.uiConfig.installationGuidesBlockType}
+          hasPlatformApps={hasPlatformApps}
+          platform={OS_TO_PLATFORM[detectOs()]}
+        />
+      ) : null}
     </Surface>
   );
 }

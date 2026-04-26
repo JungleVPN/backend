@@ -5,7 +5,7 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 
 export function Header() {
   return (
-    <div className='flex items-baseline justify-between'>
+    <div className='flex items-center justify-between'>
       <div>
         <Link to='/'>
           <img
@@ -18,7 +18,6 @@ export function Header() {
             }}
           />
         </Link>
-        <span>JungleVPN</span>
       </div>
 
       <div className='flex items-center justify-between'>

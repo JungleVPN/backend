@@ -12,7 +12,7 @@ export function RootLayout() {
       <AuthProvider>
         <AppContainer>
           <Header />
-          <div className='pt-14'>
+          <div className='pt-14 pb-10.5'>
             <Outlet />
           </div>
         </AppContainer>

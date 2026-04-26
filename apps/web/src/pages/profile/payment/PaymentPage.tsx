@@ -7,10 +7,12 @@ import {
 import { Fragment, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { paymentsApi } from '@/api/payments';
+import PaymentPageIcon from '@/assets/icons/payment-icon.svg?url';
 import { Link } from '@/components/Link/Link';
 import { SavedMethodRow } from '@/components/payment/SavedMethodRow';
 import { env } from '@/config/env';
 import { useAuthStoreInfo } from '@/store/auth';
+import { Page } from '@/ui/Page.tsx';
 
 export default function PaymentPage() {
   const { t } = useTranslation();
@@ -61,8 +63,8 @@ export default function PaymentPage() {
   };
 
   return (
-    <div className='flex flex-col gap-4'>
-      <div className='flex flex-col gap-2'>
+    <Page icon={PaymentPageIcon} title={'Payment'} subtitle={'Manage your payment methods here'}>
+      <div className='flex flex-col gap-2 w-full'>
         <h2 className='px-1 text-xs font-semibold tracking-[0.06em] text-muted uppercase'>
           Saved payment methods
         </h2>
@@ -94,7 +96,7 @@ export default function PaymentPage() {
       </div>
 
       {hasActiveMethod ? (
-        <>
+        <div className={'flex flex-col gap-2 w-full text-start mt-3'}>
           <p className='text-center text-xs text-muted'>
             Autopayment is active. To pay manually, remove your saved card first.
           </p>
@@ -104,7 +106,7 @@ export default function PaymentPage() {
               {t('terms.paymentLinkLabel')}
             </Link>
           </p>
-        </>
+        </div>
       ) : (
         <>
           <Button
@@ -112,11 +114,12 @@ export default function PaymentPage() {
             isDisabled={!authUser?.email}
             isPending={isPaying}
             size='lg'
+            className={'w-full mt-4'}
             onClick={handlePay}
           >
             Pay {env.priceRub} ₽
           </Button>
-          <p className='text-center text-xs text-muted'>
+          <p className='text-center text-xs text-muted mt-3'>
             {t('terms.paymentConsentLead')}
             <Link className='underline underline-offset-2' href='/terms'>
               {t('terms.paymentLinkLabel')}
@@ -124,6 +127,6 @@ export default function PaymentPage() {
           </p>
         </>
       )}
-    </div>
+    </Page>
   );
 }
