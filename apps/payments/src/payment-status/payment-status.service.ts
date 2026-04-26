@@ -60,6 +60,11 @@ export class PaymentStatusService {
     try {
       const { data } = await axios.get<GetUserByUuidResponseDto>(
         `${this.remnawareBaseUrl}/api/users/${uuid}`,
+        {
+          headers: {
+            'x-service-secret': process.env.INTER_SERVICE_SECRET,
+          },
+        },
       );
       return data ?? null;
     } catch (err: any) {
@@ -70,10 +75,18 @@ export class PaymentStatusService {
   }
 
   private async updateUserExpiry(uuid: string, expireAt: Date): Promise<void> {
-    await axios.patch(`${this.remnawareBaseUrl}/api/users`, {
-      uuid,
-      expireAt: expireAt.toISOString(),
-    });
+    await axios.patch(
+      `${this.remnawareBaseUrl}/api/users`,
+      {
+        uuid,
+        expireAt: expireAt.toISOString(),
+      },
+      {
+        headers: {
+          'x-service-secret': process.env.INTER_SERVICE_SECRET,
+        },
+      },
+    );
   }
 
   private async triggerReferralReward(telegramId: number): Promise<boolean> {
@@ -81,6 +94,11 @@ export class PaymentStatusService {
       const { data } = await axios.post<{ rewarded: boolean }>(
         `${this.referralsBaseUrl}/referrals/reward-after-payment`,
         { invitedTelegramId: telegramId },
+        {
+          headers: {
+            'x-service-secret': process.env.INTER_SERVICE_SECRET,
+          },
+        },
       );
       return data.rewarded;
     } catch (err: any) {

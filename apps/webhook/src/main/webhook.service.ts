@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -69,6 +70,7 @@ export class WebhookService {
         headers: {
           'content-type': 'application/json',
           'stripe-signature': signature,
+          'x-service-secret': process.env.INTER_SERVICE_SECRET,
         },
         // Send raw buffer, don't let axios transform it
         transformRequest: [(data: Buffer) => data],
@@ -83,6 +85,7 @@ export class WebhookService {
     await axios.post(`${this.paymentsBaseUrl}/payments/yookassa/webhook`, payload, {
       headers: {
         'x-forwarded-for': ip,
+        'x-service-secret': process.env.INTER_SERVICE_SECRET,
       },
     });
   }

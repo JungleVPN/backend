@@ -28,6 +28,11 @@ export class RemnaClient {
     try {
       const { data } = await axios.get<RemnaUser[]>(
         `${this.baseUrl}/api/users/by-telegram-id/${telegramId}`,
+        {
+          headers: {
+            'x-service-secret': process.env.INTER_SERVICE_SECRET,
+          },
+        },
       );
 
       const user = Array.isArray(data) ? data[0] : data;
@@ -39,21 +44,16 @@ export class RemnaClient {
     }
   }
 
-  async createUser(payload: {
-    username: string;
-    telegramId: number;
-    description?: string;
-  }): Promise<RemnaUser> {
-    const { data } = await axios.post<RemnaUser>(`${this.baseUrl}/api/users`, payload);
-    return data;
-  }
-
   async updateUser(payload: {
     uuid: string;
     expireAt?: Date | string;
     [key: string]: unknown;
   }): Promise<RemnaUser> {
-    const { data } = await axios.patch<RemnaUser>(`${this.baseUrl}/api/users`, payload);
+    const { data } = await axios.patch<RemnaUser>(`${this.baseUrl}/api/users`, payload, {
+      headers: {
+        'x-service-secret': process.env.INTER_SERVICE_SECRET,
+      },
+    });
     return data;
   }
 }

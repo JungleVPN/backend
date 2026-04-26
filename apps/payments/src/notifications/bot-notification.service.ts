@@ -40,6 +40,11 @@ export class BotNotificationService {
     try {
       const { data } = await axios.get<GetUserByUuidResponseDto | null>(
         `${this.remnawareBaseUrl}/api/users/${uuid}`,
+        {
+          headers: {
+            'x-service-secret': process.env.INTER_SERVICE_SECRET,
+          },
+        },
       );
       if (!data) {
         throw new NotFoundException(`User not found: ${uuid}`);
