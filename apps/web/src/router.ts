@@ -8,6 +8,7 @@ import LoginPage from '@/pages/login/LoginPage';
 import { ProtectedPaymentPage } from '@/pages/profile/payment/protected';
 import { ProtectedProfileSubscriptionPage } from '@/pages/profile/subscription/protected.tsx';
 import SubscriptionPage from '@/pages/subscription/SubscriptionPage';
+import TermsPage from '@/pages/terms/TermsPage';
 
 export const router = createBrowserRouter([
   {
@@ -42,6 +43,10 @@ export const router = createBrowserRouter([
       {
         path: '/subscription/:shortUuid',
         Component: SubscriptionPage,
+      },
+      {
+        path: '/terms',
+        Component: TermsPage,
       },
     ],
   },

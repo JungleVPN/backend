@@ -5,12 +5,15 @@ import {
   useSavedMethods,
 } from '@workspace/core/hooks';
 import { Fragment, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { paymentsApi } from '@/api/payments';
+import { Link } from '@/components/Link/Link';
 import { SavedMethodRow } from '@/components/payment/SavedMethodRow';
 import { env } from '@/config/env';
 import { useAuthStoreInfo } from '@/store/auth';
 
 export default function PaymentPage() {
+  const { t } = useTranslation();
   const { authUser, rmnUser } = useAuthStoreInfo();
 
   const {
@@ -91,19 +94,35 @@ export default function PaymentPage() {
       </div>
 
       {hasActiveMethod ? (
-        <p className='text-center text-xs text-muted'>
-          Autopayment is active. To pay manually, remove your saved card first.
-        </p>
+        <>
+          <p className='text-center text-xs text-muted'>
+            Autopayment is active. To pay manually, remove your saved card first.
+          </p>
+          <p className='text-center text-xs text-muted'>
+            {t('terms.paymentConsentLead')}
+            <Link className='underline underline-offset-2' href='/terms'>
+              {t('terms.paymentLinkLabel')}
+            </Link>
+          </p>
+        </>
       ) : (
-        <Button
-          fullWidth
-          isDisabled={!authUser?.email}
-          isPending={isPaying}
-          size='lg'
-          onClick={handlePay}
-        >
-          Pay {env.priceRub} ₽
-        </Button>
+        <>
+          <Button
+            fullWidth
+            isDisabled={!authUser?.email}
+            isPending={isPaying}
+            size='lg'
+            onClick={handlePay}
+          >
+            Pay {env.priceRub} ₽
+          </Button>
+          <p className='text-center text-xs text-muted'>
+            {t('terms.paymentConsentLead')}
+            <Link className='underline underline-offset-2' href='/terms'>
+              {t('terms.paymentLinkLabel')}
+            </Link>
+          </p>
+        </>
       )}
     </div>
   );
