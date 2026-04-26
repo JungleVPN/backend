@@ -90,18 +90,6 @@
   --color-tg-separator: var(--tg-theme-section-separator-color);
 }
 
-@layer components {
-  .button--primary {
-    /* bg-accent resolves to --tg-theme-button-color (via --accent mapping above).
-       text-accent-foreground resolves to --tg-theme-button-text-color. */
-    @apply bg-accent text-accent-foreground;
-  }
-
-  .button--icon-only {
-    @apply rounded-lg bg-blue-500;
-  }
-}
-
 html,
 body {
   background-color: oklch(0.1448 0 0);

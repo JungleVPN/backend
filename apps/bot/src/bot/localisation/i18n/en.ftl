@@ -128,6 +128,8 @@ payment-success-text =
 
     Your subscription has been extended 🙂
 
+    You can manage it in your profile. Just click the button below!
+
 subscription-text =
     📖 Setting up VPN on { $deviceLabel }:
 

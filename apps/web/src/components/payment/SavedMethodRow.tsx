@@ -1,5 +1,7 @@
 import { Button, Chip, Separator, Tooltip } from '@heroui/react';
 import type { SavedMethodDto } from '@workspace/types';
+// @ts-expect-error
+import BinIcon from '@/assets/icons/bin-icon.svg?react';
 import { formatSavedMethodLabel, getPaymentMethodIcon } from '@/ui/savedMethodDisplay';
 
 export interface SavedMethodRowProps {
@@ -35,17 +37,17 @@ export function SavedMethodRow({
         </div>
 
         {onDelete ? (
-          <Tooltip delay={0}>
+          <Tooltip delay={0} closeDelay={0}>
             <Button
               aria-label='Delete payment method'
-              className='shrink-0 text-danger'
+              className='shrink-0'
               isIconOnly
               isPending={isDeleting}
               size='sm'
-              variant='ghost'
+              variant='tertiary'
               onPress={() => onDelete(method.id)}
             >
-              ✕
+              <BinIcon />
             </Button>
             <Tooltip.Content placement='left' showArrow>
               <Tooltip.Arrow />
