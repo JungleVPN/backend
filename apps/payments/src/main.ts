@@ -5,8 +5,18 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
+  const corsOriginEnv = process.env.CORS_ORIGIN;
+  if (!corsOriginEnv) {
+    throw new Error('CORS_ORIGIN environment variable must be set to an explicit origin URL');
+  }
+
+  const origin = corsOriginEnv
+    .split(',')
+    .map((s) => s.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
+
   app.enableCors({
-    origin: process.env.CORS_ORIGIN ?? true,
+    origin,
     credentials: true,
   });
 
