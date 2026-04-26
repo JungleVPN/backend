@@ -1,5 +1,5 @@
 import { Tabs } from '@heroui/react';
-import { IconWallet } from '@tabler/icons-react';
+import { IconPigFilled, IconWallet } from '@tabler/icons-react';
 import { useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import css from './Tabs.module.css';
@@ -21,7 +21,7 @@ function getActiveTab(pathname: string): TabValue {
 
 const tabs: TabDef[] = [
   { id: 'subscription', label: 'Subscription', icon: <IconWallet className='size-4' /> },
-  { id: 'payment', label: 'Payment', icon: <IconWallet className='size-4' /> },
+  { id: 'payment', label: 'Payment', icon: <IconPigFilled className='size-4' /> },
 ];
 
 export const Navbar = () => {
@@ -39,19 +39,14 @@ export const Navbar = () => {
   );
 
   return (
-    <Tabs
-      className={css.root}
-      selectedKey={activeTab}
-      // variant='secondary'
-      onSelectionChange={handleSelectionChange}
-    >
+    <Tabs className={css.root} selectedKey={activeTab} onSelectionChange={handleSelectionChange}>
       <Tabs.ListContainer>
-        <Tabs.List aria-label='Profile sections'>
+        <Tabs.List aria-label='Profile sections' className={css.list}>
           {tabs.map((tab) => (
-            <Tabs.Tab key={tab.id} id={tab.id}>
+            <Tabs.Tab key={tab.id} id={tab.id} className={css.tab}>
               <span>{tab.icon}</span>
               <span>{tab.label}</span>
-              <Tabs.Indicator />
+              <Tabs.Indicator className={css.indicator} />
             </Tabs.Tab>
           ))}
         </Tabs.List>

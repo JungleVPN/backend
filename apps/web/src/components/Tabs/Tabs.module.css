@@ -2,7 +2,6 @@
   left: 50%;
   transform: translateX(-50%);
   backface-visibility: hidden;
-  border-radius: 1rem;
   bottom: 16px;
   position: fixed;
   will-change: transform;
@@ -10,11 +9,12 @@
   isolation: isolate;
   margin-block: 0;
   margin-inline: auto;
+  height: 51px;
 }
 
 .list {
   position: relative;
-  border-radius: 1rem;
+  border-radius: 4rem;
   align-items: flex-start;
   align-self: stretch;
   display: flex;
@@ -22,6 +22,7 @@
   padding: 4px;
   touch-action: none;
   width: 100%;
+  height: 100%;
   backdrop-filter: blur(30px) saturate(10);
   background: rgb(from #212121 r g b / 84%);
   box-shadow:
@@ -57,14 +58,14 @@
   justify-content: center;
   padding-inline: 0;
   width: 124px;
+  height: 100%;
   will-change: transform;
   z-index: 3;
   padding-block: 5px;
 }
 
 .indicator {
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4rem;
   box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
   background-color: rgb(from rgb(255, 255, 255) r g b / 10%);
   border-color: transparent;
