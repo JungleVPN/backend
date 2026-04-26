@@ -64,11 +64,6 @@ export class YookassaService {
       return;
     }
 
-    if (record.status === 'succeeded') {
-      this.logger.log(`Payment ${id} already processed — ignoring duplicate webhook`);
-      return;
-    }
-
     await this.yookassaPaymentRepo.update(id, {
       status,
       paidAt: captured_at ? new Date(captured_at) : new Date(),
