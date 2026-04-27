@@ -37,12 +37,12 @@ export class MainMenu extends Base {
         process.env.WEB_APP_URL || 'https://miniapp.thejungle.pro',
       )
       .row()
-      .text(
-        (ctx) => ctx.t('extend-button-label'),
-        async (ctx) => {
-          await this.render(ctx, ctx.t('payment-methods-text'), this.paymentMethodMenu.menu);
-        },
-      )
+      // .text(
+      //   (ctx) => ctx.t('extend-button-label'),
+      //   async (ctx) => {
+      //     await this.render(ctx, ctx.t('payment-methods-text'), this.paymentMethodMenu.menu);
+      //   },
+      // )
       .text(
         (ctx) => ctx.t('referra-button-label'),
         async (ctx) => {
@@ -50,11 +50,10 @@ export class MainMenu extends Base {
         },
       )
       .row()
-      .text(
-        (ctx) => ctx.t('profile-button-label'),
-        async (ctx) => await this.profileMenuService.init(ctx),
-      )
-      .row()
+      // .text(
+      //   (ctx) => ctx.t('profile-button-label'),
+      //   async (ctx) => await this.profileMenuService.init(ctx),
+      // )
       .url(
         (ctx) => ctx.t('chanel-button-label'),
         process.env.TELEGRAM_CHANNEL_URL || 'https://t.me/in_the_jungle',
@@ -66,7 +65,7 @@ export class MainMenu extends Base {
 
         if (user) {
           range.text(
-            (ctx) => ctx.t('support-button-label'),
+            (ctx) => ctx.t('not-workinig-button-label'),
             async (ctx) => {
               await this.render(ctx, ctx.t('support-text'), this.supportMenu.menu);
             },

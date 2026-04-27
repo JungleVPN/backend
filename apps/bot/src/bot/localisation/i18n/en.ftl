@@ -6,8 +6,8 @@ extend-button-label = Extend ➕
 pay-button-label = Pay 💶
 donate-button-label = Donate 💶
 available-countries-button-label = Countries 🌍
-support-button-label = VPN is not working 🚨
-support-chanel-button-label = Support
+not-workinig-button-label = VPN is not working 🚨
+support-button-label = Support
 home-button-label = Home 🏠
 profile-button-label = Profile 👤
 invoice-button-label = Invoice 📄
@@ -175,7 +175,7 @@ expires-in-24-hours-subscription-text =
 expired-subscription-text =
     Your subscription has expired 🥲
 
-    You can pay using both Russian and international payment methods 🌍
+    Click the button bellow to make a payment
 
     With love, Jungle 🌴
 

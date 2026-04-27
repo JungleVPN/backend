@@ -5,8 +5,8 @@ connect-button-label = Подключиться 📶
 extend-button-label = Продлить ➕
 donate-button-label = Поддержать 💶
 available-countries-button-label = Страны 🌍
-support-button-label = VPN не работает 🚨
-support-chanel-button-label = Поддержка
+not-workinig-button-label = VPN не работает 🚨
+support-button-label = Поддержка
 back-button-label = ⤴ Назад
 payment-period-button-label-1 = 1 месяц
 payment-period-button-label-2 = 3 месяца ({ $discount })
@@ -148,7 +148,7 @@ expires-in-24-hours-subscription-text =
 expired-subscription-text =
     <b>Ну вот, твоя подписка закончилась 🥲</b>
 
-    Оплатить можно как российскими, так и международными способами 🌍
+    Нажми кнопку снизу, чтобы перейти к оплате
 
     С любовью, Jungle 🌴
 

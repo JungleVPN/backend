@@ -45,7 +45,10 @@ export const mapToClientAppName = (device: UserDevice) => {
   }
 };
 
-export const toDateString = (value: Date, utc?: boolean) => {
+export const toDateString = (value: Date | string, utc?: boolean) => {
+  if (typeof value === 'string') {
+    value = new Date(value);
+  }
   return value.toLocaleDateString('ru-EU', {
     year: 'numeric',
     month: 'numeric',

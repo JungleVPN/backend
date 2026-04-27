@@ -35,12 +35,15 @@ export class UserNotConnectedListener {
     const diffHours = differenceInHours(timestamp, createdAt);
 
     const keyboard = new InlineKeyboard()
-      .text(this.localService.i18n.t(locale, 'connect-button-label'), 'navigate_devices')
+      .webApp(
+        this.localService.i18n.t(locale, 'profile-button-label'),
+        process.env.WEB_APP_URL || 'https://miniapp.thejungle.pro',
+      )
       .text(this.localService.i18n.t(locale, 'home-button-label'), 'navigate_main')
       .row()
       .url(
         this.localService.i18n.t(locale, 'support-button-label'),
-        process.env.SUPPORT_URL || 'https://t.me/JungleVPN_support',
+        process.env.SUPPORT_URL || 'https://t.me/JungleVPN_support_bot',
       );
 
     if (!payload.data.telegramId) {

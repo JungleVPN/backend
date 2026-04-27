@@ -2,8 +2,7 @@ import * as process from 'node:process';
 import { BotService } from '@bot/bot.service';
 import { BotContext } from '@bot/bot.types';
 import { LocalisationService } from '@bot/localisation/localisation.service';
-import { paymentPeriods } from '@bot/utils/constants';
-import { mapPeriodLabelToPriceLabel, safeSendMessage, toDateString } from '@bot/utils/utils';
+import { safeSendMessage, toDateString } from '@bot/utils/utils';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { WebHookEvent } from '@remna/remna.model';
@@ -59,15 +58,15 @@ export class UserExpireListener {
 
     const keyboard = new InlineKeyboard();
 
-    paymentPeriods.forEach((period) => {
-      keyboard.text(
-        this.localService.i18n.t(locale, mapPeriodLabelToPriceLabel(period), {
-          discount: period === 'month_3' ? '-15%' : '-25%',
-        }),
-        `payment_for_${period}`,
-      );
-      keyboard.row();
-    });
+    keyboard.webApp(
+      this.localService.i18n.t(locale, 'pay-button-label'),
+      process.env.WEB_APP_PAYMENT_URL || 'https://miniapp.thejungle.pro/profile/payment',
+    );
+    keyboard.row();
+    keyboard.url(
+      this.localService.i18n.t(locale, 'support-button-label'),
+      process.env.SUPPORT_URL || 'https://t.me/JungleVPN_support',
+    );
     keyboard.text(this.localService.i18n.t(locale, 'home-button-label'), 'navigate_main');
 
     const formattedDate = toDateString(payload.data.expireAt);

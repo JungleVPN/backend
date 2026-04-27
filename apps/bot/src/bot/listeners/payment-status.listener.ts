@@ -136,7 +136,10 @@ export class PaymentStatusListener {
     const i18n = this.localService.i18n;
 
     const successMenu = new InlineKeyboard()
-      .text(i18n.t(locale, 'profile-button-label'), 'navigate_to_profile')
+      .webApp(
+        i18n.t(locale, 'profile-button-label'),
+        process.env.WEB_APP_URL || 'https://miniapp.thejungle.pro',
+      )
       .row()
       .text(i18n.t(locale, 'home-button-label'), 'navigate_main');
 
