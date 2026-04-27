@@ -232,7 +232,7 @@ no-active-subscription-text =
 
 
 
-invoice-payment-failed-text =
+payment-failed-text =
     ❗ <b>Оплата не прошла</b>
 
     Не получилось провести оплату подписки.
@@ -241,8 +241,13 @@ invoice-payment-failed-text =
     Управлять подпиской можно в меню Профиль.
 
 
+no-active-method-text =
+    ❗Твоя подписка закончится через 24 часа, но я не нашел сохранённого способа оплаты для продления.
 
-invoice-payment-failed-insufficient-funds-text =
+    Оплати пожалуйста вручную, нажав на кнопку ниже
+
+
+payment-failed-insufficient-funds-text =
     ❗ <b>Оплата не прошла — недостаточно средств</b>
 
     На карте не хватило средств для проведения платежа.
@@ -252,7 +257,7 @@ invoice-payment-failed-insufficient-funds-text =
 
 
 
-invoice-payment-failed-card-expired-text =
+payment-failed-card-expired-text =
     ❗ <b>Оплата не прошла — карта просрочена</b>
 
     Срок действия карты истёк.
@@ -262,7 +267,7 @@ invoice-payment-failed-card-expired-text =
 
 
 
-invoice-payment-failed-invalid-card-text =
+payment-failed-invalid-card-text =
     ❗ <b>Оплата не прошла — неверные данные карты</b>
 
     Номер карты или CVV-код введены неправильно.
@@ -272,7 +277,7 @@ invoice-payment-failed-invalid-card-text =
 
 
 
-invoice-payment-failed-3ds-text =
+payment-failed-3ds-text =
     ❗ <b>Оплата не прошла — не пройдена 3-D Secure</b>
 
     Не удалось пройти аутентификацию 3-D Secure.
@@ -282,7 +287,7 @@ invoice-payment-failed-3ds-text =
 
 
 
-invoice-payment-failed-fraud-text =
+payment-failed-fraud-text =
     ❗ <b>Оплата не прошла — заблокирована</b>
 
     Платёж заблокирован как подозрительный.
@@ -292,7 +297,7 @@ invoice-payment-failed-fraud-text =
 
 
 
-invoice-payment-failed-issuer-text =
+payment-failed-issuer-text =
     ❗ <b>Оплата не прошла — отказ банка</b>
 
     Банк отклонил платёж.
@@ -302,7 +307,7 @@ invoice-payment-failed-issuer-text =
 
 
 
-invoice-payment-failed-limit-text =
+payment-failed-limit-text =
     ❗ <b>Оплата не прошла — превышен лимит</b>
 
     Достигнут лимит для этого способа оплаты.
@@ -312,7 +317,7 @@ invoice-payment-failed-limit-text =
 
 
 
-invoice-payment-failed-country-text =
+payment-failed-country-text =
     ❗ <b>Оплата не прошла — способ не поддерживается</b>
 
     Оплата такой картой или через этого мобильного оператора сейчас недоступна.
@@ -322,7 +327,7 @@ invoice-payment-failed-country-text =
 
 
 
-invoice-payment-failed-identification-text =
+payment-failed-identification-text =
     ❗ <b>Оплата не прошла — требуется идентификация</b>
 
     Превышен лимит для кошелька ЮMoney без идентификации.
@@ -332,7 +337,7 @@ invoice-payment-failed-identification-text =
 
 
 
-invoice-payment-failed-expired-text =
+payment-failed-expired-text =
     ❗ <b>Оплата не прошла — время вышло</b>
 
     Срок подтверждения платежа истёк.
@@ -342,7 +347,7 @@ invoice-payment-failed-expired-text =
 
 
 
-invoice-payment-failed-timeout-text =
+payment-failed-timeout-text =
     ❗ <b>Оплата не прошла — временная ошибка</b>
 
     Временные неполадки на стороне платёжного провайдера.
@@ -352,7 +357,7 @@ invoice-payment-failed-timeout-text =
 
 
 
-invoice-payment-failed-permission-revoked-text =
+payment-failed-permission-revoked-text =
     ❗ <b>Автоплатёж недоступен</b>
 
     Разрешение на автоплатежи отозвано, поэтому списать оплату автоматически не удалось.

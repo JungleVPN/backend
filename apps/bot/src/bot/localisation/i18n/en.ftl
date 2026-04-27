@@ -214,7 +214,7 @@ invoice-payment-success-text =
 
 
 
-invoice-payment-failed-text =
+payment-failed-text =
     ❗ <b>Payment failed</b>
 
     We couldn't process the payment for your subscription.
@@ -223,8 +223,13 @@ invoice-payment-failed-text =
     You can manage your subscription via the Profile menu.
 
 
+no-active-method-text =
+    ❗Your subscription will expire in 24 hours, but you don't have any active payment methods.
 
-invoice-payment-failed-insufficient-funds-text =
+    Please pay manaully by clicking the button below.
+
+
+payment-failed-insufficient-funds-text =
     ❗ <b>Payment failed — insufficient funds</b>
 
     There weren't enough funds on your card to complete the payment.
@@ -234,7 +239,7 @@ invoice-payment-failed-insufficient-funds-text =
 
 
 
-invoice-payment-failed-card-expired-text =
+payment-failed-card-expired-text =
     ❗ <b>Payment failed — card expired</b>
 
     The bank card you used has expired.
@@ -244,7 +249,7 @@ invoice-payment-failed-card-expired-text =
 
 
 
-invoice-payment-failed-invalid-card-text =
+payment-failed-invalid-card-text =
     ❗ <b>Payment failed — incorrect card details</b>
 
     The card number or CVV code didn't match.
@@ -254,7 +259,7 @@ invoice-payment-failed-invalid-card-text =
 
 
 
-invoice-payment-failed-3ds-text =
+payment-failed-3ds-text =
     ❗ <b>Payment failed — 3-D Secure check didn't pass</b>
 
     The 3-D Secure authentication wasn't completed.
@@ -264,7 +269,7 @@ invoice-payment-failed-3ds-text =
 
 
 
-invoice-payment-failed-fraud-text =
+payment-failed-fraud-text =
     ❗ <b>Payment failed — blocked for safety</b>
 
     The payment was blocked because it was flagged as suspicious.
@@ -274,7 +279,7 @@ invoice-payment-failed-fraud-text =
 
 
 
-invoice-payment-failed-issuer-text =
+payment-failed-issuer-text =
     ❗ <b>Payment failed — declined by the bank</b>
 
     Your bank declined the transaction.
@@ -284,7 +289,7 @@ invoice-payment-failed-issuer-text =
 
 
 
-invoice-payment-failed-limit-text =
+payment-failed-limit-text =
     ❗ <b>Payment failed — limit reached</b>
 
     The payment limit for this method has been reached.
@@ -294,7 +299,7 @@ invoice-payment-failed-limit-text =
 
 
 
-invoice-payment-failed-country-text =
+payment-failed-country-text =
     ❗ <b>Payment failed — method not supported</b>
 
     Payments with this card or mobile carrier aren't supported right now.
@@ -304,7 +309,7 @@ invoice-payment-failed-country-text =
 
 
 
-invoice-payment-failed-identification-text =
+payment-failed-identification-text =
     ❗ <b>Payment failed — identification required</b>
 
     Your YooMoney wallet needs identification to complete this payment.
@@ -314,7 +319,7 @@ invoice-payment-failed-identification-text =
 
 
 
-invoice-payment-failed-expired-text =
+payment-failed-expired-text =
     ❗ <b>Payment failed — session expired</b>
 
     The payment session expired before it could be completed.
@@ -324,7 +329,7 @@ invoice-payment-failed-expired-text =
 
 
 
-invoice-payment-failed-timeout-text =
+payment-failed-timeout-text =
     ❗ <b>Payment failed — temporary error</b>
 
     A temporary issue on the payment provider's side prevented the payment from going through.
@@ -334,7 +339,7 @@ invoice-payment-failed-timeout-text =
 
 
 
-invoice-payment-failed-permission-revoked-text =
+payment-failed-permission-revoked-text =
     ❗ <b>Autopayment unavailable</b>
 
     Autopayment permission was revoked, so we couldn't charge your card automatically.

@@ -15,30 +15,31 @@ import { Bot, InlineKeyboard } from 'grammy';
  * we don't end up with 20 near-identical translation strings.
  */
 const CANCEL_REASON_I18N_KEY: Record<Payments.CancelReason, string> = {
-  insufficient_funds: 'invoice-payment-failed-insufficient-funds-text',
-  card_expired: 'invoice-payment-failed-card-expired-text',
-  invalid_card_number: 'invoice-payment-failed-invalid-card-text',
-  invalid_csc: 'invoice-payment-failed-invalid-card-text',
-  '3d_secure_failed': 'invoice-payment-failed-3ds-text',
-  fraud_suspected: 'invoice-payment-failed-fraud-text',
-  call_issuer: 'invoice-payment-failed-issuer-text',
-  issuer_unavailable: 'invoice-payment-failed-issuer-text',
-  payment_method_restricted: 'invoice-payment-failed-issuer-text',
-  payment_method_limit_exceeded: 'invoice-payment-failed-limit-text',
-  country_forbidden: 'invoice-payment-failed-country-text',
-  unsupported_mobile_operator: 'invoice-payment-failed-country-text',
-  identification_required: 'invoice-payment-failed-identification-text',
-  expired_on_capture: 'invoice-payment-failed-expired-text',
-  expired_on_confirmation: 'invoice-payment-failed-expired-text',
-  deal_expired: 'invoice-payment-failed-expired-text',
-  internal_timeout: 'invoice-payment-failed-timeout-text',
-  permission_revoked: 'invoice-payment-failed-permission-revoked-text',
-  canceled_by_merchant: 'invoice-payment-failed-text',
-  general_decline: 'invoice-payment-failed-text',
+  insufficient_funds: 'payment-failed-insufficient-funds-text',
+  card_expired: 'payment-failed-card-expired-text',
+  invalid_card_number: 'payment-failed-invalid-card-text',
+  invalid_csc: 'payment-failed-invalid-card-text',
+  '3d_secure_failed': 'payment-failed-3ds-text',
+  fraud_suspected: 'payment-failed-fraud-text',
+  call_issuer: 'payment-failed-issuer-text',
+  issuer_unavailable: 'payment-failed-issuer-text',
+  payment_method_restricted: 'payment-failed-issuer-text',
+  payment_method_limit_exceeded: 'payment-failed-limit-text',
+  country_forbidden: 'payment-failed-country-text',
+  unsupported_mobile_operator: 'payment-failed-country-text',
+  identification_required: 'payment-failed-identification-text',
+  expired_on_capture: 'payment-failed-expired-text',
+  expired_on_confirmation: 'payment-failed-expired-text',
+  deal_expired: 'payment-failed-expired-text',
+  internal_timeout: 'payment-failed-timeout-text',
+  permission_revoked: 'payment-failed-permission-revoked-text',
+  canceled_by_merchant: 'payment-failed-text',
+  general_decline: 'payment-failed-text',
+  no_active_method: 'no-active-method-text',
 };
 
 /** Generic fallback used for unknown / missing reasons. */
-const DEFAULT_FAILURE_I18N_KEY = 'invoice-payment-failed-text';
+const DEFAULT_FAILURE_I18N_KEY = 'payment-failed-text';
 
 /**
  * Handles payment notifications from the backend.
@@ -111,7 +112,10 @@ export class PaymentStatusListener {
 
     const text = i18n.t(locale, i18nKey);
     const menu = new InlineKeyboard()
-      .text(i18n.t(locale, 'pay-button-label'), 'navigate_to_payment')
+      .webApp(
+        this.localService.i18n.t(locale, 'pay-button-label'),
+        process.env.WEB_APP_PAYMENT_URL || 'https://miniapp.thejungle.pro/profile/payment',
+      )
       .row()
       .text(i18n.t(locale, 'profile-button-label'), 'navigate_to_profile');
 

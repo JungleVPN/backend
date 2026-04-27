@@ -3,7 +3,6 @@ import { Menu } from '@bot/navigation';
 import { DevicesMenu } from '@bot/navigation/features/devices/devices.menu';
 import { PaymentMethodMenu } from '@bot/navigation/features/payment/payment-method/payment-method.menu';
 import { ProfileMenu } from '@bot/navigation/features/profile/profile.menu';
-import { ProfileMenuService } from '@bot/navigation/features/profile/profile-menu.service';
 import { ReferralMenu } from '@bot/navigation/features/referral/referral.menu';
 import { ReferralMenuService } from '@bot/navigation/features/referral/referral.service';
 import { SupportMenu } from '@bot/navigation/features/support/support.menu';
@@ -27,7 +26,6 @@ export class MainMenu extends Base {
     readonly referralMenu: ReferralMenu,
     readonly remnaService: RemnaService,
     readonly referralMenuService: ReferralMenuService,
-    readonly profileMenuService: ProfileMenuService,
   ) {
     super();
 

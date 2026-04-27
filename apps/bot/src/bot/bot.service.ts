@@ -1,12 +1,7 @@
 import * as process from 'node:process';
 import { BotContext, initialSession } from '@bot/bot.types';
-import { NavigateDevicesCallback } from '@bot/callbacks/navigate-devices.callback';
 import { NavigateMainCallback } from '@bot/callbacks/navigate-main.callback';
-import { NavigatePaymentPeriodsCallback } from '@bot/callbacks/navigate-payment-periods.callback';
 import { NavigateProfileCallback } from '@bot/callbacks/navigate-profile.callback';
-import { NavigateToPaymentCallback } from '@bot/callbacks/navigate-to-payment.callback';
-import { PaymentPeriodsCallback } from '@bot/callbacks/payment-periods.callback';
-import { PaymentSuccessCallback } from '@bot/callbacks/payment-success.callback';
 import { BroadcastDeleteCommand } from '@bot/commands/broadcast/broadcast-delete.command';
 import { BroadcastEditCommand } from '@bot/commands/broadcast/broadcast-edit.command';
 import { BroadcastMessageCommand } from '@bot/commands/broadcast/broadcast-message.command';
@@ -30,12 +25,7 @@ export class BotService implements OnModuleInit {
     private readonly broadcastEditCommand: BroadcastEditCommand,
     private readonly broadcastDeleteCommand: BroadcastDeleteCommand,
     private readonly navigateMainCallback: NavigateMainCallback,
-    private readonly navigateDevicesCallback: NavigateDevicesCallback,
-    private readonly paymentSuccessCallback: PaymentSuccessCallback,
-    private readonly paymentPeriodsCallback: PaymentPeriodsCallback,
     private readonly navigateProfileCallback: NavigateProfileCallback,
-    private readonly navigatePaymentPeriodsCallback: NavigatePaymentPeriodsCallback,
-    private readonly navigateToPaymentCallback: NavigateToPaymentCallback,
     private readonly localService: LocalisationService,
     private readonly inlineQueryListener: InlineQueryListener,
     private readonly pollService: PollService,
@@ -63,12 +53,7 @@ export class BotService implements OnModuleInit {
     this.pollService.register(this.bot);
 
     this.navigateMainCallback.register(this.bot);
-    this.navigateDevicesCallback.register(this.bot);
-    this.paymentSuccessCallback.register(this.bot);
-    this.paymentPeriodsCallback.register(this.bot);
     this.navigateProfileCallback.register(this.bot);
-    this.navigatePaymentPeriodsCallback.register(this.bot);
-    this.navigateToPaymentCallback.register(this.bot);
     this.inlineQueryListener.register(this.bot);
 
     this.bot.catch((err) => {

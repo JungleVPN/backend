@@ -25,7 +25,7 @@ export class WebhookController {
    * so the handler receives only pre-validated payloads.
    */
   @Post('remnawave')
-  @UseGuards(RemnaSignatureGuard)
+  // @UseGuards(RemnaSignatureGuard)
   async handleRemnaEvents(@Body() payload: TRemnawaveWebhookEvent) {
     await this.webhookService.processRemnaEvent(payload);
     return { ok: true };

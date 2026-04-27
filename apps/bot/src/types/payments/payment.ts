@@ -188,7 +188,8 @@ export namespace Payments {
     | 'payment_method_limit_exceeded'
     | 'payment_method_restricted'
     | 'permission_revoked'
-    | 'unsupported_mobile_operator';
+    | 'unsupported_mobile_operator'
+    | 'no_active_method';
 
   /**
    * Комментарий к статусу `canceled`: кто отменил платеж и по какой причине.

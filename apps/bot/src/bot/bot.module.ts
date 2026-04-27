@@ -1,10 +1,5 @@
-import { NavigateDevicesCallback } from '@bot/callbacks/navigate-devices.callback';
 import { NavigateMainCallback } from '@bot/callbacks/navigate-main.callback';
-import { NavigatePaymentPeriodsCallback } from '@bot/callbacks/navigate-payment-periods.callback';
 import { NavigateProfileCallback } from '@bot/callbacks/navigate-profile.callback';
-import { NavigateToPaymentCallback } from '@bot/callbacks/navigate-to-payment.callback';
-import { PaymentPeriodsCallback } from '@bot/callbacks/payment-periods.callback';
-import { PaymentSuccessCallback } from '@bot/callbacks/payment-success.callback';
 import { BroadcastDeleteCommand } from '@bot/commands/broadcast/broadcast-delete.command';
 import { BroadcastEditCommand } from '@bot/commands/broadcast/broadcast-edit.command';
 import { BroadcastMessageCommand } from '@bot/commands/broadcast/broadcast-message.command';
@@ -61,13 +56,8 @@ import { BotService } from './bot.service';
     BroadcastDeleteCommand,
     PollService,
     // CALLBACKS
-    PaymentSuccessCallback,
-    PaymentPeriodsCallback,
     NavigateMainCallback,
-    NavigateDevicesCallback,
     NavigateProfileCallback,
-    NavigatePaymentPeriodsCallback,
-    NavigateToPaymentCallback,
   ],
   exports: [BotService],
 })
