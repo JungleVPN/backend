@@ -1,9 +1,18 @@
 import { Surface } from '@heroui/react';
-import { useParams } from 'react-router';
+import { useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router';
 import { SubscriptionView } from '@/components/SubscriptionView/SubscriptionView';
+import { useAuthStoreInfo } from '@/store/auth';
 
 export default function SubscriptionPage() {
+  const navigate = useNavigate();
   const { shortUuid } = useParams<{ shortUuid: string }>();
+
+  const { authUser } = useAuthStoreInfo();
+
+  useEffect(() => {
+    if (authUser) navigate('/profile/subscription');
+  }, [authUser, navigate]);
 
   if (!shortUuid) {
     return null;

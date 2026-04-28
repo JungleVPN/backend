@@ -1,9 +1,10 @@
 import { Button, Chip, Description, FieldError, Form, Input, TextField } from '@heroui/react';
 import { IconArrowRight, IconCheck, IconMail } from '@tabler/icons-react';
-import { SyntheticEvent, useState } from 'react';
+import { SyntheticEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { env } from '@/config/env.ts';
+import { useAuthStoreInfo } from '@/store/auth';
 import { Block } from '@/ui/Block/Block';
 import { initUser } from '@/utils/remnawave.ts';
 import styles from './getSubscription.module.css';
@@ -15,6 +16,11 @@ export default function GetSubscriptionPage() {
   const [error, setError] = useState<string | null>(null);
   const [hasError, setHasError] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { authUser } = useAuthStoreInfo();
+
+  useEffect(() => {
+    if (authUser) navigate('/profile/subscription');
+  }, [authUser, navigate]);
 
   const validateEmail = (value: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);

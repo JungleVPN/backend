@@ -1,5 +1,5 @@
 import { Alert, Button, Form, Input, Label, Surface, TextField } from '@heroui/react';
-import { type FormEvent, useState } from 'react';
+import { SyntheticEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router';
 import { createClient } from '@/lib/supabase/client';
@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -66,7 +66,7 @@ export default function LoginPage() {
                 placeholder={t('login.email_placeholder')}
                 value={email}
                 variant='secondary'
-                onChange={setEmail}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </TextField>
             <Button fullWidth isPending={loading} type='submit'>

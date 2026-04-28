@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStoreActions } from '@/store/auth';
-
 /**
  * Client-side auth provider.
  * Listens for Supabase auth state changes and updates the Zustand auth store.
