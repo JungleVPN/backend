@@ -1,8 +1,9 @@
-import { Button, Chip, Description, Form, Input, Label, TextField } from '@heroui/react';
+import { Button, Chip, Description, FieldError, Form, Input, TextField } from '@heroui/react';
 import { IconArrowRight, IconCheck, IconMail } from '@tabler/icons-react';
-import { type FormEvent, useState } from 'react';
+import { SyntheticEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
+import { env } from '@/config/env.ts';
 import { Block } from '@/ui/Block/Block';
 import { initUser } from '@/utils/remnawave.ts';
 import styles from './getSubscription.module.css';
@@ -11,24 +12,28 @@ export default function GetSubscriptionPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [hasError, setHasError] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const validateEmail = (value: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
     setError('');
+    setHasError(false);
 
     if (!email.trim()) {
       setError(t('getSubscription.error_empty_email'));
+      setHasError(true);
       return;
     }
 
     if (!validateEmail(email)) {
       setError(t('getSubscription.error_invalid_email'));
+      setHasError(true);
       return;
     }
 
@@ -39,6 +44,7 @@ export default function GetSubscriptionPage() {
       navigate(`/subscription/${data.shortUuid}`);
     } catch {
       setError(t('getSubscription.error_failed_to_create'));
+      setHasError(true);
     } finally {
       setIsLoading(false);
     }
@@ -51,14 +57,14 @@ export default function GetSubscriptionPage() {
   ];
 
   return (
-    <Form className={styles.form} onSubmit={(ev) => void handleSubmit(ev)}>
-      <div className='mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2'>
+    <Form className={styles.form}>
+      <div className='flex flex-col mx-auto max-w-5xl gap-3'>
         <Block>
           <div className='flex flex-col gap-2'>
-            <Label className='text-base font-medium text-foreground'>
+            <p className='text-base font-medium text-foreground'>
               {t('getSubscription.enter_email')}
-            </Label>
-            <TextField isRequired name='email' type='email'>
+            </p>
+            <TextField isInvalid={hasError} isRequired name='email' id={'email'} type='email'>
               <div className='relative w-full'>
                 <span className={styles.inputIcon}>
                   <IconMail size={20} stroke={1.5} />
@@ -70,13 +76,20 @@ export default function GetSubscriptionPage() {
                   value={email}
                   variant='secondary'
                   onChange={(v) => {
-                    setEmail(v);
-                    if (error) setError('');
+                    setEmail(v.target.value);
+                    if (error) {
+                      setHasError(false);
+                      setError('');
+                    }
                   }}
                 />
               </div>
-              <Description>{t('getSubscription.email_description')}</Description>
-              {error ? <Description className='text-danger'>{error}</Description> : null}
+
+              {hasError ? (
+                <FieldError>{error}</FieldError>
+              ) : (
+                <Description>{t('getSubscription.email_description')}</Description>
+              )}
             </TextField>
           </div>
         </Block>
@@ -89,20 +102,20 @@ export default function GetSubscriptionPage() {
               <div className={styles.itemLabel}>
                 <div className='flex flex-col gap-0.5'>
                   <p className={styles.itemName}>{t('getSubscription.item_name')}</p>
-                  <Chip color='accent' size='sm' variant='soft'>
+                  <Chip color='accent' size='sm' className={'w-fit'} variant='soft'>
                     <Chip.Label>{t('getSubscription.discount')}</Chip.Label>
                   </Chip>
                 </div>
               </div>
               <div className={styles.priceColumn}>
-                <p className={styles.currentPrice}>€0.00</p>
-                <p className={styles.oldPrice}>€1.99</p>
+                <p className={styles.currentPrice}>0 ₽</p>
+                <p className={styles.oldPrice}>{env.priceRub} ₽</p>
               </div>
             </div>
 
             <div className={styles.divider} />
 
-            <Button className={styles.submitButton} isPending={isLoading} type='submit'>
+            <Button className={'w-full'} isPending={isLoading} type='submit' onClick={handleSubmit}>
               {t('getSubscription.submit_button')}
               <IconArrowRight size={20} stroke={2} />
             </Button>
