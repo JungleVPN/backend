@@ -90,6 +90,12 @@
   --color-tg-separator: var(--tg-theme-section-separator-color);
 }
 
+.alert-dialog__dialog {
+  &[data-placement="auto"] {
+    margin: auto;
+  }
+}
+
 html,
 body {
   background-color: oklch(0.1448 0 0);
