@@ -16,7 +16,7 @@ interface IProps {
 
 export function LanguagePicker(props: IProps) {
   const { locales, currentLang, onLanguageChange } = props;
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
 
   useEffect(() => {
     const nextDir = currentLang === 'fa' ? 'rtl' : 'ltr';
@@ -39,7 +39,7 @@ export function LanguagePicker(props: IProps) {
   return (
     <Dropdown>
       <Button
-        aria-label='Language'
+        aria-label={t('a11y.language')}
         className='border border-white/10 bg-white/[0.02]'
         isIconOnly
         variant='secondary'

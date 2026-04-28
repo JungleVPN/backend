@@ -1,6 +1,7 @@
 import { Tabs } from '@heroui/react';
 import { IconPigFilled, IconWallet } from '@tabler/icons-react';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
 import css from './Tabs.module.css';
 
@@ -19,15 +20,27 @@ function getActiveTab(pathname: string): TabValue {
   return TAB_VALUES.includes(segment) ? segment : 'subscription';
 }
 
-const tabs: TabDef[] = [
-  { id: 'subscription', label: 'Subscription', icon: <IconWallet className='size-4' /> },
-  { id: 'payment', label: 'Payment', icon: <IconPigFilled className='size-4' /> },
-];
-
 export const Navbar = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const activeTab = getActiveTab(pathname);
+
+  const tabs = useMemo<TabDef[]>(
+    () => [
+      {
+        id: 'subscription',
+        label: t('profileTabs.subscription'),
+        icon: <IconWallet className='size-4' />,
+      },
+      {
+        id: 'payment',
+        label: t('profileTabs.payment'),
+        icon: <IconPigFilled className='size-4' />,
+      },
+    ],
+    [t],
+  );
 
   const handleSelectionChange = useCallback(
     (key: string | number | null) => {
@@ -41,7 +54,7 @@ export const Navbar = () => {
   return (
     <Tabs className={css.root} selectedKey={activeTab} onSelectionChange={handleSelectionChange}>
       <Tabs.ListContainer>
-        <Tabs.List aria-label='Profile sections' className={css.list}>
+        <Tabs.List aria-label={t('profileTabs.ariaLabel')} className={css.list}>
           {tabs.map((tab) => (
             <Tabs.Tab key={tab.id} id={tab.id} className={css.tab}>
               <span>{tab.icon}</span>

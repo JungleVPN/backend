@@ -1,6 +1,7 @@
 import { Label, ListBox, Select } from '@heroui/react';
-import type { Key } from 'react';
 import type { TSubscriptionPagePlatformKey } from '@workspace/types';
+import type { Key } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export interface PlatformOption {
   value: TSubscriptionPagePlatformKey;
@@ -15,6 +16,8 @@ interface PlatformSelectorProps {
 }
 
 export function PlatformSelector({ options, selectedPlatformId, onSelect }: PlatformSelectorProps) {
+  const { t } = useTranslation();
+
   if (options.length <= 1) return null;
 
   const selectedIcon = options.find((opt) => opt.value === selectedPlatformId)?.icon ?? '';
@@ -29,7 +32,7 @@ export function PlatformSelector({ options, selectedPlatformId, onSelect }: Plat
         onSelect(value as TSubscriptionPagePlatformKey);
       }}
     >
-      <Label className='sr-only'>Platform</Label>
+      <Label className='sr-only'>{t('a11y.platform')}</Label>
       <Select.Trigger>
         <span
           className='flex size-5 shrink-0 items-center justify-center'

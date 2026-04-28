@@ -4,7 +4,7 @@ import { useSubscriptionConfigStoreActions } from '@workspace/core/stores';
 import { useTranslation } from 'react-i18next';
 
 export function LanguageSwitcher() {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const { setLanguage } = useSubscriptionConfigStoreActions();
 
   const handleLanguageChange = (newLocale: string) => {
@@ -25,11 +25,11 @@ export function LanguageSwitcher() {
             handleLanguageChange(String(key));
           }}
         >
-          <Dropdown.Item id='ru' textValue='Русский'>
-            <Label>Русский</Label>
+          <Dropdown.Item id='ru' textValue={t('languages.nativeRu')}>
+            <Label>{t('languages.nativeRu')}</Label>
           </Dropdown.Item>
-          <Dropdown.Item id='en' textValue='English'>
-            <Label>English</Label>
+          <Dropdown.Item id='en' textValue={t('languages.nativeEn')}>
+            <Label>{t('languages.nativeEn')}</Label>
           </Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown.Popover>

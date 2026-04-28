@@ -17,7 +17,7 @@ export const Page = (props: PageProps) => {
       <p className={'text-2xl mt-1'}>{title}</p>
       <p className={'text-md text-muted m-1'}>{subtitle}</p>
       <p className={'text-sm text-muted'}>{description}</p>
-      <div className={'mt-5 py-6 flex items-center justify-center flex-col w-full'}>{children}</div>
+      <div className={'mt-5 py-6 flex flex-col w-full'}>{children}</div>
     </Surface>
   );
 };

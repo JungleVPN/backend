@@ -1,4 +1,4 @@
-import { Button, Card, Spinner } from '@heroui/react';
+import { AlertDialog, Button, Card, Spinner, useOverlayState } from '@heroui/react';
 import {
   useCreatePaymentSession,
   useDeleteSavedMethod,
@@ -26,6 +26,7 @@ export default function PaymentPage() {
 
   const { isLoading: isPaying, execute: createSession } = useCreatePaymentSession(paymentsApi);
   const { isLoading: isDeleting, execute: deleteMethod } = useDeleteSavedMethod(paymentsApi);
+  const termsState = useOverlayState();
 
   useEffect(() => {
     if (rmnUser?.uuid) {
@@ -63,10 +64,14 @@ export default function PaymentPage() {
   };
 
   return (
-    <Page icon={PaymentPageIcon} title={'Payment'} subtitle={'Manage your payment methods here'}>
+    <Page
+      icon={PaymentPageIcon}
+      title={t('payment.pageTitle')}
+      subtitle={t('payment.pageSubtitle')}
+    >
       <div className='flex flex-col gap-2 w-full'>
-        <h2 className='px-1 text-xs font-semibold tracking-[0.06em] text-muted uppercase'>
-          Saved payment methods
+        <h2 className='px-4 text-xs font-semibold tracking-[0.06em] text-muted uppercase'>
+          {t('payment.methodsHeading')}
         </h2>
 
         <Card className='w-full overflow-hidden p-0' variant='default'>
@@ -87,9 +92,7 @@ export default function PaymentPage() {
                 </Fragment>
               ))
             ) : (
-              <p className='px-4 py-4 text-sm text-muted'>
-                No saved payment methods yet. Complete a payment to save one.
-              </p>
+              <p className='px-4 py-4 text-sm text-muted'>{t('payment.emptyMethods')}</p>
             )}
           </Card.Content>
         </Card>
@@ -97,14 +100,16 @@ export default function PaymentPage() {
 
       {hasActiveMethod ? (
         <div className={'flex flex-col gap-2 w-full text-start mt-3'}>
-          <p className='text-center text-xs text-muted'>
-            Autopayment is active. To pay manually, remove your saved card first.
-          </p>
-          <p className='text-center text-xs text-muted'>
+          <p className='text-center text-xs text-muted'>{t('payment.autopaymentActive')}</p>
+          <p className='text-start text-xs text-muted'>
             {t('terms.paymentConsentLead')}
-            <Link className='underline underline-offset-2' href='/terms'>
+            <button
+              type='button'
+              className='underline underline-offset-2 cursor-pointer'
+              onClick={termsState.open}
+            >
               {t('terms.paymentLinkLabel')}
-            </Link>
+            </button>
           </p>
         </div>
       ) : (
@@ -117,16 +122,98 @@ export default function PaymentPage() {
             className={'w-full mt-4'}
             onClick={handlePay}
           >
-            Pay {env.priceRub} ₽
+            {t('payment.payButton', { amount: env.priceRub })}
           </Button>
-          <p className='text-center text-xs text-muted mt-3'>
+          <p className='text-start text-xs text-muted mt-1 pl-4'>
             {t('terms.paymentConsentLead')}
-            <Link className='underline underline-offset-2' href='/terms'>
+            <button
+              type='button'
+              className='underline underline-offset-2 cursor-pointer'
+              onClick={termsState.open}
+            >
               {t('terms.paymentLinkLabel')}
-            </Link>
+            </button>
           </p>
         </>
       )}
+      <AlertDialog.Backdrop
+        isDismissable
+        isOpen={termsState.isOpen}
+        variant='blur'
+        onOpenChange={termsState.setOpen}
+      >
+        <AlertDialog.Container size='sm'>
+          <AlertDialog.Dialog>
+            <AlertDialog.CloseTrigger />
+            <AlertDialog.Header className={'mb-4'}>
+              <AlertDialog.Heading>{t('terms.dialog.title')}</AlertDialog.Heading>
+            </AlertDialog.Header>
+            <AlertDialog.Body>
+              <div className='flex flex-col gap-4 text-sm'>
+                <div>
+                  <p className='font-semibold text-foreground mb-1'>
+                    {t('terms.dialog.activationTitle')}
+                  </p>
+                  <p className='text-muted'>{t('terms.dialog.activationBody')}</p>
+                </div>
+                <div>
+                  <p className='font-semibold text-foreground mb-1'>
+                    {t('terms.dialog.autoRenewalTitle')}
+                  </p>
+                  <p className='text-muted'>{t('terms.dialog.autoRenewalLead')}</p>
+                </div>
+                <div>
+                  <p className='font-semibold text-foreground mb-1'>
+                    {t('terms.dialog.renewalCostTitle')}
+                  </p>
+                  <p className='text-muted'>
+                    {t('terms.dialog.renewalCostLead')}
+                    <Link
+                      className='underline underline-offset-2'
+                      href={import.meta.env.VITE_SUPPORT_URL}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                    >
+                      {t('terms.dialog.supportLink')}
+                    </Link>
+                  </p>
+                </div>
+                <div>
+                  <p className='font-semibold text-foreground mb-1'>
+                    {t('terms.dialog.agreementsTitle')}
+                  </p>
+                  <p className='text-muted'>
+                    {t('terms.dialog.agreementsLead')}
+                    <Link
+                      className='underline underline-offset-2'
+                      href='/terms'
+                      target='_blank'
+                      rel='noopener noreferrer'
+                    >
+                      {t('terms.dialog.termsOfServiceLink')}
+                    </Link>
+                    {/*{t('terms.dialog.agreementsMid')}*/}
+                    {/*<Link*/}
+                    {/*  className='underline underline-offset-2'*/}
+                    {/*  href='/privacy-policy'*/}
+                    {/*  target='_blank'*/}
+                    {/*  rel='noopener noreferrer'*/}
+                    {/*>*/}
+                    {/*  {t('terms.dialog.privacyPolicyLink')}*/}
+                    {/*</Link>*/}
+                    {t('terms.dialog.agreementsTail')}
+                  </p>
+                </div>
+              </div>
+            </AlertDialog.Body>
+            <AlertDialog.Footer>
+              <Button fullWidth slot='close'>
+                {t('terms.dialog.confirmButton')}
+              </Button>
+            </AlertDialog.Footer>
+          </AlertDialog.Dialog>
+        </AlertDialog.Container>
+      </AlertDialog.Backdrop>
     </Page>
   );
 }

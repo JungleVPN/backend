@@ -13,6 +13,9 @@ export function ErrorConnection() {
       >
         &#x26A0;
       </Surface>
+      <p className='max-w-xs text-center text-sm text-muted'>
+        {t('main.page.component.error-connect')}
+      </p>
       <Button variant='secondary' onPress={() => window.location.reload()}>
         {t('main.page.component.refresh')}
       </Button>

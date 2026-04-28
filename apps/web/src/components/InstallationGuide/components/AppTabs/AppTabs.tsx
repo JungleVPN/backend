@@ -1,6 +1,7 @@
 import { Surface, Tabs } from '@heroui/react';
 import type { TSubscriptionPageAppConfig } from '@workspace/types';
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import { getIconFromLibrary } from '@/utils/configParser';
 import { vibrate } from '@/utils/vibrate';
 import classes from '../../InstallationGuide.module.css';
@@ -20,6 +21,8 @@ export function AppTabs({
   svgLibrary,
   onAppChange,
 }: AppTabsProps) {
+  const { t } = useTranslation();
+
   if (platformApps.length === 0) return null;
 
   const appIds = platformApps.map((app) => `${platformId}:${app.name}`);
@@ -41,7 +44,7 @@ export function AppTabs({
         }}
       >
         <Tabs.ListContainer>
-          <Tabs.List aria-label='Apps'>
+          <Tabs.List aria-label={t('a11y.appsTabs')}>
             {platformApps.map((app, index) => {
               const isActive = index === safeIndex;
               return (

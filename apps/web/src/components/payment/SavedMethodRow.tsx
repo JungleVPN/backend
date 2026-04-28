@@ -1,5 +1,6 @@
 import { Button, Chip, Separator, Tooltip } from '@heroui/react';
 import type { SavedMethodDto } from '@workspace/types';
+import { useTranslation } from 'react-i18next';
 // @ts-expect-error
 import BinIcon from '@/assets/icons/bin-icon.svg?react';
 import { formatSavedMethodLabel, getPaymentMethodIcon } from '@/ui/savedMethodDisplay';
@@ -17,6 +18,8 @@ export function SavedMethodRow({
   isDeleting,
   showSeparatorAbove,
 }: SavedMethodRowProps) {
+  const { t } = useTranslation();
+
   return (
     <>
       {showSeparatorAbove ? <Separator className='shrink-0' variant='secondary' /> : null}
@@ -39,7 +42,7 @@ export function SavedMethodRow({
         {onDelete ? (
           <Tooltip delay={0} closeDelay={0}>
             <Button
-              aria-label='Delete payment method'
+              aria-label={t('a11y.deletePaymentMethod')}
               className='shrink-0'
               isIconOnly
               isPending={isDeleting}
@@ -51,7 +54,7 @@ export function SavedMethodRow({
             </Button>
             <Tooltip.Content placement='left' showArrow>
               <Tooltip.Arrow />
-              <p className='text-sm'>Remove card</p>
+              <p className='text-sm'>{t('a11y.removeCard')}</p>
             </Tooltip.Content>
           </Tooltip>
         ) : null}

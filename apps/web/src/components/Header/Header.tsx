@@ -1,15 +1,18 @@
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import Logo from '@/assets/Logo.svg';
 import { AuthButtons } from './AuthButtons';
 import { LanguageSwitcher } from './LanguageSwitcher';
 
 export function Header() {
+  const { t } = useTranslation();
+
   return (
     <div className='flex items-center justify-between'>
       <div>
         <Link to='/'>
           <img
-            alt='JungleVPN_logo'
+            alt={t('header.logoAlt')}
             src={Logo}
             style={{
               width: '64px',

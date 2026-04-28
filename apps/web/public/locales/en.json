@@ -26,12 +26,46 @@
     "submit": "Login",
     "resend_in": "Resend in {timer}s",
     "resend_otp": "Resend OTP",
-    "hint": "You will receive an email with the code to enter"
+    "hint": "You will receive an email with the code to enter",
+    "error_invalid_code": "The code is incorrect. Please try again."
   },
   "header": {
     "title": "JungleVPN",
     "logout": "Logout",
-    "login": "Log In"
+    "login": "Log In",
+    "logoAlt": "JungleVPN logo"
+  },
+  "languages": {
+    "nativeRu": "Русский",
+    "nativeEn": "English"
+  },
+  "profileTabs": {
+    "ariaLabel": "Profile sections",
+    "subscription": "Subscription",
+    "payment": "Payment"
+  },
+  "payment": {
+    "pageTitle": "Payment",
+    "pageSubtitle": "Manage your payment methods here",
+    "methodsHeading": "Saved payment methods",
+    "emptyMethods": "No saved payment methods yet. Complete a payment to save one.",
+    "autopaymentActive": "Autopayment is active. To pay manually, remove your saved card first.",
+    "payButton": "Pay {{amount}} ₽"
+  },
+  "a11y": {
+    "otpCode": "One-time code",
+    "platform": "Platform",
+    "deletePaymentMethod": "Delete payment method",
+    "removeCard": "Remove card",
+    "language": "Language",
+    "appsTabs": "Apps"
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "reload": "Reload"
+  },
+  "errors": {
+    "unknown": "Something went wrong"
   },
   "getSubscription": {
     "enter_email": "Enter the email for your JungleVPN account",
@@ -54,6 +88,23 @@
     "paymentConsentLead": "By completing your purchase, you agree to our ",
     "paymentLinkLabel": "Terms of Use",
     "footer": "By using the Service (including by starting the bot and/or sending the /start command), the User confirms that they have read this Agreement and accept its terms in full.",
+    "dialog": {
+      "title": "Subscription terms",
+      "activationTitle": "Subscription activation",
+      "activationBody": "The subscription will be activated after payment confirmation is sent to your email.",
+      "autoRenewalTitle": "Auto-renewal",
+      "autoRenewalLead": "Your subscription will automatically renew at the end of the initial subscription period. You can turn off auto-renewal anytime in your account",
+      "renewalCostTitle": "Renewal cost",
+      "renewalCostLead": "Renewal is charged at the same rate as the original subscription. If the cost changes, we'll notify you in advance via email. Need help? ",
+      "supportLink": "Contact our support team.",
+      "agreementsTitle": "Agreements",
+      "agreementsLead": "By subscribing to JungleVPN, you agree to the JungleVPN ",
+      "termsOfServiceLink": "Terms of Service",
+      "agreementsMid": " and ",
+      "privacyPolicyLink": "Privacy Policy",
+      "agreementsTail": ".",
+      "confirmButton": "Confirm"
+    },
     "s1": {
       "h": "1. General provisions",
       "i1": "This User Agreement (the \"Agreement\") governs the use of the online service (the \"Service\") provided by the Administration.",

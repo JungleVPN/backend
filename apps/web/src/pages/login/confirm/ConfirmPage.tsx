@@ -43,11 +43,7 @@ export default function ConfirmPage() {
     });
 
     if (verifyError) {
-      setError(
-        t('confirm.error_invalid_code', {
-          defaultValue: 'The code is incorrect. Please try again.',
-        }),
-      );
+      setError(t('confirm.error_invalid_code'));
     } else {
       navigate('/profile/subscription');
     }
@@ -89,7 +85,7 @@ export default function ConfirmPage() {
             {error ? <Description className='text-center text-danger'>{error}</Description> : null}
 
             <div className='mx-auto flex w-full max-w-xs flex-col gap-2'>
-              <Label className='sr-only'>One-time code</Label>
+              <Label className='sr-only'>{t('a11y.otpCode')}</Label>
               <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={otp} onChange={setOtp}>
                 <InputOTP.Group>
                   <InputOTP.Slot index={0} />

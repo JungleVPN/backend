@@ -15,7 +15,7 @@ interface ErrorViewProps {
 export function ErrorView({ errorCode }: ErrorViewProps) {
   const { t } = useTranslation();
   const i18nKey = ERROR_I18N_KEYS[errorCode];
-  const message = i18nKey ? t(i18nKey) : JSON.stringify(errorCode);
+  const message = i18nKey ? t(i18nKey) : `${t('errors.unknown')} (${errorCode})`;
 
   return (
     <Surface className='mx-auto my-8 max-w-4xl p-4' variant='transparent'>
