@@ -1,4 +1,4 @@
-import { Button, Chip, Separator, Tooltip } from '@heroui/react';
+import { AlertDialog, Button, Chip, Separator, Tooltip, useOverlayState } from '@heroui/react';
 import type { SavedMethodDto } from '@workspace/types';
 import { useTranslation } from 'react-i18next';
 // @ts-expect-error
@@ -19,6 +19,7 @@ export function SavedMethodRow({
   showSeparatorAbove,
 }: SavedMethodRowProps) {
   const { t } = useTranslation();
+  const confirmState = useOverlayState();
 
   return (
     <>
@@ -48,7 +49,7 @@ export function SavedMethodRow({
               isPending={isDeleting}
               size='sm'
               variant='tertiary'
-              onPress={() => onDelete(method.id)}
+              onPress={confirmState.open}
             >
               <BinIcon />
             </Button>
@@ -59,6 +60,38 @@ export function SavedMethodRow({
           </Tooltip>
         ) : null}
       </div>
+
+      {/* Deletion confirmation dialog */}
+      <AlertDialog.Backdrop
+        isDismissable
+        isOpen={confirmState.isOpen}
+        variant='blur'
+        onOpenChange={confirmState.setOpen}
+      >
+        <AlertDialog.Container size='sm'>
+          <AlertDialog.Dialog>
+            <AlertDialog.Header>
+              <AlertDialog.Icon status='danger' />
+              <AlertDialog.Heading>{t('payment.deleteMethod.title')}</AlertDialog.Heading>
+            </AlertDialog.Header>
+            <AlertDialog.Body>
+              <p className='text-sm text-muted'>{t('payment.deleteMethod.body')}</p>
+            </AlertDialog.Body>
+            <AlertDialog.Footer>
+              <Button slot='close' variant='tertiary'>
+                {t('payment.deleteMethod.cancel')}
+              </Button>
+              <Button
+                slot='close'
+                variant='danger'
+                onPress={() => onDelete?.(method.id)}
+              >
+                {t('payment.deleteMethod.confirm')}
+              </Button>
+            </AlertDialog.Footer>
+          </AlertDialog.Dialog>
+        </AlertDialog.Container>
+      </AlertDialog.Backdrop>
     </>
   );
 }

@@ -51,7 +51,13 @@
     "emptyMethods": "No saved payment methods yet.",
     "autopaymentActive": "Autopayment is active. To pay manually, remove your saved card first.",
     "payButton": "Pay {{amount}} ₽",
-    "extendButton": "Extend"
+    "extendButton": "Extend",
+    "deleteMethod": {
+      "title": "Remove payment method?",
+      "body": "This card will be removed and auto-renewal will be disabled. New card will be added on next manual payment",
+      "cancel": "Cancel",
+      "confirm": "Remove"
+    }
   },
   "a11y": {
     "otpCode": "One-time code",
