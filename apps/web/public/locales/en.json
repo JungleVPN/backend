@@ -48,9 +48,10 @@
     "pageTitle": "Payment",
     "pageSubtitle": "Manage your payment methods here",
     "methodsHeading": "Saved payment methods",
-    "emptyMethods": "No saved payment methods yet. Complete a payment to save one.",
+    "emptyMethods": "No saved payment methods yet.",
     "autopaymentActive": "Autopayment is active. To pay manually, remove your saved card first.",
-    "payButton": "Pay {{amount}} ₽"
+    "payButton": "Pay {{amount}} ₽",
+    "extendButton": "Extend"
   },
   "a11y": {
     "otpCode": "One-time code",

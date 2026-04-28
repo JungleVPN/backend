@@ -7,6 +7,7 @@ import { env } from '@/config/env.ts';
 import { useAuthStoreInfo } from '@/store/auth';
 import { Block } from '@/ui/Block/Block';
 import { initUser } from '@/utils/remnawave.ts';
+import { validateEmail } from '@/utils/validators.ts';
 import styles from './getSubscription.module.css';
 
 export default function GetSubscriptionPage() {
@@ -21,10 +22,6 @@ export default function GetSubscriptionPage() {
   useEffect(() => {
     if (authUser) navigate('/profile/subscription');
   }, [authUser, navigate]);
-
-  const validateEmail = (value: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-  };
 
   const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();

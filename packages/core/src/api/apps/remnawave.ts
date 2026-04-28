@@ -6,6 +6,9 @@ import {
   GetSubscriptionInfoByShortUuidCommand,
   GetSubscriptionPageConfigCommand,
   GetUserByEmailCommand,
+  GetUserByTelegramIdCommand,
+  UpdateUserCommand,
+  UpdateUserResponseDto,
 } from '@workspace/types';
 import type { ApiClient } from '../client';
 
@@ -28,6 +31,23 @@ export function createRemnawaveApi(client: ApiClient) {
       try {
         const data = await client.get<GetUserByEmailCommand.Response['response']>(
           GetUserByEmailCommand.url(body.email),
+        );
+        if (data.length === 0) return null;
+        return data;
+      } catch (err: unknown) {
+        if (err && typeof err === 'object' && 'status' in err && err.status === 404) {
+          return null;
+        }
+        throw err;
+      }
+    },
+
+    async getUserByTelegramId(
+      telegramId: string,
+    ): Promise<GetUserByTelegramIdCommand.Response['response'] | null> {
+      try {
+        const data = await client.get<GetUserByTelegramIdCommand.Response['response']>(
+          GetUserByTelegramIdCommand.url(String(telegramId)),
         );
         if (data.length === 0) return null;
         return data;
@@ -70,6 +90,10 @@ export function createRemnawaveApi(client: ApiClient) {
       return await client.get<GetSubscriptionPageConfigCommand.Response['response']>(
         GetSubscriptionPageConfigCommand.url(uuid),
       );
+    },
+
+    async updateUser(body: UpdateUserCommand.Request): Promise<UpdateUserResponseDto> {
+      return client.patch<UpdateUserResponseDto>(UpdateUserCommand.url, body);
     },
   };
 }
