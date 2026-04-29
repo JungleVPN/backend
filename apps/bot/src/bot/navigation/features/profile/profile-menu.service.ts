@@ -18,9 +18,9 @@ export class ProfileMenuService extends Base {
   }
 
   async init(ctx: BotContext) {
-    const telegramId = ctx.from?.id;
+    const userId = ctx.session.userId;
 
-    const activeMethod = telegramId ? await this.resolveActiveMethod(String(telegramId)) : null;
+    const activeMethod = userId ? await this.resolveActiveMethod(String(userId)) : null;
 
     // Populate session BEFORE render so the profile menu's dynamic range can
     // decide whether to show the "delete saved method" button.
@@ -68,8 +68,8 @@ export class ProfileMenuService extends Base {
 
   /** Fetches the most recent active saved method for a user, or `null`. */
   private async resolveActiveMethod(telegramId: string): Promise<SavedMethodDto | null> {
-    const methods = await this.paymentsService.getSavedPaymentMethods(telegramId);
-    return methods.find((m) => m.isActive) ?? null;
+    const methods = await this.paymentsService.getSavedMethods(telegramId);
+    return methods.data.find((m) => m.isActive) ?? null;
   }
 
   /**

@@ -205,7 +205,10 @@ profile-text =
     <blockquote>Автоплатеж</blockquote>
     { $activeMethod }
 
-profile-active-method-text = 💳 Активный способ оплаты: <b>{ $label }</b>
+profile-active-method-text =
+    💳 Активный способ оплаты: <b>{ $label }</b>
+
+    Чтобы добавить новый способ оплаты, удали этот.
 
 profile-no-active-method-text =
     У тебя пока нет сохранённого способа оплаты.
@@ -224,7 +227,7 @@ payment-success-text =
 
     Спасибо, что остаешься в <code>Jungle</code>
 
-    Ты можешь управлять подпиской, нажав на кнопку ниже
+    Ты можешь управлять оплатой, нажав на кнопку ниже
 
 
 no-active-subscription-text =

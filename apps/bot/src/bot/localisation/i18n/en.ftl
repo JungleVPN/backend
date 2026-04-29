@@ -128,7 +128,7 @@ payment-success-text =
 
     Your subscription has been extended 🙂
 
-    You can manage it in your profile. Just click the button below!
+    You can manage payments in your profile. Just click the button below!
 
 subscription-text =
     📖 Setting up VPN on { $deviceLabel }:
@@ -352,7 +352,10 @@ payment-failed-permission-revoked-text =
 
 profile-text = { $activeMethod }
 
-profile-active-method-text = 💳 Active payment method: <b>{ $label }</b>
+profile-active-method-text =
+    💳 Active payment method: <b>{ $label }</b>
+
+    To add a different payment method delete this one.
 
 profile-no-active-method-text =
     You don't have an active payment method saved yet.

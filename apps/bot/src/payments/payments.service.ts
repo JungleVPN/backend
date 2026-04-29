@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { CreateStripeSessionDto } from '@shared/payments';
 import { createBackendClient } from '@utils/http-client';
 import { CreateYookassaSessionDto, SavedMethodDto } from '@workspace/types';
-import { AxiosInstance } from 'axios';
+import { AxiosInstance, AxiosResponse } from 'axios';
 
 /**
  * HTTP client for the payments backend service (port 3001).
@@ -77,21 +77,9 @@ export class PaymentsService {
    * identically to "BE unreachable" — the profile screen shouldn't fail just
    * because we couldn't enrich it with autopayment info.
    */
-  async getSavedPaymentMethods(telegramId: string): Promise<SavedMethodDto[]> {
-    try {
-      const res = await this.backend.get(`/payments/yookassa/saved-methods/${telegramId}`);
-
-      if (res.status >= 400) {
-        this.logger.warn(
-          `Fetch saved methods failed for ${telegramId}: ${res.status} ${JSON.stringify(res.data)}`,
-        );
-        return [];
-      }
-
-      return Array.isArray(res.data) ? res.data : [];
-    } catch (err: any) {
-      this.logger.warn(`Fetch saved methods errored for ${telegramId}: ${err?.message ?? err}`);
-      return [];
-    }
+  async getSavedMethods(userId: string): Promise<AxiosResponse<SavedMethodDto[]>> {
+    return this.backend.get<SavedMethodDto[]>(
+      `/payments/yookassa/saved-methods/${encodeURIComponent(userId)}`,
+    );
   }
 }
