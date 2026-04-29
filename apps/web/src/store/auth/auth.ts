@@ -5,6 +5,9 @@ const initialState: IState = {
   authUser: null,
   rmnUser: null,
   loading: true,
+  authSource: null,
+  tgUser: null,
+  tgInitDataRaw: null,
 };
 
 export const useAuthStore = create<IActions & IState>()((set) => ({
@@ -13,6 +16,10 @@ export const useAuthStore = create<IActions & IState>()((set) => ({
     setAuthUser: (authUser) => set({ authUser }),
     setRmnUser: (rmnUser) => set({ rmnUser }),
     setLoading: (loading) => set({ loading }),
+
+    setAuthSource: (authSource) => set({ authSource }),
+    setTgUser: (tgUser) => set({ tgUser }),
+    setTgInitDataRaw: (tgInitDataRaw) => set({ tgInitDataRaw }),
   },
 }));
 
