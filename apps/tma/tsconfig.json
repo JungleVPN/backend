@@ -1,0 +1,18 @@
+{
+  "extends": "@workspace/shared-config/tsconfig.react.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    /**
+     * Pin @types resolution to the local node_modules only.
+     * Without this, TypeScript climbs into the pnpm content store and finds
+     * @types/react@18 alongside react-router, causing ReactNode/ReactPortal
+     * type conflicts with the project's @types/react@19.
+     */
+    "typeRoots": ["./node_modules/@types"]
+  },
+  "include": ["src", "vite-env.d.ts"],
+  "exclude": ["node_modules", "dist"]
+}

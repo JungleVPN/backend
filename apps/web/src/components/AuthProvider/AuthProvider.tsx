@@ -1,32 +1,36 @@
 import { useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStoreActions } from '@/store/auth';
+
 /**
  * Client-side auth provider.
  * Listens for Supabase auth state changes and updates the Zustand auth store.
  * No server-side session — auth is fully client-side.
+ *
+ * Sets authSource = 'web' whenever a Supabase session is resolved.
+ * This allows shared components to branch on authSource when needed.
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { setAuthUser, setLoading } = useAuthStoreActions();
+  const { setAuthUser, setAuthSource, setLoading } = useAuthStoreActions();
   const supabase = createClient();
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setAuthUser(session?.user ?? null);
+      setAuthSource(session?.user ? 'web' : null);
       setLoading(false);
     });
 
-    // Listen for auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setAuthUser(session?.user ?? null);
+      setAuthSource(session?.user ? 'web' : null);
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase.auth, setAuthUser, setLoading]);
+  }, [supabase.auth, setAuthUser, setAuthSource, setLoading]);
 
   return <>{children}</>;
 }
