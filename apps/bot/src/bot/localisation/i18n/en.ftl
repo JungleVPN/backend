@@ -114,14 +114,14 @@ payment-periods-text =
 
 
 payment-methods-text =
-    You can pay any way you like!
-
-    We accept 🇷🇺Russian and 🌍International payment methods
+    Currently only 🇷🇺Russian payment methods are supported
 
 payment-text =
     <b>As soon as you pay, come back to get the connection link</b>
 
     <blockquote>You’re paying <b>{ $amount }{ $currency }</b> for <b>{ $period }</b></blockquote>
+
+    By paying you accept terms and conditions - { $link }
 
 payment-success-text =
     ✅ Payment successful! Thank you for your support!

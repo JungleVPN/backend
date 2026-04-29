@@ -4,11 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "nest start --watch",
-    "build": "nest build && cp -r src/bot/localisation/i18n dist/bot/localisation/i18n",
+    "build": "pnpm run clean && nest build && cp -r src/bot/localisation/i18n dist/bot/localisation/i18n",
     "start": "node dist/main.js",
     "start:prod": "node dist/main.js",
     "lint": "biome lint ./src",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist && rm -rf tsconfig.tsbuildinfo"
   },
   "dependencies": {
     "@grammyjs/i18n": "^1.1.2",

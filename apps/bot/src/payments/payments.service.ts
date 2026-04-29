@@ -47,26 +47,10 @@ export class PaymentsService {
    * Returns `true` on success and `false` for any non-2xx response or network
    * error — callers decide whether to show an error toast or just re-render.
    */
-  async deleteSavedPaymentMethod(telegramId: string, methodId: string): Promise<boolean> {
-    try {
-      const res = await this.backend.delete(
-        `/payments/yookassa/saved-methods/${telegramId}/${methodId}`,
-      );
-
-      if (res.status >= 400) {
-        this.logger.warn(
-          `Delete saved method failed for ${telegramId}/${methodId}: ${res.status} ${JSON.stringify(res.data)}`,
-        );
-        return false;
-      }
-
-      return true;
-    } catch (err: any) {
-      this.logger.warn(
-        `Delete saved method errored for ${telegramId}/${methodId}: ${err?.message ?? err}`,
-      );
-      return false;
-    }
+  async deleteSavedMethod(userId: string, id: string): Promise<AxiosResponse<void>> {
+    return this.backend.delete<void>(
+      `/payments/yookassa/saved-methods/${encodeURIComponent(userId)}/${encodeURIComponent(id)}`,
+    );
   }
 
   /**

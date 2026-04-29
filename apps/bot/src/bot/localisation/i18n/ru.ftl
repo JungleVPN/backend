@@ -105,9 +105,7 @@ payment-periods-text =
 
 
 payment-methods-text =
-    Плати любым удобным способом!
-
-    Мы принимаем 🇷🇺Российские и 🌍Международные способы оплаты
+    На дынный момент поддерживаются только 🇷🇺Российские способы оплаты
 
 
 payment-text =
@@ -115,6 +113,7 @@ payment-text =
 
     <blockquote>Ты платишь <b>{ $amount }{ $currency }</b> за <b>{ $period }</b></blockquote>
 
+    Оплачивая ты принимаешь условия - { $link }
 
 
 subscription-text =

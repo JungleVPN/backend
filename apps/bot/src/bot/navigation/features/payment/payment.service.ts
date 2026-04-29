@@ -33,6 +33,7 @@ export class PaymentMsgService extends Base {
       amount: process.env.ALLOWED_AMOUNTS || '250',
       period: ctx.t(`period-${process.env.ALLOWED_PERIODS}`),
       currency: '₽',
+      link: process.env.TERMS_URL || 'https://thejungle.pro/app/terms',
     });
 
     await this.render(ctx, content, this.paymentMenu.menu);

@@ -47,15 +47,15 @@ export class ProfileMenuService extends Base {
   async deleteActiveMethod(ctx: BotContext): Promise<void> {
     const telegramId = ctx.from?.id;
     const methodId = ctx.session.activeSavedMethodId;
+    const userId = ctx.session.userId;
 
-    if (!telegramId || !methodId) {
+    if (!userId || !methodId) {
       await ctx.answerCallbackQuery({ text: ctx.t('profile-delete-method-error') });
       return;
     }
 
-    const ok = await this.paymentsService.deleteSavedPaymentMethod(String(telegramId), methodId);
-
-    if (!ok) {
+    const { status } = await this.paymentsService.deleteSavedMethod(userId, methodId);
+    if (status !== 200) {
       await ctx.answerCallbackQuery({ text: ctx.t('profile-delete-method-error') });
       this.logger.warn(`Failed to delete saved method ${methodId} for tg=${telegramId}`);
       return;
@@ -67,8 +67,8 @@ export class ProfileMenuService extends Base {
   }
 
   /** Fetches the most recent active saved method for a user, or `null`. */
-  private async resolveActiveMethod(telegramId: string): Promise<SavedMethodDto | null> {
-    const methods = await this.paymentsService.getSavedMethods(telegramId);
+  private async resolveActiveMethod(userId: string): Promise<SavedMethodDto | null> {
+    const methods = await this.paymentsService.getSavedMethods(userId);
     return methods.data.find((m) => m.isActive) ?? null;
   }
 
