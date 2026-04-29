@@ -34,9 +34,9 @@ error-menu-outdated = Something changed, try /start again
 error-generic-restart = ❗ Something went wrong. Try /start again
 payment-not-found = ❗ Payment not found. Try /start again
 payment-pending = ❗ Payment is still pending.
-period-month_1 = 1 month
-period-month_3 = 3 months
-period-month_6 = 6 months
+period-1 = 1 month
+period-3 = 3 months
+period-6 = 6 months
 
 days-left-label = { $daysLeft ->
     [one] { $daysLeft } day

@@ -1,5 +1,6 @@
 import { NavigateMainCallback } from '@bot/callbacks/navigate-main.callback';
 import { NavigateProfileCallback } from '@bot/callbacks/navigate-profile.callback';
+import { NavigateToYookassaPaymentCallback } from '@bot/callbacks/navigate-to-yookassa.callback';
 import { BroadcastDeleteCommand } from '@bot/commands/broadcast/broadcast-delete.command';
 import { BroadcastEditCommand } from '@bot/commands/broadcast/broadcast-edit.command';
 import { BroadcastMessageCommand } from '@bot/commands/broadcast/broadcast-message.command';
@@ -58,6 +59,7 @@ import { BotService } from './bot.service';
     // CALLBACKS
     NavigateMainCallback,
     NavigateProfileCallback,
+    NavigateToYookassaPaymentCallback,
   ],
   exports: [BotService],
 })

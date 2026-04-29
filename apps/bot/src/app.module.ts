@@ -8,7 +8,7 @@ import { WebhookModule } from './webhook/webhook.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env'],
+      envFilePath: ['../../.env'],
     }),
     EventEmitterModule.forRoot(),
     BotModule,

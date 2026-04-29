@@ -1,12 +1,8 @@
 import * as process from 'node:process';
 import { Injectable, Logger } from '@nestjs/common';
-import {
-  CreateStripeSessionDto,
-  CreateYookassaSessionDto,
-  PaymentSession,
-  Payments,
-} from '@shared/payments';
+import { CreateStripeSessionDto } from '@shared/payments';
 import { createBackendClient } from '@utils/http-client';
+import { CreateYookassaSessionDto, SavedMethodDto } from '@workspace/types';
 import { AxiosInstance } from 'axios';
 
 /**
@@ -21,7 +17,7 @@ export class PaymentsService {
     process.env.PAYMENTS_URL || 'http://localhost:3001',
   );
 
-  async createStripeSession(dto: CreateStripeSessionDto): Promise<PaymentSession> {
+  async createStripeSession(dto: CreateStripeSessionDto) {
     const res = await this.backend.post('/payments/stripe/create-session', dto);
 
     if (res.status >= 400) {
@@ -32,8 +28,8 @@ export class PaymentsService {
     return res.data;
   }
 
-  async createYookassaSession(dto: CreateYookassaSessionDto): Promise<PaymentSession> {
-    const res = await this.backend.post('/api/payments/yookassa/create-session', dto);
+  async createYookassaSession(dto: CreateYookassaSessionDto) {
+    const res = await this.backend.post('/payments/yookassa/create-session', dto);
 
     if (res.status >= 400) {
       this.logger.error(`Yookassa session failed: ${res.status} ${JSON.stringify(res.data)}`);
@@ -81,7 +77,7 @@ export class PaymentsService {
    * identically to "BE unreachable" — the profile screen shouldn't fail just
    * because we couldn't enrich it with autopayment info.
    */
-  async getSavedPaymentMethods(telegramId: string): Promise<Payments.SavedPaymentMethod[]> {
+  async getSavedPaymentMethods(telegramId: string): Promise<SavedMethodDto[]> {
     try {
       const res = await this.backend.get(`/payments/yookassa/saved-methods/${telegramId}`);
 

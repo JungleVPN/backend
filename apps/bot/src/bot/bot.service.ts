@@ -2,6 +2,7 @@ import * as process from 'node:process';
 import { BotContext, initialSession } from '@bot/bot.types';
 import { NavigateMainCallback } from '@bot/callbacks/navigate-main.callback';
 import { NavigateProfileCallback } from '@bot/callbacks/navigate-profile.callback';
+import { NavigateToYookassaPaymentCallback } from '@bot/callbacks/navigate-to-yookassa.callback';
 import { BroadcastDeleteCommand } from '@bot/commands/broadcast/broadcast-delete.command';
 import { BroadcastEditCommand } from '@bot/commands/broadcast/broadcast-edit.command';
 import { BroadcastMessageCommand } from '@bot/commands/broadcast/broadcast-message.command';
@@ -26,6 +27,7 @@ export class BotService implements OnModuleInit {
     private readonly broadcastDeleteCommand: BroadcastDeleteCommand,
     private readonly navigateMainCallback: NavigateMainCallback,
     private readonly navigateProfileCallback: NavigateProfileCallback,
+    private readonly navigateToYookassaPaymentCallback: NavigateToYookassaPaymentCallback,
     private readonly localService: LocalisationService,
     private readonly inlineQueryListener: InlineQueryListener,
     private readonly pollService: PollService,
@@ -54,6 +56,7 @@ export class BotService implements OnModuleInit {
 
     this.navigateMainCallback.register(this.bot);
     this.navigateProfileCallback.register(this.bot);
+    this.navigateToYookassaPaymentCallback.register(this.bot);
     this.inlineQueryListener.register(this.bot);
 
     this.bot.catch((err) => {

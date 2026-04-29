@@ -8,7 +8,7 @@ async function bootstrap() {
     rawBody: true,
   });
 
-  const port = Number(process.env.PORT) || 7000;
+  const port = Number(process.env.BOT_PORT) || 7000;
 
   await app.listen(port, '0.0.0.0');
   console.log(`Server is running on http://localhost:${port}`);

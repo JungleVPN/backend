@@ -58,9 +58,13 @@ export class UserExpireListener {
 
     const keyboard = new InlineKeyboard();
 
-    keyboard.webApp(
+    // keyboard.webApp(
+    //   this.localService.i18n.t(locale, 'pay-button-label'),
+    //   process.env.WEB_APP_PAYMENT_URL || 'https://miniapp.thejungle.pro/profile/payment',
+    // );
+    keyboard.text(
       this.localService.i18n.t(locale, 'pay-button-label'),
-      process.env.WEB_APP_PAYMENT_URL || 'https://miniapp.thejungle.pro/profile/payment',
+      'navigate_to_yookassa_payment',
     );
     keyboard.row();
     keyboard.url(
