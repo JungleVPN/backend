@@ -4,6 +4,8 @@
  * each app's own env config and be injected via providers.
  */
 
+export { apiRoutes } from '@workspace/types';
+
 export const APP_NAME = 'JungleVPN';
 
 export const SUBSCRIPTION_PERIODS = {
@@ -12,8 +14,7 @@ export const SUBSCRIPTION_PERIODS = {
   YEARLY: 12,
 } as const;
 
-export type SubscriptionPeriod =
-  (typeof SUBSCRIPTION_PERIODS)[keyof typeof SUBSCRIPTION_PERIODS];
+export type SubscriptionPeriod = (typeof SUBSCRIPTION_PERIODS)[keyof typeof SUBSCRIPTION_PERIODS];
 
 export const SUPPORTED_CURRENCIES = ['RUB', 'EUR', 'USD'] as const;
 export type SupportedCurrency = (typeof SUPPORTED_CURRENCIES)[number];

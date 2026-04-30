@@ -22,7 +22,6 @@ async function bootstrap() {
   });
 
   app.useGlobalFilters(new GlobalExceptionFilter());
-  app.setGlobalPrefix('api');
 
   const port = process.env.REMNAWAVE_PORT ?? 3002;
   await app.listen(port, '0.0.0.0');

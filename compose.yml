@@ -46,7 +46,7 @@ services:
     env_file: .env
     environment:
       POSTGRES_HOST: db
-      REMNAWAVE_URL: http://remnawave:${REMNAWAVE_PORT}/api
+      REMNAWAVE_URL: http://remnawave:${REMNAWAVE_PORT}
       REFERRALS_URL: http://referrals:${REFERRALS_PORT}
       BOT_URL: http://bot:${BOT_PORT}
     ports:
@@ -87,7 +87,7 @@ services:
     env_file: .env
     environment:
       POSTGRES_HOST: db
-      REMNAWAVE_URL: http://remnawave:${REMNAWAVE_PORT}/api
+      REMNAWAVE_URL: http://remnawave:${REMNAWAVE_PORT}
     ports:
       - "127.0.0.1:${REFERRALS_PORT}:${REFERRALS_PORT}"
     restart: always
@@ -128,7 +128,7 @@ services:
     env_file: .env
     environment:
       POSTGRES_HOST: db
-      PAYMENTS_URL: http://payments:${PAYMENTS_PORT}/api
+      PAYMENTS_URL: http://payments:${PAYMENTS_PORT}
       BOT_URL: http://bot:${BOT_PORT}
     ports:
       - "127.0.0.1:${WEBHOOK_PORT}:${WEBHOOK_PORT}"
@@ -169,8 +169,8 @@ services:
     env_file: .env
     environment:
       POSTGRES_HOST: db
-      REMNAWAVE_URL: http://remnawave:${REMNAWAVE_PORT}/api
-      PAYMENTS_URL: http://payments:${PAYMENTS_PORT}/api
+      REMNAWAVE_URL: http://remnawave:${REMNAWAVE_PORT}
+      PAYMENTS_URL: http://payments:${PAYMENTS_PORT}
       REFERRALS_URL: http://referrals:${REFERRALS_PORT}
       BROADCASTS_URL: http://broadcasts:${BROADCASTS_PORT}
       WEBHOOK_URL: http://webhook:${WEBHOOK_PORT}

@@ -1,5 +1,5 @@
 import {
-  CreateUserCommand,
+  apiRoutes,
   CreateUserRequestDto,
   CreateUserResponseDto,
   GetSubpageConfigByShortUuidCommand,
@@ -15,9 +15,8 @@ import type { ApiClient } from '../client';
 /**
  * Shared Remnawave API.
  *
- * All paths come directly from `@remnawave/backend-contract` commands,
- * so they match both the Remnawave panel AND the NestJS proxy (which
- * mirrors the same URL structure).
+ * Request paths use `apiRoutes.remnawave` from `@workspace/types`, aligned
+ * with `apps/remnawave` Nest controllers.
  *
  * Accepts an ApiClient so each platform can inject its own auth strategy:
  * - Web: API key header → NestJS proxy
@@ -30,7 +29,7 @@ export function createRemnawaveApi(client: ApiClient) {
     ): Promise<GetUserByEmailCommand.Response['response'] | null> {
       try {
         const data = await client.get<GetUserByEmailCommand.Response['response']>(
-          GetUserByEmailCommand.url(body.email),
+          apiRoutes.remnawave.userByEmail(body.email),
         );
         if (data.length === 0) return null;
         return data;
@@ -47,7 +46,7 @@ export function createRemnawaveApi(client: ApiClient) {
     ): Promise<GetUserByTelegramIdCommand.Response['response'] | null> {
       try {
         const data = await client.get<GetUserByTelegramIdCommand.Response['response']>(
-          GetUserByTelegramIdCommand.url(String(telegramId)),
+          apiRoutes.remnawave.userByTelegramId(telegramId),
         );
         if (data.length === 0) return null;
         return data;
@@ -62,7 +61,7 @@ export function createRemnawaveApi(client: ApiClient) {
     async createUser(
       params: Pick<CreateUserRequestDto, 'email' | 'telegramId'>,
     ): Promise<CreateUserResponseDto> {
-      return client.post<CreateUserResponseDto>(CreateUserCommand.url, {
+      return client.post<CreateUserResponseDto>(apiRoutes.remnawave.users, {
         ...params,
         username: crypto.randomUUID().slice(0, 8),
       });
@@ -72,7 +71,7 @@ export function createRemnawaveApi(client: ApiClient) {
       shortUuid: string,
     ): Promise<GetSubpageConfigByShortUuidCommand.Response['response']> {
       return await client.get<GetSubpageConfigByShortUuidCommand.Response['response']>(
-        GetSubpageConfigByShortUuidCommand.url(shortUuid),
+        apiRoutes.remnawave.subscriptionSubpageConfig(shortUuid),
       );
     },
 
@@ -80,7 +79,7 @@ export function createRemnawaveApi(client: ApiClient) {
       shortUuid: string,
     ): Promise<GetSubscriptionInfoByShortUuidCommand.Response['response']> {
       return await client.get<GetSubscriptionInfoByShortUuidCommand.Response['response']>(
-        GetSubscriptionInfoByShortUuidCommand.url(shortUuid),
+        apiRoutes.remnawave.subscriptionInfoByShortUuid(shortUuid),
       );
     },
 
@@ -88,12 +87,12 @@ export function createRemnawaveApi(client: ApiClient) {
       uuid: string,
     ): Promise<GetSubscriptionPageConfigCommand.Response['response']> {
       return await client.get<GetSubscriptionPageConfigCommand.Response['response']>(
-        GetSubscriptionPageConfigCommand.url(uuid),
+        apiRoutes.remnawave.subscriptionPageConfig(uuid),
       );
     },
 
     async updateUser(body: UpdateUserCommand.Request): Promise<UpdateUserResponseDto> {
-      return client.patch<UpdateUserResponseDto>(UpdateUserCommand.url, body);
+      return client.patch<UpdateUserResponseDto>(apiRoutes.remnawave.users, body);
     },
   };
 }

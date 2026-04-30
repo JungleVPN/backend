@@ -25,8 +25,6 @@ async function bootstrap() {
     credentials: true,
   });
 
-  app.setGlobalPrefix('api');
-
   const port = process.env.PAYMENTS_PORT ?? 3001;
   await app.listen(port, '0.0.0.0');
 

@@ -13,7 +13,8 @@
       "@shared/*": ["src/types/*"],
       "@broadcasts/*": ["src/broadcasts/*"],
       "@assets/*": ["src/assets/*"],
-      "@utils/*": ["src/utils/*"]
+      "@utils/*": ["src/utils/*"],
+      "@constants/*": ["src/constants/*"]
     }
   },
   "include": ["src/**/*"],

@@ -3,6 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { RemnaError } from '@remna/remna.error';
 import { createBackendClient } from '@utils/http-client';
 import {
+  apiRoutes,
   CreateUserRequestDto,
   CreateUserResponseDto,
   GetUserByTelegramIdResponseDto,
@@ -84,14 +85,14 @@ export class RemnaService {
 
   async getAllUsers(): Promise<UserDto[]> {
     return this.fetch<UserDto[]>({
-      url: '/users',
+      url: apiRoutes.remnawave.users,
       method: 'GET',
     });
   }
 
   async createUser(payload: { username: string; telegramId: number; description?: string }) {
     return this.fetch<CreateUserResponseDto>({
-      url: '/users',
+      url: apiRoutes.remnawave.users,
       body: payload,
     });
   }
@@ -99,7 +100,7 @@ export class RemnaService {
   async updateUser(body: UpdateUserRequestDto) {
     return this.fetch<UserDto>({
       method: 'PATCH',
-      url: '/users',
+      url: apiRoutes.remnawave.users,
       body,
     });
   }
@@ -111,7 +112,7 @@ export class RemnaService {
     try {
       const users = await this.fetch<GetUserByTelegramIdResponseDto>({
         method: 'GET',
-        url: `/users/by-telegram-id/${telegramId}`,
+        url: apiRoutes.remnawave.userByTelegramId(telegramId),
       });
 
       if (!users || users.length === 0) return null;
@@ -123,15 +124,13 @@ export class RemnaService {
   }
 
   async deleteUser(uuid: string) {
-    await this.fetch({ url: `/users/${uuid}`, method: 'DELETE' });
+    await this.fetch({ url: apiRoutes.remnawave.userByUuid(uuid), method: 'DELETE' });
   }
 
   async revokeSub(uuid: string) {
-    const subscriptionUrl = await this.fetch<string>({
-      url: `/users/${uuid}/actions/revoke`,
+    return await this.fetch<string>({
+      url: apiRoutes.remnawave.revokeUserSubscription(uuid),
     });
-
-    return subscriptionUrl;
   }
 
   /**

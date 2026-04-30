@@ -1,0 +1,31 @@
+export const apiRoutes = {
+  broadcasts: {
+    collection: '/broadcasts',
+    byId: (id: number | string) => `/broadcasts/${id}`,
+    messages: (broadcastId: number | string) => `/broadcasts/${broadcastId}/messages`,
+    messagesBatch: (broadcastId: number | string) => `/broadcasts/${broadcastId}/messages/batch`,
+  },
+  payments: {
+    stripeCreateSession: '/payments/stripe/create-session',
+    yookassaCreateSession: '/payments/yookassa/create-session',
+    yookassaSavedMethods: (userId: string) =>
+      `/payments/yookassa/saved-methods/${encodeURIComponent(userId)}`,
+    yookassaSavedMethodById: (userId: string, id: string) =>
+      `/payments/yookassa/saved-methods/${encodeURIComponent(userId)}/${encodeURIComponent(id)}`,
+  },
+  referrals: {
+    collection: '/referrals',
+    byInvited: (telegramId: number | string) => `/referrals/by-invited/${telegramId}`,
+    rewardAfterPayment: '/referrals/reward-after-payment',
+  },
+  remnawave: {
+    users: '/users',
+    userByTelegramId: (telegramId: number | string) => `/users/by-telegram-id/${telegramId}`,
+    userByEmail: (email: string) => `/users/by-email/${encodeURIComponent(email)}`,
+    userByUuid: (uuid: string) => `/users/${uuid}`,
+    revokeUserSubscription: (uuid: string) => `/users/${uuid}/actions/revoke`,
+    subscriptionSubpageConfig: (shortUuid: string) => `/subscriptions/subpage-config/${shortUuid}`,
+    subscriptionInfoByShortUuid: (shortUuid: string) => `/sub/${shortUuid}/info`,
+    subscriptionPageConfig: (uuid: string) => `/subscription-page-configs/${uuid}`,
+  },
+} as const;

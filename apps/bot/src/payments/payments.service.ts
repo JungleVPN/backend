@@ -2,7 +2,7 @@ import * as process from 'node:process';
 import { Injectable, Logger } from '@nestjs/common';
 import { CreateStripeSessionDto } from '@shared/payments';
 import { createBackendClient } from '@utils/http-client';
-import { CreateYookassaSessionDto, SavedMethodDto } from '@workspace/types';
+import { apiRoutes, CreateYookassaSessionDto, SavedMethodDto } from '@workspace/types';
 import { AxiosInstance, AxiosResponse } from 'axios';
 
 /**
@@ -18,7 +18,7 @@ export class PaymentsService {
   );
 
   async createStripeSession(dto: CreateStripeSessionDto) {
-    const res = await this.backend.post('/payments/stripe/create-session', dto);
+    const res = await this.backend.post(apiRoutes.payments.stripeCreateSession, dto);
 
     if (res.status >= 400) {
       this.logger.error(`Stripe session failed: ${res.status} ${JSON.stringify(res.data)}`);
@@ -29,7 +29,7 @@ export class PaymentsService {
   }
 
   async createYookassaSession(dto: CreateYookassaSessionDto) {
-    const res = await this.backend.post('/payments/yookassa/create-session', dto);
+    const res = await this.backend.post(apiRoutes.payments.yookassaCreateSession, dto);
 
     if (res.status >= 400) {
       this.logger.error(`Yookassa session failed: ${res.status} ${JSON.stringify(res.data)}`);
@@ -48,9 +48,7 @@ export class PaymentsService {
    * error — callers decide whether to show an error toast or just re-render.
    */
   async deleteSavedMethod(userId: string, id: string): Promise<AxiosResponse<void>> {
-    return this.backend.delete<void>(
-      `/payments/yookassa/saved-methods/${encodeURIComponent(userId)}/${encodeURIComponent(id)}`,
-    );
+    return this.backend.delete<void>(apiRoutes.payments.yookassaSavedMethodById(userId, id));
   }
 
   /**
@@ -62,8 +60,6 @@ export class PaymentsService {
    * because we couldn't enrich it with autopayment info.
    */
   async getSavedMethods(userId: string): Promise<AxiosResponse<SavedMethodDto[]>> {
-    return this.backend.get<SavedMethodDto[]>(
-      `/payments/yookassa/saved-methods/${encodeURIComponent(userId)}`,
-    );
+    return this.backend.get<SavedMethodDto[]>(apiRoutes.payments.yookassaSavedMethods(userId));
   }
 }
