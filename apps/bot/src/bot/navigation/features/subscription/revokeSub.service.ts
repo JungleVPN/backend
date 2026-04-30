@@ -23,7 +23,7 @@ export class RevokeSubMenuService extends Base {
       await ctx.reply(ctx.t('error-generic-restart'));
       return;
     }
-
+    ctx.session.userId = user[0].uuid;
     const subUrl = await this.remnaService.revokeSub(user[0].uuid);
     session.redirectUrl = getRedirectUrl(session.selectedDevice, subUrl);
     session.subscriptionUrl = subUrl;

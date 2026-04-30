@@ -17,6 +17,7 @@ export class MainMenuService extends Base {
     if (!user) {
       return;
     }
+    ctx.session.userId = user[0].uuid;
 
     const isExpired = Date.now() > new Date(user[0].expireAt).getTime();
 

@@ -68,8 +68,8 @@ export class ProfileMenuService extends Base {
 
   /** Fetches the most recent active saved method for a user, or `null`. */
   private async resolveActiveMethod(userId: string): Promise<SavedMethodDto | null> {
-    const methods = await this.paymentsService.getSavedMethods(userId);
-    return methods.data.find((m) => m.isActive) ?? null;
+    const response = await this.paymentsService.getSavedMethods(userId);
+    return response.data.find((m) => m.isActive) ?? null;
   }
 
   /**

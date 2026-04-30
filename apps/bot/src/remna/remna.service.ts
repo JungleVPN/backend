@@ -5,7 +5,6 @@ import { createBackendClient } from '@utils/http-client';
 import {
   CreateUserRequestDto,
   CreateUserResponseDto,
-  GetUserByTelegramIdCommand,
   GetUserByTelegramIdResponseDto,
   UpdateUserRequestDto,
   UserDto,
@@ -112,7 +111,7 @@ export class RemnaService {
     try {
       const users = await this.fetch<GetUserByTelegramIdResponseDto>({
         method: 'GET',
-        url: GetUserByTelegramIdCommand.url(telegramId.toString()),
+        url: `/users/by-telegram-id/${telegramId}`,
       });
 
       if (!users || users.length === 0) return null;
