@@ -7,13 +7,9 @@ import { env } from '@/config/env';
  * so the shared API works without any web-specific overrides.
  */
 const backendClient = createApiClient({
-  baseUrl: env.remnawavePanelUrl,
+  baseUrl: env.remnawaveUrl,
   getHeaders: () => {
     const headers: Record<string, string> = {};
-
-    if (env.authApiKey) {
-      headers['X-Api-Key'] = env.authApiKey;
-    }
 
     return headers;
   },

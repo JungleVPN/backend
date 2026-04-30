@@ -44,7 +44,7 @@ export class InlineQueryListener {
           type: 'article',
           id: 'referral-link',
           title,
-          thumbnail_url: `${process.env.BASE_URL}/assets/logo.jpg`,
+          thumbnail_url: `${process.env.REMNAWAVE_PANEL_URL}/assets/logo.jpg`,
           description,
           input_message_content: {
             message_text: ctx.t('invitation-text', {

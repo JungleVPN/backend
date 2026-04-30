@@ -1,4 +1,5 @@
 import * as http from 'node:http';
+import process from 'node:process';
 import axios, { AxiosInstance } from 'axios';
 
 /**
@@ -26,6 +27,7 @@ export function createBackendClient(baseURL: string): AxiosInstance {
     httpAgent: agent,
     headers: {
       'Content-Type': 'application/json',
+      'x-service-secret': process.env.INTER_SERVICE_SECRET,
     },
     // Per-request timeout so we never hang indefinitely
     timeout: 5_000,

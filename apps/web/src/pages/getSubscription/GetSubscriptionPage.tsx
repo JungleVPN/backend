@@ -112,7 +112,7 @@ export default function GetSubscriptionPage() {
               </div>
               <div className={styles.priceColumn}>
                 <p className={styles.currentPrice}>0 ₽</p>
-                <p className={styles.oldPrice}>{env.priceRub} ₽</p>
+                <p className={styles.oldPrice}>{env.allowedAmounts} ₽</p>
               </div>
             </div>
 

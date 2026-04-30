@@ -12,7 +12,8 @@ import { dataSourceOptions } from '@workspace/database';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env', '../../.env'],
+      envFilePath: ['../../.env.development', '../../.env'],
+      expandVariables: true,
     }),
     EventEmitterModule.forRoot(),
     TypeOrmModule.forRoot(dataSourceOptions),

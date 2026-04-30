@@ -6,10 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "start": "serve dist --single",
     "preview": "vite preview",
     "lint": "biome check ./src"
   },
   "dependencies": {
+    "serve": "^14.2.4",
     "@heroui/react": "^3.0.3",
     "@heroui/styles": "^3.0.3",
     "@remnawave/backend-contract": "2.6.0",

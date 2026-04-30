@@ -6,6 +6,8 @@ node_modules
 .gitignore
 .idea
 .env.local
+.env.development
+.env.*.local
 
 Dockerfile*
 docker-compose*

@@ -9,8 +9,8 @@ import { SavedPaymentMethod } from './entities/saved-payment-method.entity';
 import { StripePayment } from './entities/stripe-payment.entity';
 import { YookassaPayment } from './entities/yookassa-payment.entity';
 
-// Load .env from multiple possible locations.
-// In Docker, env vars are injected directly — dotenv is a no-op.
+config({ path: path.resolve(process.cwd(), '.env.development') });
+config({ path: path.resolve(process.cwd(), '../../.env.development') });
 config({ path: path.resolve(process.cwd(), '.env') });
 config({ path: path.resolve(process.cwd(), '../../.env') });
 

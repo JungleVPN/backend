@@ -13,7 +13,8 @@ import { ReferralsNotificationModule } from './notifications/referrals-notificat
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env', '../../.env'],
+      envFilePath: ['../../.env.development', '../../.env'],
+      expandVariables: true,
     }),
     TypeOrmModule.forRoot(dataSourceOptions),
     TypeOrmModule.forFeature([Referral]),

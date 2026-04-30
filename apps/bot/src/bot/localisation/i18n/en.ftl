@@ -137,6 +137,8 @@ payment-success-text =
 
     You can manage payments in your profile. Just click the button below!
 
+    I will add ability to control notifications a bit later
+
 subscription-text =
     📖 Setting up VPN on { $deviceLabel }:
 
