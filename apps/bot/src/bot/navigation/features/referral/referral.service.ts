@@ -18,7 +18,7 @@ export class ReferralMenuService extends Base {
   async init(ctx: BotContext, menu: Menu, deleteOldMsg?: boolean) {
     const user = await this.remnaService.getUserByTgId(ctx.from?.id || 0);
 
-    const locale = user?.description || process.env.DEFAULT_LOCALE || 'ru';
+    const locale = user?.[0].description || process.env.DEFAULT_LOCALE || 'ru';
 
     const content = this.localService.i18n.t(locale, 'referral-page-text', {
       inviterStartBonusInDays: process.env.INVITER_START_BONUS_IN_DAYS || '0',

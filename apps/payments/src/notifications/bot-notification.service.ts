@@ -39,7 +39,7 @@ export class BotNotificationService {
 
     try {
       const { data } = await axios.get<GetUserByUuidResponseDto | null>(
-        `${this.remnawareBaseUrl}/api/users/${uuid}`,
+        `${this.remnawareBaseUrl}/users/${uuid}`,
         {
           headers: {
             'x-service-secret': process.env.INTER_SERVICE_SECRET,
@@ -131,7 +131,7 @@ export class BotNotificationService {
         ? `${err.message} ${err.response?.data != null ? JSON.stringify(err.response.data) : ''}`
         : err instanceof Error
           ? err.message
-          : String(err);
+          : err;
       this.logger.warn(
         `Failed to notify bot about ${eventType} for userId=${payload.userId}: ${detail}`,
       );

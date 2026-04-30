@@ -30,7 +30,7 @@ export class PaymentMethodMsgService extends Base {
     }
 
     const paymentSession = await this.createSessionForProvider(provider, {
-      userId: user.uuid,
+      userId: user[0].uuid,
       selectedPeriod: Number(process.env.ALLOWED_PERIODS),
       save_payment_method: true,
       amount: { value: process.env.ALLOWED_AMOUNTS || '250', currency: 'RUB' },

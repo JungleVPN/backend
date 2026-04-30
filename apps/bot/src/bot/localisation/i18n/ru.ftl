@@ -38,23 +38,30 @@ period-3 = 3 месяца
 period-6 = 6 месяцев
 
 main-text =
-    Привет, <b>{ $username }</b>! 👋
+    🌴 Добро пожаловать в <b>Jungle</b>, <b>{ $username }</b>!
 
     Я @Ramazzaniii, автор проекта <code>JungleVPN</code> 🌴
 
-    Сейчас VPN полностью бесплатный — хочу сделать более качественно и стабильно!
 
-    Если захочешь поддержать развитие проекта — можешь отправить донат, для меня это будет большой мотивацией 💙
 
-    Или помоги иначе: расскажи друзьям и подпишись на канал.
+    Информация о подписке:
 
-    Спасибо ❤️
+    <blockquote>
+        { $isExpired ->
+        [true]🆘🆘🆘 <b>У тебя закончилась подписка 🥲</b>
+        *[false]📅 <b>Подписка закончится:</b>
 
-    Мои контакты:
+        { $expireAt } (МСК)
+        }
+    </blockquote>
+
+
+
+    My contacts:
     <blockquote>
         <code>Telegram</code>: @Ramazzaniii
-        <code>Канал</code>: @In_The_Jungle
-        <code>LinkedIn</code>: <a href="https://www.linkedin.com/in/ramazan-ittiev/">Ссылка</a>
+        <code>Channel</code>: @In_The_Jungle
+        <code>LinkedIn</code>: <a href="https://www.linkedin.com/in/ramazan-ittiev/">Link</a>
     </blockquote>
 
 
@@ -145,7 +152,7 @@ expires-in-24-hours-subscription-text =
 
 
 expired-subscription-text =
-    <b>Ну вот, твоя подписка закончилась 🥲</b>
+    <b>Твоя подписка закончилась, но у тебя нет активных способов оплаты, чтобы ее продлить 🥲</b>
 
     Нажми кнопку снизу, чтобы перейти к оплате
 

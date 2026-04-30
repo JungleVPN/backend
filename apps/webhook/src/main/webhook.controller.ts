@@ -7,11 +7,8 @@ import {
   Post,
   type RawBodyRequest,
   Req,
-  UseGuards,
 } from '@nestjs/common';
 import type { PaymentWebhookNotification, TRemnawaveWebhookEvent } from '@workspace/types';
-import type { Request } from 'express';
-import { RemnaSignatureGuard } from './remna-signature.guard';
 import { WebhookService } from './webhook.service';
 
 @Controller('webhook')
@@ -25,7 +22,6 @@ export class WebhookController {
    * so the handler receives only pre-validated payloads.
    */
   @Post('remnawave')
-  // @UseGuards(RemnaSignatureGuard)
   async handleRemnaEvents(@Body() payload: TRemnawaveWebhookEvent) {
     await this.webhookService.processRemnaEvent(payload);
     return { ok: true };
@@ -47,17 +43,15 @@ export class WebhookController {
     return { ok: true };
   }
 
-  /**
-   * Security is provided by the payments service's CIDR allowlist check against
-   * req.socket.remoteAddress (the kernel-level TCP peer address, unforgeable).
-   */
   @Post('payment/yookassa')
   @HttpCode(200)
-  async handleYookassaEvents(@Req() req: Request, @Body() payload: PaymentWebhookNotification) {
+  async handleYookassaEvents(
+    @Headers('x-forwarded-for') xForwardedFor: string,
+    @Headers('x-real-ip') xRealIp: string,
+    @Body() payload: PaymentWebhookNotification,
+  ) {
     this.logger.log(`Received Yookassa webhook`);
-    // Use the kernel-supplied TCP source address — never trust forged headers.
-    const sourceIp = (req as any).socket?.remoteAddress ?? '';
-    await this.webhookService.forwardYookassaWebhook(payload, sourceIp);
+    await this.webhookService.forwardYookassaWebhook(payload, xForwardedFor || xRealIp || '');
     return { ok: true };
   }
 

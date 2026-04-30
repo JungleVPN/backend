@@ -59,7 +59,7 @@ export class PaymentStatusService {
   private async getUserByUuid(uuid: string): Promise<GetUserByUuidResponseDto | null> {
     try {
       const { data } = await axios.get<GetUserByUuidResponseDto>(
-        `${this.remnawareBaseUrl}/api/users/${uuid}`,
+        `${this.remnawareBaseUrl}/users/${uuid}`,
         {
           headers: {
             'x-service-secret': process.env.INTER_SERVICE_SECRET,
@@ -76,7 +76,7 @@ export class PaymentStatusService {
 
   private async updateUserExpiry(uuid: string, expireAt: Date): Promise<void> {
     await axios.patch(
-      `${this.remnawareBaseUrl}/api/users`,
+      `${this.remnawareBaseUrl}/users`,
       {
         uuid,
         expireAt: expireAt.toISOString(),

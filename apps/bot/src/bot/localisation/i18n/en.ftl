@@ -45,17 +45,24 @@ days-left-label = { $daysLeft ->
 
 
 main-text =
-    Hello, <b>{ $username }</b>! 👋
+    🌴 Welcome to the <code>Jungle</code>, <b>{ $username }</b>!
 
     I’m @Ramazzaniii, the creator of <code>JungleVPN</code> 🌴
 
-    Right now the VPN is completely free — I want to focus on improving quality and stability.
 
-    If you’d like to support the project, you can send a donation — it really motivates me to keep going 💙
 
-    Or help in another way: tell your friends and subscribe to the channel.
+    Here is some info about your subscription:
 
-    Thank you ❤️
+    <blockquote>
+    { $isExpired ->
+    [true]🆘🆘🆘 <b>Your subscription has expired 🥲</b>
+    *[false]📅 <b>Subscription end date:</b>
+
+    { $expireAt } (MSK)
+    }
+    </blockquote>
+
+
 
     My contacts:
     <blockquote>
@@ -173,7 +180,7 @@ expires-in-24-hours-subscription-text =
 
 
 expired-subscription-text =
-    Your subscription has expired 🥲
+    Your subscription has expired, but you don't have any active payment methods to activate it 🥲
 
     Click the button bellow to make a payment
 

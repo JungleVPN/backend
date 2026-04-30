@@ -46,8 +46,9 @@ services:
     env_file: .env
     environment:
       POSTGRES_HOST: db
-      REMNAWAVE_URL: http://remnawave:${REMNAWAVE_PORT}
+      REMNAWAVE_URL: http://remnawave:${REMNAWAVE_PORT}/api
       REFERRALS_URL: http://referrals:${REFERRALS_PORT}
+      BOT_URL: http://bot:${BOT_PORT}
     ports:
       - "127.0.0.1:${PAYMENTS_PORT}:${PAYMENTS_PORT}"
     restart: always
@@ -86,7 +87,7 @@ services:
     env_file: .env
     environment:
       POSTGRES_HOST: db
-      REMNAWAVE_URL: http://remnawave:${REMNAWAVE_PORT}
+      REMNAWAVE_URL: http://remnawave:${REMNAWAVE_PORT}/api
     ports:
       - "127.0.0.1:${REFERRALS_PORT}:${REFERRALS_PORT}"
     restart: always
@@ -95,7 +96,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: ["node", "apps/broadcasts/dist/src/main.js"]
+    command: ["node", "apps/broadcasts/dist/main.js"]
     networks:
       - jungle-net
     depends_on:
@@ -127,22 +128,23 @@ services:
     env_file: .env
     environment:
       POSTGRES_HOST: db
-      PAYMENTS_URL: http://payments:${PAYMENTS_PORT}
+      PAYMENTS_URL: http://payments:${PAYMENTS_PORT}/api
+      BOT_URL: http://bot:${BOT_PORT}
     ports:
       - "127.0.0.1:${WEBHOOK_PORT}:${WEBHOOK_PORT}"
     restart: always
 
-  tma:
-    build:
-      context: .
-      dockerfile: apps/tma/Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL:-/api}
-    networks:
-      - jungle-net
-    ports:
-      - "127.0.0.1:${TMA_PORT:-8080}:80"
-    restart: always
+#  tma:
+#    build:
+#      context: .
+#      dockerfile: apps/tma/Dockerfile
+#      args:
+#        VITE_API_URL: ${VITE_API_URL:-/api}
+#    networks:
+#      - jungle-net
+#    ports:
+#      - "127.0.0.1:${TMA_PORT:-8080}:80"
+#    restart: always
 
   bot:
     build:
@@ -167,8 +169,8 @@ services:
     env_file: .env
     environment:
       POSTGRES_HOST: db
-      REMNAWAVE_URL: http://remnawave:${REMNAWAVE_PORT}
-      PAYMENTS_URL: http://payments:${PAYMENTS_PORT}
+      REMNAWAVE_URL: http://remnawave:${REMNAWAVE_PORT}/api
+      PAYMENTS_URL: http://payments:${PAYMENTS_PORT}/api
       REFERRALS_URL: http://referrals:${REFERRALS_PORT}
       BROADCASTS_URL: http://broadcasts:${BROADCASTS_PORT}
       WEBHOOK_URL: http://webhook:${WEBHOOK_PORT}

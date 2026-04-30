@@ -2,7 +2,14 @@ import * as process from 'node:process';
 import { Injectable, Logger } from '@nestjs/common';
 import { RemnaError } from '@remna/remna.error';
 import { createBackendClient } from '@utils/http-client';
-import { CreateUserResponseDto, UpdateUserRequestDto, UserDto } from '@workspace/types';
+import {
+  CreateUserRequestDto,
+  CreateUserResponseDto,
+  GetUserByTelegramIdCommand,
+  GetUserByTelegramIdResponseDto,
+  UpdateUserRequestDto,
+  UserDto,
+} from '@workspace/types';
 import { AxiosInstance } from 'axios';
 
 @Injectable()
@@ -56,7 +63,7 @@ export class RemnaService {
     }
   }
 
-  async init(telegramId: number, language_code: string): Promise<UserDto> {
+  async init(telegramId: number, language_code: string | undefined): Promise<UserDto> {
     const user = await this.getUserByTgId(telegramId);
     if (!user) {
       return await this.createUser({
@@ -65,27 +72,27 @@ export class RemnaService {
         username: telegramId.toString(),
       });
     } else {
-      if (user.description !== language_code) {
+      if (user[0].description !== language_code) {
         await this.updateUser({
-          uuid: user.uuid,
+          uuid: user[0].uuid,
           description: language_code,
         });
       }
 
-      return user;
+      return user[0];
     }
   }
 
   async getAllUsers(): Promise<UserDto[]> {
     return this.fetch<UserDto[]>({
-      url: '/api/users',
+      url: '/users',
       method: 'GET',
     });
   }
 
   async createUser(payload: { username: string; telegramId: number; description?: string }) {
     return this.fetch<CreateUserResponseDto>({
-      url: '/api/users',
+      url: '/users',
       body: payload,
     });
   }
@@ -93,28 +100,36 @@ export class RemnaService {
   async updateUser(body: UpdateUserRequestDto) {
     return this.fetch<UserDto>({
       method: 'PATCH',
-      url: '/api/users',
+      url: '/users',
       body,
     });
   }
 
-  async getUserByTgId(id: number): Promise<UserDto | null> {
-    const users = await this.fetch<CreateUserResponseDto[] | null>({
-      url: `/api/users/by-telegram-id/${id}`,
-      method: 'GET',
-    });
+  async getUserByTgId(
+    telegramId: CreateUserRequestDto['telegramId'],
+  ): Promise<GetUserByTelegramIdResponseDto | null> {
+    if (!telegramId) return null;
+    try {
+      const users = await this.fetch<GetUserByTelegramIdResponseDto>({
+        method: 'GET',
+        url: GetUserByTelegramIdCommand.url(telegramId.toString()),
+      });
 
-    if (!users || users.length === 0) return null;
-    return users[0];
+      if (!users || users.length === 0) return null;
+      return users;
+    } catch (e: any) {
+      if (e.status === 404) return null;
+      throw e;
+    }
   }
 
   async deleteUser(uuid: string) {
-    await this.fetch({ url: `/api/users/${uuid}`, method: 'DELETE' });
+    await this.fetch({ url: `/users/${uuid}`, method: 'DELETE' });
   }
 
   async revokeSub(uuid: string) {
     const subscriptionUrl = await this.fetch<string>({
-      url: `/api/users/${uuid}/actions/revoke`,
+      url: `/users/${uuid}/actions/revoke`,
     });
 
     return subscriptionUrl;
