@@ -1,13 +1,9 @@
 import * as process from 'node:process';
 import { Injectable, Logger } from '@nestjs/common';
-import {
-  CreateStripeSessionDto,
-  CreateYookassaSessionDto,
-  PaymentSession,
-  Payments,
-} from '@shared/payments';
+import { CreateStripeSessionDto } from '@shared/payments';
 import { createBackendClient } from '@utils/http-client';
-import { AxiosInstance } from 'axios';
+import { apiRoutes, CreateYookassaSessionDto, SavedMethodDto } from '@workspace/types';
+import { AxiosInstance, AxiosResponse } from 'axios';
 
 /**
  * HTTP client for the payments backend service (port 3001).
@@ -21,8 +17,8 @@ export class PaymentsService {
     process.env.PAYMENTS_URL || 'http://localhost:3001',
   );
 
-  async createStripeSession(dto: CreateStripeSessionDto): Promise<PaymentSession> {
-    const res = await this.backend.post('/payments/stripe/create-session', dto);
+  async createStripeSession(dto: CreateStripeSessionDto) {
+    const res = await this.backend.post(apiRoutes.payments.stripeCreateSession, dto);
 
     if (res.status >= 400) {
       this.logger.error(`Stripe session failed: ${res.status} ${JSON.stringify(res.data)}`);
@@ -32,8 +28,8 @@ export class PaymentsService {
     return res.data;
   }
 
-  async createYookassaSession(dto: CreateYookassaSessionDto): Promise<PaymentSession> {
-    const res = await this.backend.post('/api/payments/yookassa/create-session', dto);
+  async createYookassaSession(dto: CreateYookassaSessionDto) {
+    const res = await this.backend.post(apiRoutes.payments.yookassaCreateSession, dto);
 
     if (res.status >= 400) {
       this.logger.error(`Yookassa session failed: ${res.status} ${JSON.stringify(res.data)}`);
@@ -51,26 +47,8 @@ export class PaymentsService {
    * Returns `true` on success and `false` for any non-2xx response or network
    * error — callers decide whether to show an error toast or just re-render.
    */
-  async deleteSavedPaymentMethod(telegramId: string, methodId: string): Promise<boolean> {
-    try {
-      const res = await this.backend.delete(
-        `/payments/yookassa/saved-methods/${telegramId}/${methodId}`,
-      );
-
-      if (res.status >= 400) {
-        this.logger.warn(
-          `Delete saved method failed for ${telegramId}/${methodId}: ${res.status} ${JSON.stringify(res.data)}`,
-        );
-        return false;
-      }
-
-      return true;
-    } catch (err: any) {
-      this.logger.warn(
-        `Delete saved method errored for ${telegramId}/${methodId}: ${err?.message ?? err}`,
-      );
-      return false;
-    }
+  async deleteSavedMethod(userId: string, id: string): Promise<AxiosResponse<void>> {
+    return this.backend.delete<void>(apiRoutes.payments.yookassaSavedMethodById(userId, id));
   }
 
   /**
@@ -81,21 +59,7 @@ export class PaymentsService {
    * identically to "BE unreachable" — the profile screen shouldn't fail just
    * because we couldn't enrich it with autopayment info.
    */
-  async getSavedPaymentMethods(telegramId: string): Promise<Payments.SavedPaymentMethod[]> {
-    try {
-      const res = await this.backend.get(`/payments/yookassa/saved-methods/${telegramId}`);
-
-      if (res.status >= 400) {
-        this.logger.warn(
-          `Fetch saved methods failed for ${telegramId}: ${res.status} ${JSON.stringify(res.data)}`,
-        );
-        return [];
-      }
-
-      return Array.isArray(res.data) ? res.data : [];
-    } catch (err: any) {
-      this.logger.warn(`Fetch saved methods errored for ${telegramId}: ${err?.message ?? err}`);
-      return [];
-    }
+  async getSavedMethods(userId: string): Promise<AxiosResponse<SavedMethodDto[]>> {
+    return this.backend.get<SavedMethodDto[]>(apiRoutes.payments.yookassaSavedMethods(userId));
   }
 }

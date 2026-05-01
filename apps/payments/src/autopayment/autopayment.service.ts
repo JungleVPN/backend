@@ -26,11 +26,11 @@ export class AutopaymentService {
   ) {}
 
   private get autopaymentAmount(): string {
-    return process.env.AUTOPAYMENT_AMOUNT || '200';
+    return process.env.ALLOWED_AMOUNTS || '200';
   }
 
   private get autopaymentPeriod(): number {
-    return Number(process.env.AUTOPAYMENT_PERIOD || '1');
+    return Number(process.env.ALLOWED_PERIODS || '1');
   }
 
   async init(payload: RemnawebhookPayload): Promise<void> {

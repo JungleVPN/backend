@@ -1,3 +1,4 @@
+import * as process from 'node:process';
 import { BotContext } from '@bot/bot.types';
 import { PaymentMenu } from '@bot/navigation/features/payment/payment.menu';
 import { Base } from '@bot/navigation/menu.base';
@@ -16,22 +17,23 @@ export class PaymentMsgService extends Base {
 
   async init(ctx: BotContext) {
     const session = ctx.session;
-    const { selectedPeriod = 'month_1', selectedProvider } = session;
+    const { selectedProvider } = session;
 
-    if (!selectedPeriod || !selectedProvider) {
+    if (!selectedProvider) {
       await ctx.reply(ctx.t('error-generic-restart'));
       return;
     }
 
-    const { amount, currency } = this.currencyService.getPriceForPeriod(
-      selectedPeriod,
-      selectedProvider,
-    );
+    // const {  currency } = this.currencyService.getPriceForPeriod(
+    //   selectedPeriod,
+    //   selectedProvider,
+    // );
 
     const content = ctx.t('payment-text', {
-      amount,
-      period: ctx.t(`period-${selectedPeriod}`),
-      currency: currency === 'EUR' ? '€' : '₽',
+      amount: process.env.ALLOWED_AMOUNTS || '250',
+      period: ctx.t(`period-${process.env.ALLOWED_PERIODS}`),
+      currency: '₽',
+      link: process.env.TERMS_URL || 'https://thejungle.pro/app/terms',
     });
 
     await this.render(ctx, content, this.paymentMenu.menu);

@@ -63,12 +63,13 @@ export class StartCommand {
         }
       }
 
-      await this.remnaService.init(
+      const rmnUser = await this.remnaService.init(
         ctx.from.id,
         ctx.from.language_code || this.configService.get('DEFAULT_LANGUAGE', 'ru'),
       );
 
       ctx.session.user = initialSession().user;
+      ctx.session.userId = rmnUser.uuid;
       await this.mainMenuService.init(ctx, this.mainMenu.menu);
 
       if (payload?.startsWith('ad_')) {

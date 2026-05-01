@@ -27,7 +27,7 @@ export class RemnaClient {
   async getUserByTgId(telegramId: number): Promise<RemnaUser | null> {
     try {
       const { data } = await axios.get<RemnaUser[]>(
-        `${this.baseUrl}/api/users/by-telegram-id/${telegramId}`,
+        `${this.baseUrl}/users/by-telegram-id/${telegramId}`,
         {
           headers: {
             'x-service-secret': process.env.INTER_SERVICE_SECRET,
@@ -49,7 +49,7 @@ export class RemnaClient {
     expireAt?: Date | string;
     [key: string]: unknown;
   }): Promise<RemnaUser> {
-    const { data } = await axios.patch<RemnaUser>(`${this.baseUrl}/api/users`, payload, {
+    const { data } = await axios.patch<RemnaUser>(`${this.baseUrl}/users`, payload, {
       headers: {
         'x-service-secret': process.env.INTER_SERVICE_SECRET,
       },

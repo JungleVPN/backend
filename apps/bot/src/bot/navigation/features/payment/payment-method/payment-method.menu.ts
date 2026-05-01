@@ -20,14 +20,14 @@ export class PaymentMethodMenu extends Base implements OnModuleInit {
 
   onModuleInit() {
     this.menu
-      .text(
-        (ctx) => ctx.t('payment-method-eur'),
-        async (ctx) => {
-          ctx.session.selectedProvider = 'stripe';
-          await this.paymentMethodMsgService.handlePaymentMethod(ctx, 'stripe');
-        },
-      )
-      .row()
+      // .text(
+      //   (ctx) => ctx.t('payment-method-eur'),
+      //   async (ctx) => {
+      //     ctx.session.selectedProvider = 'stripe';
+      //     await this.paymentMethodMsgService.handlePaymentMethod(ctx, 'stripe');
+      //   },
+      // )
+      // .row()
       .text(
         (ctx) => ctx.t('payment-method-rub'),
         async (ctx) => {

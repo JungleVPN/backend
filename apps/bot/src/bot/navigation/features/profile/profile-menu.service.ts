@@ -3,7 +3,7 @@ import { ProfileMenu } from '@bot/navigation/features/profile/profile.menu';
 import { Base } from '@bot/navigation/menu.base';
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { PaymentsService } from '@payments/payments.service';
-import { Payments } from '@shared/payments';
+import { SavedMethodDto } from '@workspace/types';
 
 @Injectable()
 export class ProfileMenuService extends Base {
@@ -18,11 +18,9 @@ export class ProfileMenuService extends Base {
   }
 
   async init(ctx: BotContext) {
-    const telegramId = ctx.from?.id;
+    const userId = ctx.session.userId;
 
-    const activeMethod = telegramId
-      ? await this.resolveActiveMethod(String(telegramId))
-      : null;
+    const activeMethod = userId ? await this.resolveActiveMethod(String(userId)) : null;
 
     // Populate session BEFORE render so the profile menu's dynamic range can
     // decide whether to show the "delete saved method" button.
@@ -49,18 +47,15 @@ export class ProfileMenuService extends Base {
   async deleteActiveMethod(ctx: BotContext): Promise<void> {
     const telegramId = ctx.from?.id;
     const methodId = ctx.session.activeSavedMethodId;
+    const userId = ctx.session.userId;
 
-    if (!telegramId || !methodId) {
+    if (!userId || !methodId) {
       await ctx.answerCallbackQuery({ text: ctx.t('profile-delete-method-error') });
       return;
     }
 
-    const ok = await this.paymentsService.deleteSavedPaymentMethod(
-      String(telegramId),
-      methodId,
-    );
-
-    if (!ok) {
+    const { status } = await this.paymentsService.deleteSavedMethod(userId, methodId);
+    if (status !== 200) {
       await ctx.answerCallbackQuery({ text: ctx.t('profile-delete-method-error') });
       this.logger.warn(`Failed to delete saved method ${methodId} for tg=${telegramId}`);
       return;
@@ -72,11 +67,9 @@ export class ProfileMenuService extends Base {
   }
 
   /** Fetches the most recent active saved method for a user, or `null`. */
-  private async resolveActiveMethod(
-    telegramId: string,
-  ): Promise<Payments.SavedPaymentMethod | null> {
-    const methods = await this.paymentsService.getSavedPaymentMethods(telegramId);
-    return methods.find((m) => m.isActive) ?? null;
+  private async resolveActiveMethod(userId: string): Promise<SavedMethodDto | null> {
+    const response = await this.paymentsService.getSavedMethods(userId);
+    return response.data.find((m) => m.isActive) ?? null;
   }
 
   /**
@@ -87,7 +80,7 @@ export class ProfileMenuService extends Base {
    *   2. Any `title` the provider gave us
    *   3. The raw `paymentMethodType` (last-resort fallback)
    */
-  private formatMethodLabel(method: Payments.SavedPaymentMethod): string {
+  private formatMethodLabel(method: SavedMethodDto): string {
     const { card, title, paymentMethodType } = method;
 
     if (card?.last4) {

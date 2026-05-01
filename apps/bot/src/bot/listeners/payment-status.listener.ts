@@ -112,10 +112,7 @@ export class PaymentStatusListener {
 
     const text = i18n.t(locale, i18nKey);
     const menu = new InlineKeyboard()
-      .webApp(
-        this.localService.i18n.t(locale, 'pay-button-label'),
-        process.env.WEB_APP_PAYMENT_URL || 'https://miniapp.thejungle.pro/profile/payment',
-      )
+      .text(this.localService.i18n.t(locale, 'pay-button-label'), 'navigate_to_yookassa_payment')
       .row()
       .text(i18n.t(locale, 'profile-button-label'), 'navigate_to_profile');
 
@@ -140,10 +137,11 @@ export class PaymentStatusListener {
     const i18n = this.localService.i18n;
 
     const successMenu = new InlineKeyboard()
-      .webApp(
-        i18n.t(locale, 'profile-button-label'),
-        process.env.WEB_APP_URL || 'https://miniapp.thejungle.pro',
-      )
+      // .webApp(
+      //   i18n.t(locale, 'profile-button-label'),
+      //   process.env.WEB_APP_URL || 'https://miniapp.thejungle.pro',
+      // )
+      .text(i18n.t(locale, 'profile-button-label'), 'navigate_to_profile')
       .row()
       .text(i18n.t(locale, 'home-button-label'), 'navigate_main');
 

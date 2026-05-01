@@ -73,10 +73,9 @@ export default function PaymentPage() {
 
     const session = await createSession({
       userId: rmnUser.uuid,
-      selectedPeriod: env.selectedPeriodMonths,
+      selectedPeriod: env.allowedPeriods,
       save_payment_method: true,
-      amount: { value: env.priceRub, currency: 'RUB' },
-      description: env.paymentDescription,
+      amount: { value: env.allowedAmounts, currency: 'RUB' },
       confirmation: {
         return_url: `${window.location.origin}/profile/subscription`,
         type: 'redirect',

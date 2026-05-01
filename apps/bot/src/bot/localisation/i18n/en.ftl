@@ -34,9 +34,9 @@ error-menu-outdated = Something changed, try /start again
 error-generic-restart = ❗ Something went wrong. Try /start again
 payment-not-found = ❗ Payment not found. Try /start again
 payment-pending = ❗ Payment is still pending.
-period-month_1 = 1 month
-period-month_3 = 3 months
-period-month_6 = 6 months
+period-1 = 1 month
+period-3 = 3 months
+period-6 = 6 months
 
 days-left-label = { $daysLeft ->
     [one] { $daysLeft } day
@@ -45,17 +45,24 @@ days-left-label = { $daysLeft ->
 
 
 main-text =
-    Hello, <b>{ $username }</b>! 👋
+    🌴 Welcome to the <code>Jungle</code>, <b>{ $username }</b>!
 
     I’m @Ramazzaniii, the creator of <code>JungleVPN</code> 🌴
 
-    Right now the VPN is completely free — I want to focus on improving quality and stability.
 
-    If you’d like to support the project, you can send a donation — it really motivates me to keep going 💙
 
-    Or help in another way: tell your friends and subscribe to the channel.
+    Here is some info about your subscription:
 
-    Thank you ❤️
+    <blockquote>
+    { $isExpired ->
+    [true]🆘🆘🆘 <b>Your subscription has expired 🥲</b>
+    *[false]📅 <b>Subscription end date:</b>
+
+    { $expireAt } (MSK)
+    }
+    </blockquote>
+
+
 
     My contacts:
     <blockquote>
@@ -114,21 +121,23 @@ payment-periods-text =
 
 
 payment-methods-text =
-    You can pay any way you like!
-
-    We accept 🇷🇺Russian and 🌍International payment methods
+    Currently only 🇷🇺Russian payment methods are supported
 
 payment-text =
     <b>As soon as you pay, come back to get the connection link</b>
 
     <blockquote>You’re paying <b>{ $amount }{ $currency }</b> for <b>{ $period }</b></blockquote>
 
+    By paying you accept terms and conditions - { $link }
+
 payment-success-text =
     ✅ Payment successful! Thank you for your support!
 
     Your subscription has been extended 🙂
 
-    You can manage it in your profile. Just click the button below!
+    You can manage payments in your profile. Just click the button below!
+
+    I will add ability to control notifications a bit later
 
 subscription-text =
     📖 Setting up VPN on { $deviceLabel }:
@@ -173,7 +182,7 @@ expires-in-24-hours-subscription-text =
 
 
 expired-subscription-text =
-    Your subscription has expired 🥲
+    Your subscription has expired, but you don't have any active payment methods to activate it 🥲
 
     Click the button bellow to make a payment
 
@@ -352,7 +361,10 @@ payment-failed-permission-revoked-text =
 
 profile-text = { $activeMethod }
 
-profile-active-method-text = 💳 Active payment method: <b>{ $label }</b>
+profile-active-method-text =
+    💳 Active payment method: <b>{ $label }</b>
+
+    To add a different payment method delete this one.
 
 profile-no-active-method-text =
     You don't have an active payment method saved yet.

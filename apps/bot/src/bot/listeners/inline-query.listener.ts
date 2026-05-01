@@ -26,7 +26,7 @@ export class InlineQueryListener {
     bot.on('inline_query', async (ctx) => {
       const link = this.referralService.getUserReferralLink(ctx.from.id);
       const user = await this.remnaService.getUserByTgId(ctx.from.id);
-      const locale = user?.description || process.env.DEFAULT_LOCALE || 'ru';
+      const locale = user?.[0].description || process.env.DEFAULT_LOCALE || 'ru';
 
       const keyboard = new InlineKeyboard().url(
         this.localService.i18n.t(locale, 'connect-button-label'),
@@ -44,7 +44,7 @@ export class InlineQueryListener {
           type: 'article',
           id: 'referral-link',
           title,
-          thumbnail_url: `${process.env.BASE_URL}/assets/logo.jpg`,
+          thumbnail_url: `${process.env.REMNAWAVE_PANEL_URL}/assets/logo.jpg`,
           description,
           input_message_content: {
             message_text: ctx.t('invitation-text', {

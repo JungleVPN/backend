@@ -1,7 +1,8 @@
 import * as process from 'node:process';
 import { Injectable, Logger } from '@nestjs/common';
+import { createBackendClient } from '@utils/http-client';
+import { apiRoutes } from '@workspace/types';
 import { AxiosInstance } from 'axios';
-import { createBackendClient } from '../utils/http-client';
 
 export interface BroadcastDto {
   id: number;
@@ -28,7 +29,7 @@ export class BroadcastsService {
   );
 
   async create(messageText: string): Promise<BroadcastDto> {
-    const res = await this.backend.post('/broadcasts', { messageText });
+    const res = await this.backend.post(apiRoutes.broadcasts.collection, { messageText });
 
     if (res.status >= 400) {
       this.logger.error(`create failed: ${res.status} ${JSON.stringify(res.data)}`);
@@ -39,7 +40,7 @@ export class BroadcastsService {
   }
 
   async getById(id: number): Promise<BroadcastDto | null> {
-    const res = await this.backend.get(`/broadcasts/${id}`);
+    const res = await this.backend.get(apiRoutes.broadcasts.byId(id));
 
     if (res.status === 404) return null;
 
@@ -52,7 +53,7 @@ export class BroadcastsService {
   }
 
   async updateText(id: number, messageText: string): Promise<BroadcastDto> {
-    const res = await this.backend.patch(`/broadcasts/${id}`, { messageText });
+    const res = await this.backend.patch(apiRoutes.broadcasts.byId(id), { messageText });
 
     if (res.status >= 400) {
       this.logger.error(`updateText failed: ${res.status}`);
@@ -63,7 +64,7 @@ export class BroadcastsService {
   }
 
   async delete(id: number): Promise<void> {
-    const res = await this.backend.delete(`/broadcasts/${id}`);
+    const res = await this.backend.delete(apiRoutes.broadcasts.byId(id));
 
     if (res.status >= 400) {
       this.logger.error(`delete failed: ${res.status}`);
@@ -72,7 +73,7 @@ export class BroadcastsService {
   }
 
   async getMessages(broadcastId: number): Promise<BroadcastMessageDto[]> {
-    const res = await this.backend.get(`/broadcasts/${broadcastId}/messages`);
+    const res = await this.backend.get(apiRoutes.broadcasts.messages(broadcastId));
 
     if (res.status >= 400) {
       this.logger.error(`getMessages failed: ${res.status}`);
@@ -87,7 +88,7 @@ export class BroadcastsService {
     telegramId: string,
     messageId: number,
   ): Promise<BroadcastMessageDto> {
-    const res = await this.backend.post(`/broadcasts/${broadcastId}/messages`, {
+    const res = await this.backend.post(apiRoutes.broadcasts.messages(broadcastId), {
       telegramId,
       messageId,
     });
@@ -104,7 +105,7 @@ export class BroadcastsService {
     broadcastId: number,
     messages: Array<{ telegramId: string; messageId: number }>,
   ): Promise<BroadcastMessageDto[]> {
-    const res = await this.backend.post(`/broadcasts/${broadcastId}/messages/batch`, {
+    const res = await this.backend.post(apiRoutes.broadcasts.messagesBatch(broadcastId), {
       messages,
     });
 

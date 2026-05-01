@@ -1,7 +1,8 @@
 import * as process from 'node:process';
 import { Injectable, Logger } from '@nestjs/common';
+import { createBackendClient } from '@utils/http-client';
+import { apiRoutes } from '@workspace/types';
 import { AxiosInstance } from 'axios';
-import { createBackendClient } from '../utils/http-client';
 import { generateReferralCode } from './referral.utils';
 
 export interface ReferralRecord {
@@ -36,7 +37,7 @@ export class ReferralService {
     locale?: string,
   ): Promise<HandleNewUserResult> {
     try {
-      const res = await this.backend.post('/referrals', {
+      const res = await this.backend.post(apiRoutes.referrals.collection, {
         inviterId,
         invitedTelegramId,
         locale,
@@ -56,7 +57,7 @@ export class ReferralService {
 
   async getReferralRecord(invitedTelegramId: number): Promise<ReferralRecord | null> {
     try {
-      const res = await this.backend.get(`/referrals/by-invited/${invitedTelegramId}`);
+      const res = await this.backend.get(apiRoutes.referrals.byInvited(invitedTelegramId));
 
       if (res.status === 404) return null;
 
@@ -76,7 +77,7 @@ export class ReferralService {
     invitedTelegramId: number,
   ): Promise<RewardAfterPaymentResult> {
     try {
-      const res = await this.backend.post('/referrals/reward-after-payment', {
+      const res = await this.backend.post(apiRoutes.referrals.rewardAfterPayment, {
         invitedTelegramId,
       });
 
@@ -94,7 +95,7 @@ export class ReferralService {
 
   async deleteUser(invitedTelegramId: number): Promise<void> {
     try {
-      const res = await this.backend.delete(`/referrals/by-invited/${invitedTelegramId}`);
+      const res = await this.backend.delete(apiRoutes.referrals.byInvited(invitedTelegramId));
 
       if (res.status >= 400) {
         this.logger.warn(`deleteUser failed: ${res.status}`);

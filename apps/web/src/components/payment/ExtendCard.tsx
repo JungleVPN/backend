@@ -53,7 +53,7 @@ export function ExtendCard({ showEmailInput, isPaying, onExtend, onTermsOpen }: 
             <p className='text-base font-semibold text-foreground'>
               {t('getSubscription.item_name')}
             </p>
-            <p className='text-xl font-bold text-accent'>{env.priceRub} ₽</p>
+            <p className='text-xl font-bold text-accent'>{env.allowedAmounts} ₽</p>
           </div>
 
           <div className='h-px w-full bg-white/10' />
@@ -89,7 +89,7 @@ export function ExtendCard({ showEmailInput, isPaying, onExtend, onTermsOpen }: 
 
           <div className={'flex flex-col items-start gap-1'}>
             <Button fullWidth isPending={isPaying} size='lg' type='submit' onClick={handleSubmit}>
-              {t('payment.extendButton', { amount: env.priceRub })}
+              {t('payment.extendButton', { amount: env.allowedAmounts })}
               <IconArrowRight size={20} stroke={2} />
             </Button>
 

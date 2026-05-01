@@ -1,12 +1,13 @@
+import * as process from 'node:process';
 import { BotContext } from '@bot/bot.types';
 import { PaymentMsgService } from '@bot/navigation/features/payment/payment.service';
 import { Base } from '@bot/navigation/menu.base';
-import { mapPeriodToMonthsNumber } from '@bot/utils/utils';
 import { Injectable } from '@nestjs/common';
 import { CurrencyService } from '@payments/currency-service/currency.service';
 import { PaymentsService } from '@payments/payments.service';
 import { RemnaService } from '@remna/remna.service';
 import { PaymentProvider, PaymentSession } from '@shared/payments';
+import type { CreateYookassaSessionDto } from '@workspace/types';
 
 @Injectable()
 export class PaymentMethodMsgService extends Base {
@@ -20,27 +21,24 @@ export class PaymentMethodMsgService extends Base {
   }
 
   async handlePaymentMethod(ctx: BotContext, provider: PaymentProvider) {
-    const session = ctx.session;
     const tgUser = this.validateUser(ctx.from);
     const user = await this.remnaService.getUserByTgId(tgUser.id);
-    const { selectedPeriod = 'month_1' } = session;
 
-    if (!user || !selectedPeriod) {
+    if (!user || !process.env.ALLOWED_PERIODS) {
       await ctx.reply(ctx.t('error-generic-restart'));
       return;
     }
 
-    const { amount, currency } = this.currencyService.getPriceForPeriod(selectedPeriod, provider);
-    const selectedMonths = mapPeriodToMonthsNumber(selectedPeriod);
-
     const paymentSession = await this.createSessionForProvider(provider, {
-      userId: tgUser.id.toString(),
-      amount,
-      currency,
-      description: ctx.t('provider-description-text'),
-      selectedPeriod: selectedMonths,
-      telegramMessageId: ctx.msg?.message_id,
-      telegramId: tgUser.id.toString(),
+      userId: user[0].uuid,
+      selectedPeriod: Number(process.env.ALLOWED_PERIODS),
+      save_payment_method: true,
+      amount: { value: process.env.ALLOWED_AMOUNTS || '250', currency: 'RUB' },
+      description: process.env.PAYMENT_DESCRIPTION || ' subscription',
+      confirmation: {
+        return_url: process.env.BOT_RETURN_URL,
+        type: 'redirect',
+      },
     });
 
     ctx.session.paymentUrl = paymentSession.url;
@@ -50,21 +48,11 @@ export class PaymentMethodMsgService extends Base {
 
   private async createSessionForProvider(
     provider: PaymentProvider,
-    params: {
-      userId: string;
-      amount: number | string;
-      currency: string;
-      description: string;
-      selectedPeriod: number;
-      telegramMessageId?: number;
-      telegramId: string;
-    },
+    params: CreateYookassaSessionDto,
   ): Promise<PaymentSession> {
     const metadata = {
       description: params.description,
       selectedPeriod: params.selectedPeriod,
-      telegramMessageId: params.telegramMessageId,
-      telegramId: params.telegramId,
     };
 
     switch (provider) {
@@ -72,26 +60,14 @@ export class PaymentMethodMsgService extends Base {
         return this.paymentsService.createStripeSession({
           userId: params.userId,
           payment: {
-            amount: params.amount,
+            amount: params.amount.value,
             currency: 'EUR',
           },
           metadata,
         });
 
       case 'yookassa':
-        return this.paymentsService.createYookassaSession({
-          userId: params.userId,
-          paymentDto: {
-            amount: {
-              value: params.amount.toString(),
-              currency: params.currency,
-            },
-            description: params.description,
-            status: 'pending',
-            metadata,
-          },
-          save_payment_method: true,
-        });
+        return this.paymentsService.createYookassaSession(params);
     }
   }
 }

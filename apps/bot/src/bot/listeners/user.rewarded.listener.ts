@@ -27,8 +27,8 @@ export class UserRewardedListener {
     if (isNewUser) return;
 
     const user = await this.remnaService.getUserByTgId(telegramId);
-    const expireAt = user?.expireAt;
-    const locale = user?.description || process.env.DEFAULT_LOCALE || 'ru';
+    const expireAt = user?.[0].expireAt;
+    const locale = user?.[0].description || process.env.DEFAULT_LOCALE || 'ru';
     const formattedDate = toDateString(expireAt!);
 
     const content = this.localService.i18n.t(locale, 'user-rewarded-text', {

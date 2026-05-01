@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_REMNAWAVE_PANEL_URL: string;
+  readonly VITE_REMNAWAVE_URL: string;
   readonly VITE_REMNAWAVE_TOKEN: string;
   readonly VITE_BUY_LINK: string;
   readonly VITE_CRYPTO_LINK: string;

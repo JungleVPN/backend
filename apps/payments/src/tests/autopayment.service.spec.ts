@@ -55,8 +55,8 @@ describe('AutopaymentService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    process.env.AUTOPAYMENT_AMOUNT = '200';
-    process.env.AUTOPAYMENT_PERIOD = '1';
+    process.env.ALLOWED_AMOUNTS = '200';
+    process.env.ALLOWED_PERIODS = '1';
     process.env.BOT_URL = 'http://bot:7080';
     process.env.BOT_NOTIFY_SECRET = 'secret';
     process.env.PAYMENT_DESCRIPTION = 'Test payment';
