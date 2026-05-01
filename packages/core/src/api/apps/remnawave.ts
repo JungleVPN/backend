@@ -12,16 +12,6 @@ import {
 } from '@workspace/types';
 import type { ApiClient } from '../client';
 
-/**
- * Shared Remnawave API.
- *
- * Request paths use `apiRoutes.remnawave` from `@workspace/types`, aligned
- * with `apps/remnawave` Nest controllers.
- *
- * Accepts an ApiClient so each platform can inject its own auth strategy:
- * - Web: API key header → NestJS proxy
- * - TMA: Telegram initData header → NestJS proxy
- */
 export function createRemnawaveApi(client: ApiClient) {
   return {
     async getUserByEmail(
@@ -96,5 +86,3 @@ export function createRemnawaveApi(client: ApiClient) {
     },
   };
 }
-
-export type RemnawaveApi = ReturnType<typeof createRemnawaveApi>;

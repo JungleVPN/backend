@@ -2,55 +2,47 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router';
 
-import '@/core/i18n/i18n';
-import '@/utils/initDayjs';
+import '@workspace/core/core/i18n';
+import '@/assets/globals.css';
 
-import { usePlatformStore } from '@workspace/core/stores';
-import { PlatformProvider, TelegramPlatformAdapter } from '@workspace/platform';
-
-import { tmaSDK } from '@/lib/tma-sdk';
+import { ApiProvider } from '@workspace/core/api';
+import { CoreEnvProvider, PaymentsApiProvider } from '@workspace/core/runtime';
+import { initDayjs } from '@workspace/core/utils';
+import { paymentsApi } from '@/api/payments';
+import { backendClient } from '@/api/remnawave';
+import { env } from '@/config/env';
+import { initTma } from '@/lib/tma-sdk';
+import { TmaAuthProvider } from '@/providers/TmaAuthProvider';
 import { router } from '@/router';
 
-// ─── 1. Platform store update ─────────────────────────────────────────────────
-// Set platform type and init status immediately — before React renders.
-// We use getState() directly since we're outside the React tree.
-const { setPlatformType, setInitStatus, setClientPlatform, setSdkVersion } =
-  usePlatformStore.getState().actions;
+try {
+  initTma();
+} catch {}
 
-setPlatformType('telegram');
-setInitStatus('initializing');
+initDayjs();
 
-// ─── 2. TMA SDK initialisation ───────────────────────────────────────────────
-// Signal to Telegram that the app is loading.
-// WebApp.ready() dismisses Telegram's native loading splash screen.
-// WebApp.expand() requests full-height viewport.
-tmaSDK.ready();
-tmaSDK.expand();
+const coreRuntimeEnv = {
+  subpageConfigUuid: env.subpageConfigUuid,
+  allowedAmounts: env.allowedAmounts,
+  allowedPeriods: env.allowedPeriods,
+  supportUrl: import.meta.env.VITE_SUPPORT_URL ?? '',
+  subscriptionPortalPath: '/',
+  paymentReturnPath: '/',
+  authGateRedirectPath: '/',
+  profileSubscriptionPath: '/',
+  profilePaymentPath: '/payment',
+};
 
-// Record platform metadata in the store for debugging/analytics.
-const clientPlatform = tmaSDK.getPlatform() as
-  | 'android'
-  | 'ios'
-  | 'tdesktop'
-  | 'macos'
-  | 'web'
-  | 'unknown';
-
-setClientPlatform(clientPlatform);
-setSdkVersion(tmaSDK.getVersion());
-setInitStatus('ready');
-
-// ─── 3. Adapter ───────────────────────────────────────────────────────────────
-// TelegramPlatformAdapter is constructed once and shared via PlatformProvider.
-// getAuthHeaders() reads tgInitDataRaw from the auth store lazily,
-// so the adapter always sends the latest token without needing to be recreated.
-const adapter = new TelegramPlatformAdapter();
-
-// ─── 4. Render ────────────────────────────────────────────────────────────────
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <PlatformProvider adapter={adapter}>
-      <RouterProvider router={router} />
-    </PlatformProvider>
+    <CoreEnvProvider value={coreRuntimeEnv}>
+      <PaymentsApiProvider api={paymentsApi}>
+        <TmaAuthProvider>
+          <ApiProvider client={backendClient}>
+            <RouterProvider router={router} />
+          </ApiProvider>
+        </TmaAuthProvider>
+      </PaymentsApiProvider>
+    </CoreEnvProvider>
   </StrictMode>,
 );

@@ -1,14 +1,14 @@
+import { ProfileLayout, RootLayout } from '@workspace/core';
+import {
+  ConfirmPage,
+  GetSubscriptionPage,
+  LoginPage,
+  ProtectedPaymentPage,
+  ProtectedProfileSubscriptionPage,
+  SubscriptionPage,
+  TermsPage,
+} from '@workspace/core/pages';
 import { createBrowserRouter } from 'react-router';
-import { ProfileLayout } from '@/layouts/ProfileLayout';
-import { RootLayout } from '@/layouts/RootLayout';
-
-import GetSubscriptionPage from '@/pages/getSubscription/GetSubscriptionPage';
-import ConfirmPage from '@/pages/login/confirm/ConfirmPage';
-import LoginPage from '@/pages/login/LoginPage';
-import { ProtectedPaymentPage } from '@/pages/profile/payment/protected';
-import { ProtectedProfileSubscriptionPage } from '@/pages/profile/subscription/protected.tsx';
-import SubscriptionPage from '@/pages/subscription/SubscriptionPage';
-import TermsPage from '@/pages/terms/TermsPage';
 
 export const router = createBrowserRouter([
   {

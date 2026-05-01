@@ -8,28 +8,46 @@
   "exports": {
     ".": "./src/index.ts",
     "./api": "./src/api/index.ts",
+    "./components": "./src/components/index.ts",
     "./hooks": "./src/hooks/index.ts",
     "./utils": "./src/utils/index.ts",
-    "./constants": "./src/constants/index.ts",
     "./stores": "./src/stores/index.ts",
-    "./i18n": "./src/i18n/index.ts"
+    "./i18n": "./src/core/i18n/index.ts",
+    "./core/i18n": "./src/core/i18n/index.ts",
+    "./pages": "./src/pages/index.ts",
+    "./runtime": "./src/runtime/index.ts",
+    "./ui": "./src/ui/index.ts"
   },
   "scripts": {
     "lint": "biome lint ./src",
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@workspace/platform": "workspace:*",
     "@workspace/types": "workspace:*",
+    "@remnawave/subscription-page-types": "^0.4.0",
+    "@heroui/react": "^3.0.3",
+    "@heroui/styles": "^3.0.3",
+    "i18next": "^24.0.0",
     "i18next-browser-languagedetector": "^8.2.0",
-    "zustand": "^5.0.9"
+    "zustand": "^5.0.9",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-i18next": "^15.0.0",
+    "react-router": "^7.14.1",
+    "@tabler/icons-react": "^3.31.0",
+    "clsx": "^2.1.1",
+    "dayjs": "^1.11.13",
+    "ufo": "^1.6.1"
   },
   "peerDependencies": {
-    "react": "^18.0.0 || ^19.0.0"
+    "react": "^18.0.0 || ^19.0.0",
+    "react-router": "^7.0.0"
   },
   "devDependencies": {
-    "@types/react": "^18.3.24",
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
     "@workspace/shared-config": "workspace:*",
-    "react": "^18.3.1",
     "typescript": "^5.4.5"
   }
 }

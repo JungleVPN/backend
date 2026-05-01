@@ -1,0 +1,32 @@
+import { initData } from '@tma.js/sdk-react';
+import { useAuthStoreActions } from '@workspace/core/stores';
+import type { TelegramUser } from '@workspace/platform';
+import { type ReactNode, useEffect } from 'react';
+
+/**
+ * Telegram-only: initData → shared auth store. Backend validates raw initData on requests.
+ */
+export function TmaAuthProvider({ children }: { children: ReactNode }) {
+  const { setTgUser, setTgInitDataRaw, setLoading } = useAuthStoreActions();
+
+  useEffect(() => {
+    try {
+      const user = initData.user();
+      const raw = initData.raw();
+
+      if (raw) {
+        setTgInitDataRaw(raw);
+      }
+
+      if (user) {
+        setTgUser(user as unknown as TelegramUser);
+      }
+    } catch {
+      // Not inside Telegram (local dev).
+    } finally {
+      setLoading(false);
+    }
+  }, [setTgUser, setTgInitDataRaw, setLoading]);
+
+  return <>{children}</>;
+}

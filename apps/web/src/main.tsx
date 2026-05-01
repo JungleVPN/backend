@@ -2,26 +2,45 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router';
 
-// Initialize i18n before rendering
-import '@/core/i18n/i18n';
-// Initialize dayjs plugins
-import '@/utils/initDayjs';
+import '@workspace/core/core/i18n';
+import '@/assets/globals.css';
 
-import { PlatformProvider, WebPlatformAdapter } from '@workspace/platform';
+import { ApiProvider } from '@workspace/core/api';
+import { CoreEnvProvider, PaymentsApiProvider, SupabaseProvider } from '@workspace/core/runtime';
+import { initDayjs } from '@workspace/core/utils';
+import { paymentsApi } from '@/api/payments';
+import { backendClient } from '@/api/remnawave';
 import { env } from '@/config/env';
+import { createClient } from '@/lib/supabase/client';
+import { WebAuthProvider } from '@/providers/WebAuthProvider';
 import { router } from '@/router.ts';
 
-/**
- * The WebPlatformAdapter is constructed once here and never changes.
- * It receives env.authApiKey so that getAuthHeaders() can inject X-Api-Key
- * without reading import.meta.env directly in components or hooks.
- */
-const adapter = new WebPlatformAdapter(env.authApiKey);
+initDayjs();
+
+const coreRuntimeEnv = {
+  subpageConfigUuid: env.subpageConfigUuid ?? '',
+  allowedAmounts: env.allowedAmounts ?? '',
+  allowedPeriods: env.allowedPeriods,
+  supportUrl: import.meta.env.VITE_SUPPORT_URL ?? '',
+  subscriptionPortalPath: '/profile/subscription',
+  paymentReturnPath: '/profile/subscription',
+  authGateRedirectPath: '/login',
+  profileSubscriptionPath: '/profile/subscription',
+  profilePaymentPath: '/profile/payment',
+};
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <PlatformProvider adapter={adapter}>
-      <RouterProvider router={router} />
-    </PlatformProvider>
+    <CoreEnvProvider value={coreRuntimeEnv}>
+      <PaymentsApiProvider api={paymentsApi}>
+        <SupabaseProvider getClient={createClient}>
+          <WebAuthProvider>
+            <ApiProvider client={backendClient}>
+              <RouterProvider router={router} />
+            </ApiProvider>
+          </WebAuthProvider>
+        </SupabaseProvider>
+      </PaymentsApiProvider>
+    </CoreEnvProvider>
   </StrictMode>,
 );

@@ -17,7 +17,7 @@ export default defineConfig({
     postcss: './postcss.config.mjs',
   },
   server: {
-    port: 7090,
+    port: 7080,
   },
   build: {
     outDir: 'dist',

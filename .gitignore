@@ -13,3 +13,4 @@ credentials.json
 *.tsbuildinfo
 _tmp*
 AGENTS.md
+.pnpm-store

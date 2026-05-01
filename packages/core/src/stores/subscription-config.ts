@@ -21,7 +21,7 @@ function detectLanguage(
     return shortLang as TSubscriptionPageLanguageCode;
   }
 
-  return supportedLocales[0]!;
+  return supportedLocales[0];
 }
 
 export interface ISubscriptionConfigState {
@@ -86,7 +86,7 @@ export const useSubscriptionConfig = (): TSubscriptionPageRawConfig => {
   return config as TSubscriptionPageRawConfig;
 };
 
-export const useLocales = () => useSubscriptionConfigStore((state) => state.config!.locales);
+export const useLocales = () => useSubscriptionConfigStore((state) => state.config?.locales);
 
 export const useCurrentLang = () => useSubscriptionConfigStore((state) => state.currentLang);
 

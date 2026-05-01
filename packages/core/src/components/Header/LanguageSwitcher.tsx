@@ -1,0 +1,38 @@
+import { Button, Dropdown, Label } from '@heroui/react';
+import type { TSubscriptionPageLanguageCode } from '@remnawave/subscription-page-types';
+import { useSubscriptionConfigStoreActions } from '../../stores';
+import { useTranslation } from 'react-i18next';
+
+export function LanguageSwitcher() {
+  const { i18n, t } = useTranslation();
+  const { setLanguage } = useSubscriptionConfigStoreActions();
+
+  const handleLanguageChange = (newLocale: string) => {
+    i18n.changeLanguage(newLocale);
+    setLanguage(newLocale as TSubscriptionPageLanguageCode);
+  };
+
+  const code = i18n.language?.split('-')[0] || 'ru';
+
+  return (
+    <Dropdown>
+      <Button className='min-w-10 uppercase' size='sm' variant='ghost'>
+        {code}
+      </Button>
+      <Dropdown.Popover>
+        <Dropdown.Menu
+          onAction={(key) => {
+            handleLanguageChange(String(key));
+          }}
+        >
+          <Dropdown.Item id='ru' textValue={t('languages.nativeRu')}>
+            <Label>{t('languages.nativeRu')}</Label>
+          </Dropdown.Item>
+          <Dropdown.Item id='en' textValue={t('languages.nativeEn')}>
+            <Label>{t('languages.nativeEn')}</Label>
+          </Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown.Popover>
+    </Dropdown>
+  );
+}

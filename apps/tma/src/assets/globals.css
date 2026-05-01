@@ -1,125 +1,201 @@
-/**
- * TMA global styles — Phase 1.
- *
- * Uses Telegram's injected CSS variables (--tg-theme-*) directly for colours.
- * When a variable is missing (browser dev outside Telegram), the fallback
- * values provide a reasonable light-mode appearance.
- *
- * Phase 4 will introduce the full --jungle-* token mapping and
- * tma-overrides.css as described in the architecture blueprint.
- */
+@import "tailwindcss";
+@import "@heroui/styles";
+/* Scan shared UI so utilities used only in @workspace/core are generated (Tailwind v4 default detection is app-root scoped). */
+@source "../../../../packages/core/src";
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+.dark,
+[data-theme="dark"] {
+  --tg-theme-section-separator-color: #252229;
+  --tg-theme-bottom-bar-bg-color: #161419;
+  --tg-color-scheme: dark;
+  --tg-theme-bg-color: #1f1c22;
+  --tg-theme-link-color: #71608b;
+  --tg-theme-button-color: #71608b;
+  --tg-theme-section-bg-color: #1f1c22;
+  --tg-theme-secondary-bg-color: #141216;
+  --tg-theme-button-text-color: #ffffff;
+  --tg-theme-header-bg-color: #141216;
+  --tg-theme-hint-color: #b1c3d5;
+  --tg-theme-text-color: #ffffff;
+  --tg-theme-destructive-text-color: #ef5b5b;
+  --tg-theme-subtitle-text-color: #b1c3d5;
+  --tg-theme-section-header-text-color: #b1c3d5;
+  --tg-theme-accent-text-color: #71608b;
+  --tg-viewport-height: 100vh;
+  --tg-viewport-stable-height: 100vh;
+  --tg-safe-area-inset-top: 0px;
+  --tg-safe-area-inset-bottom: 0px;
+  --tg-safe-area-inset-left: 0px;
+  --tg-safe-area-inset-right: 0px;
+  --deprecated-separator-color: rgba(61, 61, 63, 1);
+  --second-button-color: rgb(113 96 139 / 10%);
+  --text-confirm-color: #35ca5b;
+  --button-confirm-color: #35ca5b;
+  --button-main-disabled-color: #2f2f2f;
+  --text-main-disabled-color: #606060;
+  --button-destructive-color: rgb(239 91 91 / 10%);
+  --highlight-default: rgba(152, 152, 157, 0.24);
+  --quick-menu-background: rgba(0, 0, 0, 0.78);
+  --quick-menu-foreground: #ffffff;
+  --toast-background: rgba(45, 45, 45, 0.8);
+  --text-overlay: #ffffff;
+  --toast-link: #5ac8fa;
+  --tertiary-fill-background: rgba(118, 118, 128, 0.24);
+  --quaternary-fill-background: rgba(116, 116, 128, 0.18);
+  --separator-non-opaque-color: rgba(84, 84, 88, 0.65);
+  --accent-orange: #ff9f0a;
+  --segmented-control-active-background: #636366;
+  --tooltip-background: #3a3a3c;
+  --border-color: oklch(from #b1c3d5 l c h / 40%);
+  --accent-cyan: #64d2ff;
+  --dpr: 2;
+  --main-card-content-height: 192px;
+  --tabbar-height: 88px;
+  --tabbar-current-height: var(--tabbar-height);
+  --has-tabbar: 1;
+  --overscroll-top: var(--tg-theme-bg-color);
+  --overscroll-bottom: var(--tg-theme-bg-color);
+
+  /* ─── HeroUI semantic tokens → TG variables ──────────────────────────────
+     These map HeroUI's design system to Telegram's theme variables.
+     When TG updates CSS vars at runtime (via Mini App init data),
+     all HeroUI components automatically reflect the new theme. */
+  --accent: var(--tg-theme-button-color);
+  --accent-foreground: var(--tg-theme-button-text-color);
+  --background: var(--tg-theme-bg-color);
+  --foreground: var(--tg-theme-text-color);
+  --surface: var(--tg-theme-section-bg-color);
+  --surface-foreground: var(--tg-theme-text-color);
+  --muted: var(--tg-theme-hint-color);
+  --link: var(--tg-theme-link-color);
+  --focus: var(--tg-theme-button-color);
+  --danger: var(--tg-theme-destructive-text-color);
+}
+
+@theme inline {
+  /* ─── Expose TG variables as Tailwind utility classes ────────────────────
+     Usage: bg-tg-button, text-tg-text, border-tg-hint, etc.
+     These are additive — they don't override HeroUI's own @theme mappings. */
+  --color-tg-button: var(--tg-theme-button-color);
+  --color-tg-button-text: var(--tg-theme-button-text-color);
+  --color-tg-bg: var(--tg-theme-bg-color);
+  --color-tg-text: var(--tg-theme-text-color);
+  --color-tg-hint: var(--tg-theme-hint-color);
+  --color-tg-link: var(--tg-theme-link-color);
+  --color-tg-secondary-bg: var(--tg-theme-secondary-bg-color);
+  --color-tg-section-bg: var(--tg-theme-section-bg-color);
+  --color-tg-header-bg: var(--tg-theme-header-bg-color);
+  --color-tg-accent-text: var(--tg-theme-accent-text-color);
+  --color-tg-subtitle-text: var(--tg-theme-subtitle-text-color);
+  --color-tg-destructive: var(--tg-theme-destructive-text-color);
+  --color-tg-bottom-bar: var(--tg-theme-bottom-bar-bg-color);
+  --color-tg-separator: var(--tg-theme-section-separator-color);
+}
+
+.alert-dialog__dialog {
+  &[data-placement="auto"] {
+    margin: auto;
+  }
 }
 
 html,
-body,
-#root {
-  height: 100%;
-  width: 100%;
-}
-
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 16px;
-  line-height: 1.5;
-  background-color: var(--tg-theme-bg-color, #ffffff);
-  color: var(--tg-theme-text-color, #1a1a2e);
-  -webkit-font-smoothing: antialiased;
-  /* Respect safe-area insets for iOS Telegram nav bar overlap */
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
+  background-color: oklch(0.1448 0 0);
+  background-size: 60px 60px;
+  background-attachment: fixed;
+  inset: 0;
+  position: fixed;
+  transform: translateZ(0);
+  height: 100dvh;
+  overflow: clip;
+  touch-action: none;
 }
 
-button {
-  font-family: inherit;
-  cursor: pointer;
-  border: none;
-  outline: none;
-}
-
-/* ─── Layout helpers ─────────────────────────────────────────────────────── */
-
-.tma-root {
-  min-height: 100%;
+#root {
   display: flex;
   flex-direction: column;
-}
-
-.tma-page {
-  flex: 1;
-  padding: 16px;
-  max-width: 480px;
-  margin: 0 auto;
+  height: 100%;
+  overflow: clip auto;
+  overscroll-behavior-x: none;
+  position: relative;
+  scrollbar-width: none;
   width: 100%;
 }
 
-.tma-card {
-  background-color: var(--tg-theme-secondary-bg-color, #f8fafc);
-  border-radius: 16px;
-  padding: 20px;
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px oklch(0.19 0 0) inset !important;
 }
 
-/* ─── Typography ─────────────────────────────────────────────────────────── */
-
-.tma-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--tg-theme-text-color, #1a1a2e);
-  margin-bottom: 4px;
+.app-container {
+  position: relative;
+  padding-bottom: var(--toolbar-safe-height);
+  --toolbar-safe-height: 82px;
 }
 
-.tma-subtitle {
-  font-size: 15px;
-  color: var(--tg-theme-hint-color, #6b7280);
-  margin-top: 4px;
+.step-card {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
-.tma-label {
-  font-size: 12px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--tg-theme-hint-color, #6b7280);
-  margin-bottom: 2px;
+.step-card:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(34, 211, 238, 0.3) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* ─── Buttons ────────────────────────────────────────────────────────────── */
-
-.tma-btn-primary {
-  display: block;
-  width: 100%;
-  padding: 14px 20px;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 600;
-  background-color: var(--tg-theme-button-color, #2563eb);
-  color: var(--tg-theme-button-text-color, #ffffff);
-  transition: opacity 0.15s ease;
+.logo-text-highlight {
+  color: oklch(0.78 0.12 195);
 }
 
-.tma-btn-primary:active {
-  opacity: 0.8;
+.logo-text-normal {
+  color: white;
 }
 
-.tma-btn-secondary {
-  display: block;
-  width: 100%;
-  padding: 12px 20px;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 500;
-  background-color: transparent;
-  color: var(--tg-theme-link-color, #2563eb);
-  border: 1.5px solid var(--tg-theme-hint-color, #d1d5db);
-  transition: opacity 0.15s ease;
+.info-card-cyan {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.1) 0%, rgba(6, 182, 212, 0.05) 100%);
+  border: 1px solid rgba(34, 211, 238, 0.2);
 }
 
-.tma-btn-secondary:active {
-  opacity: 0.7;
+.info-card-violet {
+  background: linear-gradient(135deg, rgba(151, 117, 250, 0.1) 0%, rgba(132, 94, 247, 0.05) 100%);
+  border: 1px solid rgba(151, 117, 250, 0.2);
+}
+
+.info-card-green {
+  background: linear-gradient(135deg, rgba(64, 192, 87, 0.1) 0%, rgba(55, 178, 77, 0.05) 100%);
+  border: 1px solid rgba(64, 192, 87, 0.2);
+}
+
+.info-card-red {
+  background: linear-gradient(135deg, rgba(250, 82, 82, 0.1) 0%, rgba(224, 49, 49, 0.05) 100%);
+  border: 1px solid rgba(250, 82, 82, 0.2);
+}
+
+.info-card-yellow {
+  background: linear-gradient(135deg, rgba(250, 176, 5, 0.1) 0%, rgba(245, 159, 0, 0.05) 100%);
+  border: 1px solid rgba(250, 176, 5, 0.2);
+}
+
+.info-card-blue {
+  background: linear-gradient(135deg, rgba(34, 139, 230, 0.1) 0%, rgba(28, 126, 214, 0.05) 100%);
+  border: 1px solid rgba(34, 139, 230, 0.2);
+}
+
+.info-card-teal {
+  background: linear-gradient(135deg, rgba(32, 201, 151, 0.1) 0%, rgba(18, 184, 134, 0.05) 100%);
+  border: 1px solid rgba(32, 201, 151, 0.2);
+}
+
+.info-card-orange {
+  background: linear-gradient(135deg, rgba(253, 126, 20, 0.1) 0%, rgba(247, 103, 7, 0.05) 100%);
+  border: 1px solid rgba(253, 126, 20, 0.2);
 }
