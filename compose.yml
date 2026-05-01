@@ -1,3 +1,9 @@
+x-app-build: &app-build
+  context: .
+  dockerfile: Dockerfile
+  args:
+    TURBO_CONCURRENCY: ${TURBO_CONCURRENCY:-2}
+
 services:
   db:
     image: postgres:17.6
@@ -17,8 +23,7 @@ services:
 
   migration:
     build:
-      context: .
-      dockerfile: Dockerfile
+      <<: *app-build
     command: ["node", "packages/database/dist/run-migrations.js"]
     networks:
       - jungle-net
@@ -29,8 +34,7 @@ services:
 
   payments:
     build:
-      context: .
-      dockerfile: Dockerfile
+      <<: *app-build
     command: ["node", "apps/payments/dist/src/main.js"]
     networks:
       - jungle-net
@@ -48,8 +52,7 @@ services:
 
   remnawave:
     build:
-      context: .
-      dockerfile: Dockerfile
+      <<: *app-build
     command: ["node", "apps/remnawave/dist/main.js"]
     networks:
       - jungle-net
@@ -63,8 +66,7 @@ services:
 
   referrals:
     build:
-      context: .
-      dockerfile: Dockerfile
+      <<: *app-build
     command: ["node", "apps/referrals/dist/main.js"]
     networks:
       - jungle-net
@@ -82,8 +84,7 @@ services:
 
   broadcasts:
     build:
-      context: .
-      dockerfile: Dockerfile
+      <<: *app-build
     command: ["node", "apps/broadcasts/dist/main.js"]
     networks:
       - jungle-net
@@ -99,8 +100,7 @@ services:
 
   webhook:
     build:
-      context: .
-      dockerfile: Dockerfile
+      <<: *app-build
     command: ["node", "apps/webhook/dist/main.js"]
     networks:
       - jungle-net
@@ -118,8 +118,7 @@ services:
 
   web:
     build:
-      context: .
-      dockerfile: Dockerfile
+      <<: *app-build
     command: ["apps/web/node_modules/.bin/serve", "apps/web/dist", "--single", "--listen", "tcp://0.0.0.0:${WEB_PORT:-7090}"]
     networks:
       - jungle-net
@@ -129,8 +128,7 @@ services:
 
   bot:
     build:
-      context: .
-      dockerfile: Dockerfile
+      <<: *app-build
     command: ["node", "apps/bot/dist/main.js"]
     networks:
       - jungle-net

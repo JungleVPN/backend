@@ -22,7 +22,11 @@ RUN pnpm install --frozen-lockfile
 # ── Build everything ─────────────────────────────────────────────────
 FROM deps AS build
 COPY . .
-RUN pnpm turbo build
+# Turbo defaults to high parallelism; several Nest/Vite/tsc processes at once
+# exhaust RAM on small VPSes (swap → build looks "stuck"). Override when needed:
+#   docker compose build --build-arg TURBO_CONCURRENCY=4
+ARG TURBO_CONCURRENCY=2
+RUN pnpm turbo build --concurrency=${TURBO_CONCURRENCY}
 
 # ── Production dependencies only ─────────────────────────────────────
 FROM base AS prod-deps
