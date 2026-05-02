@@ -2,11 +2,11 @@ import {
   ProfileLayout,
   ProtectedPaymentPage,
   ProtectedProfileSubscriptionPage,
-  RootLayout,
   SubscriptionPage,
   TermsPage,
 } from '@workspace/core';
 import { createMemoryRouter } from 'react-router';
+import { TmaRootLayout } from '@/layouts/TmaRootLayout';
 
 /**
  * TMA uses createMemoryRouter (no URL bar). Routes mirror web profile/terms/subscription
@@ -15,7 +15,7 @@ import { createMemoryRouter } from 'react-router';
 export const router = createMemoryRouter(
   [
     {
-      Component: RootLayout,
+      Component: TmaRootLayout,
       children: [
         {
           Component: ProfileLayout,

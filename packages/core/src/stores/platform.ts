@@ -30,11 +30,8 @@ export interface IPlatformState {
   /** Human-readable error message when initStatus === 'error'. */
   initError: string | null;
 
-  /** @telegram-apps/sdk version string. TMA only — null on web. */
-  sdkVersion: string | null;
-
   /** Telegram client type (android/ios/tdesktop/…). TMA only — null on web. */
-  clientPlatform: ClientPlatform | null;
+  clientPlatform: string;
 }
 
 // ─── Actions ─────────────────────────────────────────────────────────────────
@@ -43,20 +40,18 @@ export interface IPlatformActions {
   actions: {
     setPlatformType: (type: PlatformType) => void;
     setInitStatus: (status: InitStatus) => void;
-    setInitError: (error: string | null) => void;
-    setSdkVersion: (version: string | null) => void;
-    setClientPlatform: (platform: ClientPlatform | null) => void;
+    setInitError: (error: string) => void;
+    setClientPlatform: (platform: string) => void;
   };
 }
 
 // ─── Store ───────────────────────────────────────────────────────────────────
 
 const initialState: IPlatformState = {
-  platformType: null,
+  platformType: 'web',
   initStatus: 'idle',
   initError: null,
-  sdkVersion: null,
-  clientPlatform: null,
+  clientPlatform: 'unknown',
 };
 
 export const usePlatformStore = create<IPlatformActions & IPlatformState>()((set) => ({
@@ -65,7 +60,6 @@ export const usePlatformStore = create<IPlatformActions & IPlatformState>()((set
     setPlatformType: (platformType) => set({ platformType }),
     setInitStatus: (initStatus) => set({ initStatus }),
     setInitError: (initError) => set({ initError }),
-    setSdkVersion: (sdkVersion) => set({ sdkVersion }),
     setClientPlatform: (clientPlatform) => set({ clientPlatform }),
   },
 }));

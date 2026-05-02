@@ -1,4 +1,4 @@
-import { ProfileLayout, RootLayout } from '@workspace/core';
+import { ProfileLayout } from '@workspace/core';
 import {
   ConfirmPage,
   GetSubscriptionPage,
@@ -10,9 +10,11 @@ import {
 } from '@workspace/core/pages';
 import { createBrowserRouter } from 'react-router';
 
+import { WebRootLayout } from '@/layouts/WebRootLayout';
+
 export const router = createBrowserRouter([
   {
-    Component: RootLayout,
+    Component: WebRootLayout,
     children: [
       {
         path: '/',

@@ -5,28 +5,6 @@
 
 .dark,
 [data-theme="dark"] {
-  --tg-theme-section-separator-color: #252229;
-  --tg-theme-bottom-bar-bg-color: #161419;
-  --tg-color-scheme: dark;
-  --tg-theme-bg-color: #1f1c22;
-  --tg-theme-link-color: #71608b;
-  --tg-theme-button-color: #71608b;
-  --tg-theme-section-bg-color: #1f1c22;
-  --tg-theme-secondary-bg-color: #141216;
-  --tg-theme-button-text-color: #ffffff;
-  --tg-theme-header-bg-color: #141216;
-  --tg-theme-hint-color: #b1c3d5;
-  --tg-theme-text-color: #ffffff;
-  --tg-theme-destructive-text-color: #ef5b5b;
-  --tg-theme-subtitle-text-color: #b1c3d5;
-  --tg-theme-section-header-text-color: #b1c3d5;
-  --tg-theme-accent-text-color: #71608b;
-  --tg-viewport-height: 100vh;
-  --tg-viewport-stable-height: 100vh;
-  --tg-safe-area-inset-top: 0px;
-  --tg-safe-area-inset-bottom: 0px;
-  --tg-safe-area-inset-left: 0px;
-  --tg-safe-area-inset-right: 0px;
   --deprecated-separator-color: rgba(61, 61, 63, 1);
   --second-button-color: rgb(113 96 139 / 10%);
   --text-confirm-color: #35ca5b;

@@ -5,19 +5,21 @@ import { RouterProvider } from 'react-router';
 import '@workspace/core/core/i18n';
 import '@/assets/globals.css';
 
+import { retrieveLaunchParams } from '@tma.js/sdk-react';
 import { ApiProvider } from '@workspace/core/api';
-import { CoreEnvProvider, PaymentsApiProvider } from '@workspace/core/runtime';
+import {
+  CoreEnvProvider,
+  PaymentsApiProvider,
+  RemnawaveApiProvider,
+} from '@workspace/core/runtime';
 import { initDayjs } from '@workspace/core/utils';
 import { paymentsApi } from '@/api/payments';
-import { backendClient } from '@/api/remnawave';
+import { backendClient, remnawaveApi } from '@/api/remnawave';
 import { env } from '@/config/env';
 import { initTma } from '@/lib/tma-sdk';
 import { TmaAuthProvider } from '@/providers/TmaAuthProvider';
+import { TmaProvider } from '@/providers/TmaProvider';
 import { router } from '@/router';
-
-try {
-  initTma();
-} catch {}
 
 initDayjs();
 
@@ -33,16 +35,40 @@ const coreRuntimeEnv = {
   profilePaymentPath: '/payment',
 };
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <CoreEnvProvider value={coreRuntimeEnv}>
-      <PaymentsApiProvider api={paymentsApi}>
-        <TmaAuthProvider>
-          <ApiProvider client={backendClient}>
-            <RouterProvider router={router} />
-          </ApiProvider>
-        </TmaAuthProvider>
-      </PaymentsApiProvider>
-    </CoreEnvProvider>
-  </StrictMode>,
-);
+const root = document.getElementById('root');
+if (!root) {
+  throw new Error('Missing #root element');
+}
+
+try {
+  const launchParams = retrieveLaunchParams();
+  const { tgWebAppPlatform: platform } = launchParams;
+  const debug = (launchParams.tgWebAppStartParam || '').includes('debug') || import.meta.env.DEV;
+
+  // Configure all application dependencies.
+  await initTma({
+    debug,
+    eruda: debug && ['ios', 'android'].includes(platform),
+    mockForMacOS: platform === 'macos',
+  }).then(() => {
+    createRoot(root).render(
+      <StrictMode>
+        <CoreEnvProvider value={coreRuntimeEnv}>
+          <RemnawaveApiProvider api={remnawaveApi}>
+            <PaymentsApiProvider api={paymentsApi}>
+              <TmaAuthProvider>
+                <TmaProvider>
+                  <ApiProvider client={backendClient}>
+                    <RouterProvider router={router} />
+                  </ApiProvider>
+                </TmaProvider>
+              </TmaAuthProvider>
+            </PaymentsApiProvider>
+          </RemnawaveApiProvider>
+        </CoreEnvProvider>
+      </StrictMode>,
+    );
+  });
+} catch (e) {
+  createRoot(root).render(<div>ERROR</div>);
+}

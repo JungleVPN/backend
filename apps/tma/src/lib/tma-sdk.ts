@@ -1,18 +1,47 @@
 import {
   backButton,
-  init,
+  closingBehavior,
   initData,
+  init as initSDK,
   miniApp,
   retrieveLaunchParams,
+  setDebug,
+  swipeBehavior,
   themeParams,
   viewport,
 } from '@tma.js/sdk-react';
 
-export const initTma = () => {
-  init();
+/**
+ * Mount/bind must run once: React Strict Mode double-mounts components, and
+ * `themeParams.bindCssVars()` / `viewport.bindCssVars()` throw if called again.
+ */
+let tmaShellInitialized = false;
+
+export const initTma = async (options: {
+  debug: boolean;
+  eruda: boolean;
+  mockForMacOS: boolean;
+}) => {
+  if (tmaShellInitialized) {
+    return { launchParams: retrieveLaunchParams() };
+  }
+
+  setDebug(options.debug);
+  initSDK();
+
+  // Add Eruda if needed.
+  options.eruda &&
+    void import('eruda').then(({ default: eruda }) => {
+      eruda.init();
+      eruda.position({ x: window.innerWidth - 50, y: 0 });
+    });
 
   backButton.mount.ifAvailable();
   initData.restore();
+
+  swipeBehavior.mount();
+  closingBehavior.mount();
+  closingBehavior.enableConfirmation();
 
   if (miniApp.mount.isAvailable()) {
     themeParams.mount();
@@ -21,14 +50,12 @@ export const initTma = () => {
   }
 
   if (viewport.mount.isAvailable()) {
-    viewport.mount().then(() => {
+    void viewport.mount().then(() => {
       viewport.bindCssVars();
     });
   }
 
-  const launchParams = retrieveLaunchParams();
+  tmaShellInitialized = true;
 
-  return {
-    launchParams,
-  };
+  return { launchParams: retrieveLaunchParams() };
 };

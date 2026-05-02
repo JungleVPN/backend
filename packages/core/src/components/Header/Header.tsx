@@ -1,12 +1,14 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import Logo from '../../assets/Logo.svg';
+import { usePlatformStore } from '../../stores';
 import { AuthButtons } from './AuthButtons';
 import { LanguageSwitcher } from './LanguageSwitcher';
 
 export function Header() {
   const { t } = useTranslation();
-
+  const { platformType } = usePlatformStore();
+  console.log(platformType);
   return (
     <div className='flex items-center justify-between'>
       <div>
@@ -25,7 +27,7 @@ export function Header() {
 
       <div className='flex items-center justify-between'>
         <LanguageSwitcher />
-        <AuthButtons />
+        {platformType === 'web' && <AuthButtons />}
       </div>
     </div>
   );

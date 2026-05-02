@@ -389,6 +389,9 @@ importers:
       '@workspace/shared-config':
         specifier: workspace:*
         version: link:../../packages/shared-config
+      eruda:
+        specifier: ^3.4.3
+        version: 3.4.3
       tailwindcss:
         specifier: ^4.2.4
         version: 4.2.4
@@ -3075,6 +3078,9 @@ packages:
 
   error-kid@2.0.0:
     resolution: {integrity: sha512-U8lVKG2Fg7rDZ5b5bL7ZewhzWQrUYtCHlgb7SFcAgxObFgt47jR5l9dq/Kx4AW9gAmb8B2BD3VERXciU9Q9BZA==}
+
+  eruda@3.4.3:
+    resolution: {integrity: sha512-J2TsF4dXSspOXev5bJ6mljv0dRrxj21wklrDzbvPmYaEmVoC+2psylyRi70nUPFh1mTQfIBsSusUtAMZtUN+/w==}
 
   es-define-property@1.0.1:
     resolution: {integrity: sha512-e3nRfgfUZ4rNGL232gUgX06QNyyez04KdjFrF+LTRoOXmrOgFKDg4BCdsjW8EnT69eqdYGmRpJwiPVYNrCaW3g==}
@@ -7412,6 +7418,8 @@ snapshots:
   error-kid@1.1.0: {}
 
   error-kid@2.0.0: {}
+
+  eruda@3.4.3: {}
 
   es-define-property@1.0.1: {}
 

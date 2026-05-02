@@ -17,7 +17,7 @@ async function bootstrap() {
     .filter(Boolean);
 
   app.enableCors({
-    origin,
+    origin: process.env.NODE_ENV !== 'production' ? true : origin,
     credentials: true,
   });
 
