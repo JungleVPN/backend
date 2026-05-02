@@ -21,6 +21,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    // Docker/VPS: sourcemaps roughly double bundle work and RAM during vite build.
+    sourcemap: process.env.WEB_BUILD_SOURCEMAP !== 'false',
   },
 });

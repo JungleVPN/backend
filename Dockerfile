@@ -26,7 +26,12 @@ COPY . .
 # exhaust RAM on small VPSes (swap → build looks "stuck"). Override when needed:
 #   docker compose build --build-arg TURBO_CONCURRENCY=4
 ARG TURBO_CONCURRENCY=2
-RUN pnpm turbo build --concurrency=${TURBO_CONCURRENCY}
+# Build all packages except Vite apps first (Turbo runs many Nest builds in parallel).
+RUN pnpm turbo build --concurrency=${TURBO_CONCURRENCY} --filter='!@jungle/web' --filter='!@jungle/tma'
+# Vite apps: skip full-project `tsc -b` here — heavy on small VPS RAM; Vite already compiles TS.
+# Run `pnpm --filter @jungle/web typecheck` / `@jungle/tma typecheck` in CI. No sourcemaps in image build.
+RUN WEB_BUILD_SOURCEMAP=false pnpm --filter @jungle/web run build:docker
+RUN WEB_BUILD_SOURCEMAP=false pnpm --filter @jungle/tma run build:docker
 
 # ── Production dependencies only ─────────────────────────────────────
 FROM base AS prod-deps

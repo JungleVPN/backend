@@ -28,6 +28,6 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: process.env.WEB_BUILD_SOURCEMAP !== 'false',
   },
 });
