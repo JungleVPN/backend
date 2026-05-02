@@ -9,6 +9,14 @@ export interface ApiProviderProps {
 }
 
 export function ApiProvider({ client, children }: ApiProviderProps) {
+  // const paymentsApi = createPaymentsApi(
+  //   createApiClient({
+  //     baseUrl: env.paymentsUrl,
+  //   }),
+  // );
+  // const remnawaveApi =  useMemo(() => createRemnawaveApi(client), [client]);
+  // const remnawaveApi =  useMemo(() => createPaymentsApi(client), [client]);
+  //
   return <ApiClientContext.Provider value={client}>{children}</ApiClientContext.Provider>;
 }
 

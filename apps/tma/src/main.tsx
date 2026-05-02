@@ -7,14 +7,10 @@ import '@/assets/globals.css';
 
 import { retrieveLaunchParams } from '@tma.js/sdk-react';
 import { ApiProvider } from '@workspace/core/api';
-import {
-  CoreEnvProvider,
-  PaymentsApiProvider,
-  RemnawaveApiProvider,
-} from '@workspace/core/runtime';
+import { CoreEnvProvider, PaymentsApiProvider } from '@workspace/core/runtime';
 import { initDayjs } from '@workspace/core/utils';
-import { paymentsApi } from '@/api/payments';
-import { backendClient, remnawaveApi } from '@/api/remnawave';
+import { paymentsApi } from '@/api/payments.ts';
+import { backendClient } from '@/api/remnawave';
 import { env } from '@/config/env';
 import { initTma } from '@/lib/tma-sdk';
 import { TmaAuthProvider } from '@/providers/TmaAuthProvider';
@@ -54,17 +50,15 @@ try {
     createRoot(root).render(
       <StrictMode>
         <CoreEnvProvider value={coreRuntimeEnv}>
-          <RemnawaveApiProvider api={remnawaveApi}>
-            <PaymentsApiProvider api={paymentsApi}>
-              <TmaAuthProvider>
-                <TmaProvider>
-                  <ApiProvider client={backendClient}>
-                    <RouterProvider router={router} />
-                  </ApiProvider>
-                </TmaProvider>
-              </TmaAuthProvider>
-            </PaymentsApiProvider>
-          </RemnawaveApiProvider>
+          <PaymentsApiProvider api={paymentsApi}>
+            <TmaAuthProvider>
+              <TmaProvider>
+                <ApiProvider client={backendClient}>
+                  <RouterProvider router={router} />
+                </ApiProvider>
+              </TmaProvider>
+            </TmaAuthProvider>
+          </PaymentsApiProvider>
         </CoreEnvProvider>
       </StrictMode>,
     );

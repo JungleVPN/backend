@@ -3,6 +3,7 @@ import type { TSubscriptionPagePlatformKey } from '@workspace/types';
 import { useTranslation } from 'react-i18next';
 import { useIsConfigLoaded, useSubscriptionConfig } from '../../stores/subscription-config';
 import { useSubscriptionInfoStoreInfo } from '../../stores/subscription-info';
+import type { SubscriptionDataError } from '../../hooks/useSubscriptionData';
 
 import '../../utils/initDayjs';
 import { detectOs } from '../../utils/detectOs';
@@ -14,7 +15,6 @@ import {
   SubscriptionInfoExpanded,
 } from '../SubscriptionInfo';
 import { ErrorView } from './components/ErrorView';
-import { useSubscriptionData } from './hooks/useSubscriptionData';
 
 const OS_TO_PLATFORM: Record<string, TSubscriptionPagePlatformKey> = {
   android: 'android',
@@ -41,22 +41,27 @@ function subscriptionInfoSection(
   }
 }
 
+/**
+ * Pure render component — reads subscription data from the shared Zustand stores.
+ * Data fetching is the responsibility of the parent:
+ *   - ProfileLayout  for authenticated profile routes
+ *   - SubscriptionPage for the public /subscription/:shortUuid route
+ */
 export function SubscriptionView({
   shortUuid,
-  subpageConfigUuid,
+  error = null,
 }: {
   shortUuid: string;
-  subpageConfigUuid: string;
+  /** Error from the parent's useSubscriptionData call, if any. */
+  error?: SubscriptionDataError | null;
 }) {
   const { t } = useTranslation();
   const config = useSubscriptionConfig();
   const { subscription } = useSubscriptionInfoStoreInfo();
   const isConfigLoaded = useIsConfigLoaded();
 
-  const { error, isLoading } = useSubscriptionData(shortUuid, subpageConfigUuid);
-
   if (error) return <ErrorView errorCode={error} />;
-  if (isLoading || !isConfigLoaded) return <Loading />;
+  if (!subscription || !isConfigLoaded) return <Loading />;
 
   if (!shortUuid) {
     return (

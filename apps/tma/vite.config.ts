@@ -15,7 +15,11 @@ export default defineConfig({
   },
   server: {
     port: 7090,
-    allowedHosts: ['national-content-barnacle.ngrok-free.app'],
+    host: '127.0.0.1',
+    allowedHosts: [
+      'national-content-barnacle.ngrok-free.app',
+      'attention-mph-again-greene.trycloudflare.com',
+    ],
     /**
      * TMA requires HTTPS in production (served at tma.thejungle.pro).
      * For local dev, use ngrok or a reverse proxy to expose with HTTPS,
