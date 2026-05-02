@@ -5,16 +5,14 @@ import { RouterProvider } from 'react-router';
 import '@workspace/core/core/i18n';
 import '@/assets/globals.css';
 
-import { retrieveLaunchParams } from '@tma.js/sdk-react';
 import { ApiProvider } from '@workspace/core/api';
 import { CoreEnvProvider, PaymentsApiProvider } from '@workspace/core/runtime';
 import { initDayjs } from '@workspace/core/utils';
 import { paymentsApi } from '@/api/payments.ts';
 import { backendClient } from '@/api/remnawave';
 import { env } from '@/config/env';
+import { ensureTelegramLaunchParams } from '@/lib/ensure-telegram-launch-params';
 import { initTma } from '@/lib/tma-sdk';
-import { TmaAuthProvider } from '@/providers/TmaAuthProvider';
-import { TmaProvider } from '@/providers/TmaProvider';
 import { router } from '@/router';
 
 initDayjs();
@@ -36,33 +34,53 @@ if (!root) {
   throw new Error('Missing #root element');
 }
 
-try {
-  const launchParams = retrieveLaunchParams();
-  const { tgWebAppPlatform: platform } = launchParams;
-  const debug = (launchParams.tgWebAppStartParam || '').includes('debug') || import.meta.env.DEV;
+void (async () => {
+  try {
+    const launchParams = ensureTelegramLaunchParams();
+    const { tgWebAppPlatform: platform } = launchParams;
+    const debug = (launchParams.tgWebAppStartParam || '').includes('debug') || import.meta.env.DEV;
 
-  // Configure all application dependencies.
-  await initTma({
-    debug,
-    eruda: debug && ['ios', 'android'].includes(platform),
-    mockForMacOS: platform === 'macos',
-  }).then(() => {
+    await initTma({
+      debug,
+      eruda: debug && ['ios', 'android'].includes(platform),
+      mockForMacOS: platform === 'macos',
+    });
+
     createRoot(root).render(
       <StrictMode>
         <CoreEnvProvider value={coreRuntimeEnv}>
           <PaymentsApiProvider api={paymentsApi}>
-            <TmaAuthProvider>
-              <TmaProvider>
-                <ApiProvider client={backendClient}>
-                  <RouterProvider router={router} />
-                </ApiProvider>
-              </TmaProvider>
-            </TmaAuthProvider>
+            <ApiProvider client={backendClient}>
+              <RouterProvider router={router} />
+            </ApiProvider>
           </PaymentsApiProvider>
         </CoreEnvProvider>
       </StrictMode>,
     );
-  });
-} catch (e) {
-  createRoot(root).render(<div>ERROR</div>);
-}
+  } catch (e) {
+    console.error('[TMA bootstrap]', e);
+    const message = e instanceof Error ? e.message : String(e);
+    createRoot(root).render(
+      <div
+        style={{
+          padding: 16,
+          fontFamily: 'system-ui, sans-serif',
+          maxWidth: 480,
+          margin: '24px auto',
+        }}
+      >
+        <strong>Mini App failed to start</strong>
+        <pre style={{ marginTop: 12, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+          {message}
+        </pre>
+        {import.meta.env.DEV ? (
+          <p style={{ marginTop: 12, opacity: 0.85 }}>
+            If you opened this URL in a normal browser, launch params are mocked in dev only. For
+            real Telegram behavior, open the app inside Telegram (same tunnel URL as the Mini App
+            URL).
+          </p>
+        ) : null}
+      </div>,
+    );
+  }
+})();

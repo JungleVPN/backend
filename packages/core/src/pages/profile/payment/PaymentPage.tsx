@@ -191,8 +191,7 @@ export default function PaymentPage() {
                     <Link
                       className='underline underline-offset-2'
                       href='/terms'
-                      target='_blank'
-                      rel='noopener noreferrer'
+                      onClick={() => termsState.setOpen(false)}
                     >
                       {t('terms.dialog.termsOfServiceLink')}
                     </Link>

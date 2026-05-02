@@ -28,15 +28,16 @@ export const router = createMemoryRouter(
               path: 'payment',
               Component: ProtectedPaymentPage,
             },
-            {
-              path: 'terms',
-              Component: TermsPage,
-            },
+
             {
               path: 'subscription/:shortUuid',
               Component: SubscriptionPage,
             },
           ],
+        },
+        {
+          path: 'terms',
+          Component: TermsPage,
         },
       ],
     },

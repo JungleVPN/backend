@@ -8,8 +8,10 @@ export interface LinkProps extends Omit<JSX.IntrinsicElements['a'], 'href'> {
 
 /**
  * Universal Link component.
- * - External URLs (http/https or target=_blank) render as <a>.
- * - Internal paths render as React Router <RouterLink>.
+ * - External URLs (`http:`/`https:`) render as `<a>`.
+ * - `target="_blank"` forces `<a>` — avoid that for in-app paths (e.g. `/terms`): memory routers
+ *   have no real URL, so a plain `<a>` triggers full navigation instead of `<RouterLink>`.
+ * - Otherwise paths use React Router `<RouterLink>`.
  */
 export const Link: FC<LinkProps> = ({ className, onClick, href, target, children, ...rest }) => {
   const isExternal = href.startsWith('http') || target === '_blank';
