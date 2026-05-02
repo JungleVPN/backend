@@ -23,7 +23,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@workspace/platform": "workspace:*",
+    "@tma.js/sdk-react": "^3.0.19",
     "@workspace/types": "workspace:*",
     "@remnawave/subscription-page-types": "^0.4.0",
     "@heroui/react": "^3.0.3",

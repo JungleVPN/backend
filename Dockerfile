@@ -11,7 +11,7 @@ COPY apps/remnawave/package.json ./apps/remnawave/package.json
 COPY apps/referrals/package.json ./apps/referrals/package.json
 COPY apps/broadcasts/package.json ./apps/broadcasts/package.json
 COPY apps/bot/package.json ./apps/bot/package.json
-#COPY apps/tma/package.json ./apps/tma/package.json
+COPY apps/tma/package.json ./apps/tma/package.json
 COPY apps/web/package.json ./apps/web/package.json
 COPY packages/shared-config/package.json ./packages/shared-config/package.json
 COPY packages/types/package.json ./packages/types/package.json
@@ -37,7 +37,7 @@ COPY apps/remnawave/package.json ./apps/remnawave/package.json
 COPY apps/referrals/package.json ./apps/referrals/package.json
 COPY apps/broadcasts/package.json ./apps/broadcasts/package.json
 COPY apps/bot/package.json ./apps/bot/package.json
-#COPY apps/tma/package.json ./apps/tma/package.json
+COPY apps/tma/package.json ./apps/tma/package.json
 COPY apps/web/package.json ./apps/web/package.json
 COPY packages/shared-config/package.json ./packages/shared-config/package.json
 COPY packages/types/package.json ./packages/types/package.json
@@ -57,6 +57,7 @@ COPY --from=prod-deps /app/apps/referrals/node_modules ./apps/referrals/node_mod
 COPY --from=prod-deps /app/apps/broadcasts/node_modules ./apps/broadcasts/node_modules
 COPY --from=prod-deps /app/apps/bot/node_modules ./apps/bot/node_modules
 COPY --from=prod-deps /app/apps/web/node_modules ./apps/web/node_modules
+COPY --from=prod-deps /app/apps/tma/node_modules ./apps/tma/node_modules
 COPY --from=prod-deps /app/packages/database/node_modules ./packages/database/node_modules
 COPY --from=prod-deps /app/packages/types/node_modules ./packages/types/node_modules
 
@@ -67,6 +68,7 @@ COPY --from=build /app/apps/referrals/dist ./apps/referrals/dist
 COPY --from=build /app/apps/broadcasts/dist ./apps/broadcasts/dist
 COPY --from=build /app/apps/bot/dist ./apps/bot/dist
 COPY --from=build /app/apps/web/dist ./apps/web/dist
+COPY --from=build /app/apps/tma/dist ./apps/tma/dist
 COPY --from=build /app/packages/database/dist ./packages/database/dist
 COPY --from=build /app/packages/types/dist ./packages/types/dist
 
@@ -77,6 +79,7 @@ COPY --from=build /app/apps/referrals/package.json ./apps/referrals/package.json
 COPY --from=build /app/apps/broadcasts/package.json ./apps/broadcasts/package.json
 COPY --from=build /app/apps/bot/package.json ./apps/bot/package.json
 COPY --from=build /app/apps/web/package.json ./apps/web/package.json
+COPY --from=build /app/apps/tma/package.json ./apps/tma/package.json
 COPY --from=build /app/packages/database/package.json ./packages/database/package.json
 COPY --from=build /app/packages/types/package.json ./packages/types/package.json
 COPY --from=build /app/package.json ./package.json

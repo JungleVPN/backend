@@ -1,6 +1,6 @@
-import type { AuthSource, TelegramUser } from '@workspace/platform';
 import type { GetUserByUuidResponseDto } from '@workspace/types';
 import { create } from 'zustand';
+import { AuthSource, User } from '../types/tma';
 
 /**
  * Platform-agnostic web user identity.
@@ -22,7 +22,7 @@ export interface IAuthState {
   /** Which auth mechanism resolved the current session. */
   authSource: AuthSource | null;
   /** Telegram user parsed from initData. Populated on TMA, always null on web. */
-  tgUser: TelegramUser | null;
+  tgUser: User | null;
   /** Raw initData string sent as X-Telegram-Init-Data header. */
   tgInitDataRaw: string | null;
 }
@@ -33,7 +33,7 @@ export interface IAuthActions {
     setRmnUser: (user: GetUserByUuidResponseDto | null) => void;
     setLoading: (loading: boolean) => void;
     setAuthSource: (source: AuthSource | null) => void;
-    setTgUser: (user: TelegramUser | null) => void;
+    setTgUser: (user: User | null) => void;
     setTgInitDataRaw: (raw: string | null) => void;
   };
 }

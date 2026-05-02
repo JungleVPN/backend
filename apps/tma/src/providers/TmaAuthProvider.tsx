@@ -1,6 +1,5 @@
-import { initData } from '@tma.js/sdk-react';
+import { initData, User } from '@tma.js/sdk-react';
 import { useAuthStoreActions } from '@workspace/core/stores';
-import type { TelegramUser } from '@workspace/platform';
 import { type ReactNode, useEffect } from 'react';
 
 /**
@@ -19,7 +18,7 @@ export function TmaAuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (user) {
-        setTgUser(user as unknown as TelegramUser);
+        setTgUser(user as unknown as User);
       }
     } catch {
       // Not inside Telegram (local dev).

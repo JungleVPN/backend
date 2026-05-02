@@ -1,15 +1,8 @@
 import { create } from 'zustand';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-// These mirror @workspace/platform types to keep packages/core dependency-free.
-
 export type PlatformType = 'web' | 'telegram';
 export type InitStatus = 'idle' | 'initializing' | 'ready' | 'error';
-
-/** Telegram client platform as reported by the TMA SDK launchParams.platform */
 export type ClientPlatform = 'android' | 'ios' | 'tdesktop' | 'macos' | 'web' | 'unknown';
-
-// ─── State ───────────────────────────────────────────────────────────────────
 
 export interface IPlatformState {
   /**
@@ -34,8 +27,6 @@ export interface IPlatformState {
   clientPlatform: string;
 }
 
-// ─── Actions ─────────────────────────────────────────────────────────────────
-
 export interface IPlatformActions {
   actions: {
     setPlatformType: (type: PlatformType) => void;
@@ -44,8 +35,6 @@ export interface IPlatformActions {
     setClientPlatform: (platform: string) => void;
   };
 }
-
-// ─── Store ───────────────────────────────────────────────────────────────────
 
 const initialState: IPlatformState = {
   platformType: 'web',
