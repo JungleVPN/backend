@@ -22,8 +22,9 @@ export const initTma = async (options: {
   eruda: boolean;
   mockForMacOS: boolean;
 }) => {
+  const launchParams = retrieveLaunchParams();
   if (tmaShellInitialized) {
-    return { launchParams: retrieveLaunchParams() };
+    return { launchParams };
   }
 
   setDebug(options.debug);
@@ -51,11 +52,15 @@ export const initTma = async (options: {
 
   if (viewport.mount.isAvailable()) {
     void viewport.mount().then(() => {
+      viewport.expand();
+      if (launchParams.tgWebAppPlatform === 'ios' || launchParams.tgWebAppPlatform === 'android') {
+        viewport.requestFullscreen();
+      }
       viewport.bindCssVars();
     });
   }
 
   tmaShellInitialized = true;
 
-  return { launchParams: retrieveLaunchParams() };
+  return { launchParams };
 };

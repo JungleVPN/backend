@@ -37,16 +37,20 @@ export class MainMenu extends Base {
         process.env.WEB_APP_URL || 'https://miniapp.thejungle.pro',
       )
       .row()
-      .text(
+      // .text(
+      //   (ctx) => ctx.t('extend-button-label'),
+      //   async (ctx) => {
+      //     await this.render(ctx, ctx.t('payment-methods-text'), this.paymentMethodMenu.menu);
+      //   },
+      // )
+      .webApp(
         (ctx) => ctx.t('extend-button-label'),
-        async (ctx) => {
-          await this.render(ctx, ctx.t('payment-methods-text'), this.paymentMethodMenu.menu);
-        },
+        process.env.WEB_APP_PAYMENT_URL || 'https://miniapp.thejungle.pro',
       )
-      .text(
-        (ctx) => ctx.t('profile-button-label'),
-        async (ctx) => await this.profileMenuService.init(ctx),
-      )
+      // .text(
+      //   (ctx) => ctx.t('profile-button-label'),
+      //   async (ctx) => await this.profileMenuService.init(ctx),
+      // )
       .row()
       .text(
         (ctx) => ctx.t('referra-button-label'),

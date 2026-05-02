@@ -7,7 +7,9 @@ export function TmaRootLayout() {
   return (
     <TmaAuthProvider>
       <TmaProvider>
-        <div className={`${clientPlatform === 'ios' ? 'pt-20' : ''}`}>
+        <div
+          className={`${clientPlatform === 'ios' || clientPlatform === 'android' ? 'pt-20' : ''}`}
+        >
           <RootLayout />
         </div>
       </TmaProvider>
