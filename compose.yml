@@ -133,7 +133,7 @@ services:
     networks:
       - jungle-net
     ports:
-      - "127.0.0.1:${TMA_PORT:-7090}:${WEB_PORT:-7090}"
+      - "127.0.0.1:${TMA_PORT:-7090}:${TMA_PORT:-7090}"
     restart: always
 
   bot:
