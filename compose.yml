@@ -7,6 +7,7 @@ x-app-build: &app-build
 services:
   db:
     image: postgres:17.6
+    container_name: db
     env_file: .env
     ports:
       - "127.0.0.1:${POSTGRES_HOST_PORT}:5432"
@@ -35,6 +36,7 @@ services:
   payments:
     build:
       <<: *app-build
+    container_name: payments
     command: ["node", "apps/payments/dist/src/main.js"]
     networks:
       - jungle-net
@@ -53,6 +55,7 @@ services:
   remnawave:
     build:
       <<: *app-build
+    container_name: remnawave
     command: ["node", "apps/remnawave/dist/main.js"]
     networks:
       - jungle-net
@@ -67,6 +70,7 @@ services:
   referrals:
     build:
       <<: *app-build
+    container_name: referrals
     command: ["node", "apps/referrals/dist/main.js"]
     networks:
       - jungle-net
@@ -78,6 +82,11 @@ services:
       remnawave:
         condition: service_started
     env_file: .env
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB && psql -U $$POSTGRES_USER -d $$POSTGRES_DB -c 'SELECT 1' > /dev/null 2>&1" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     ports:
       - "127.0.0.1:${REFERRALS_PORT}:${REFERRALS_PORT}"
     restart: always
@@ -85,6 +94,7 @@ services:
   broadcasts:
     build:
       <<: *app-build
+    container_name: broadcasts
     command: ["node", "apps/broadcasts/dist/main.js"]
     networks:
       - jungle-net
@@ -101,6 +111,7 @@ services:
   webhook:
     build:
       <<: *app-build
+    container_name: webhook
     command: ["node", "apps/webhook/dist/main.js"]
     networks:
       - jungle-net
@@ -119,6 +130,7 @@ services:
   web:
     build:
       <<: *app-build
+    container_name: web
     command: ["apps/web/node_modules/.bin/serve", "apps/web/dist", "--single", "--listen", "tcp://0.0.0.0:${WEB_PORT:-7080}"]
     networks:
       - jungle-net
@@ -129,6 +141,7 @@ services:
   tma:
     build:
       <<: *app-build
+    container_name: tma
     command: ["apps/tma/node_modules/.bin/serve", "apps/tma/dist", "--single", "--listen", "tcp://0.0.0.0:${TMA_PORT:-7090}"]
     networks:
       - jungle-net
@@ -139,6 +152,7 @@ services:
   bot:
     build:
       <<: *app-build
+    container_name: bot
     command: ["node", "apps/bot/dist/main.js"]
     networks:
       - jungle-net
@@ -166,4 +180,4 @@ volumes:
 
 networks:
   jungle-net:
-    external: false
+    external: true

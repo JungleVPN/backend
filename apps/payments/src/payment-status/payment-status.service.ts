@@ -92,7 +92,7 @@ export class PaymentStatusService {
   private async triggerReferralReward(telegramId: number): Promise<boolean> {
     try {
       const { data } = await axios.post<{ rewarded: boolean }>(
-        `${this.referralsBaseUrl}/referrals/reward-after-payment`,
+        `${this.referralsBaseUrl}/reward-after-payment`,
         { invitedTelegramId: telegramId },
         {
           headers: {

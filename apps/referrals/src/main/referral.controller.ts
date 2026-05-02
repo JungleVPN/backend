@@ -11,7 +11,7 @@ import {
 import { InterServiceGuard } from '../guards/inter-service.guard';
 import { ReferralService } from './referral.service';
 
-@Controller('referrals')
+@Controller()
 @UseGuards(InterServiceGuard)
 export class ReferralController {
   constructor(private readonly referralService: ReferralService) {}
