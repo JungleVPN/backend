@@ -35,7 +35,7 @@ export class SupportMenu extends Base {
               ctx.t('revoked-sub-text'),
               keyboard.webApp(
                 ctx.t('connect-button-label'),
-                process.env.WEB_APP_URL || 'https://miniapp.thejungle.pro',
+                process.env.TMA_APP_URL || 'https://miniapp.thejungle.pro',
               ),
             );
           },

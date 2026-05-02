@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
 import { BroadcastService } from './broadcast.service';
 
-@Controller('broadcasts')
+@Controller()
 export class BroadcastController {
   constructor(private readonly broadcastService: BroadcastService) {}
 

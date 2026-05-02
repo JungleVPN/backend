@@ -28,7 +28,7 @@ import {
 import { Repository } from 'typeorm';
 import { YooKassaProvider } from './yookassa.provider';
 
-@Controller('payments/yookassa')
+@Controller('yookassa')
 export class YookassaController {
   private readonly logger = new Logger(YookassaController.name);
 

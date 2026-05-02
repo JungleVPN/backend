@@ -37,7 +37,7 @@ export const router = createBrowserRouter([
             Component: ProtectedProfileSubscriptionPage,
           },
           {
-            path: 'payment',
+            path: 'payments',
             Component: ProtectedPaymentPage,
           },
         ],

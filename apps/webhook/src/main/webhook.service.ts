@@ -52,7 +52,7 @@ export class WebhookService {
 
   private async forwardRemnaEventToPayments(payload: TRemnawaveWebhookEvent): Promise<void> {
     try {
-      await axios.post(`${this.paymentsBaseUrl}/payments/remnawave-event`, payload, {
+      await axios.post(`${this.paymentsBaseUrl}/remnawave-event`, payload, {
         timeout: 10_000,
       });
     } catch (error: any) {
@@ -94,7 +94,7 @@ export class WebhookService {
 
   async forwardStripeWebhook(rawBody: Buffer, signature: string): Promise<void> {
     try {
-      await axios.post(`${this.paymentsBaseUrl}/payments/stripe/webhook`, rawBody, {
+      await axios.post(`${this.paymentsBaseUrl}/stripe/webhook`, rawBody, {
         headers: {
           'content-type': 'application/json',
           'stripe-signature': signature,
@@ -110,7 +110,7 @@ export class WebhookService {
   }
 
   async forwardYookassaWebhook(payload: PaymentWebhookNotification, ip: string): Promise<void> {
-    await axios.post(`${this.paymentsBaseUrl}/payments/yookassa/webhook`, payload, {
+    await axios.post(`${this.paymentsBaseUrl}/yookassa/webhook`, payload, {
       headers: {
         'x-forwarded-for': ip,
         'x-service-secret': process.env.INTER_SERVICE_SECRET,

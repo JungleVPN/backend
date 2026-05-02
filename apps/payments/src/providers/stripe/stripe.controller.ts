@@ -18,7 +18,7 @@ import { Repository } from 'typeorm';
 import { StripeProvider } from './stripe.provider';
 import type { CreateStripePaymentDto, Session } from './stripe.types';
 
-@Controller('payments/stripe')
+@Controller('stripe')
 export class StripeController {
   private readonly logger = new Logger(StripeController.name);
 

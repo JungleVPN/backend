@@ -60,7 +60,7 @@ export class UserExpireListener {
 
     // keyboard.webApp(
     //   this.localService.i18n.t(locale, 'pay-button-label'),
-    //   process.env.WEB_APP_PAYMENT_URL || 'https://miniapp.thejungle.pro/profile/payment',
+    //   process.env.TMA_APP_PAYMENT_URL || 'https://miniapp.thejungle.pro/profile/payment',
     // );
     keyboard.text(
       this.localService.i18n.t(locale, 'pay-button-label'),

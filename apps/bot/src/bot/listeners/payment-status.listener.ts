@@ -139,7 +139,7 @@ export class PaymentStatusListener {
     const successMenu = new InlineKeyboard()
       // .webApp(
       //   i18n.t(locale, 'profile-button-label'),
-      //   process.env.WEB_APP_URL || 'https://miniapp.thejungle.pro',
+      //   process.env.TMA_APP_URL || 'https://miniapp.thejungle.pro',
       // )
       .text(i18n.t(locale, 'profile-button-label'), 'navigate_to_profile')
       .row()

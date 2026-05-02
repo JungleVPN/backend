@@ -11,7 +11,7 @@ import {
 import type { PaymentWebhookNotification, TRemnawaveWebhookEvent } from '@workspace/types';
 import { WebhookService } from './webhook.service';
 
-@Controller('webhook')
+@Controller()
 export class WebhookController {
   readonly logger = new Logger(WebhookService.name);
   constructor(private readonly webhookService: WebhookService) {}

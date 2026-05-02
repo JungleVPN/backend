@@ -34,7 +34,7 @@ export class MainMenu extends Base {
     this.menu
       .webApp(
         (ctx) => ctx.t('connect-button-label'),
-        process.env.WEB_APP_URL || 'https://miniapp.thejungle.pro',
+        process.env.TMA_APP_URL || 'https://miniapp.thejungle.pro',
       )
       .row()
       // .text(
@@ -45,7 +45,7 @@ export class MainMenu extends Base {
       // )
       .webApp(
         (ctx) => ctx.t('extend-button-label'),
-        process.env.WEB_APP_PAYMENT_URL || 'https://miniapp.thejungle.pro',
+        process.env.TMA_APP_PAYMENT_URL || 'https://miniapp.thejungle.pro',
       )
       // .text(
       //   (ctx) => ctx.t('profile-button-label'),

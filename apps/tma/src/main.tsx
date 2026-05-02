@@ -26,7 +26,7 @@ const coreRuntimeEnv = {
   paymentReturnPath: '/',
   authGateRedirectPath: '/',
   profileSubscriptionPath: '/',
-  profilePaymentPath: '/payment',
+  profilePaymentPath: '/payments',
 };
 
 const root = document.getElementById('root');

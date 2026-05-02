@@ -25,7 +25,7 @@ export const router = createMemoryRouter(
               Component: ProtectedProfileSubscriptionPage,
             },
             {
-              path: 'payment',
+              path: 'payments',
               Component: ProtectedPaymentPage,
             },
 

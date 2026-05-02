@@ -10,7 +10,7 @@ import { AutopaymentService } from './autopayment.service';
  * Receives forwarded Remnawave panel events from the webhook service.
  * Routes each event to the appropriate handler.
  */
-@Controller('payments')
+@Controller()
 export class AutopaymentController {
   private readonly logger = new Logger(AutopaymentController.name);
 

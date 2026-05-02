@@ -6,7 +6,7 @@ import { useLocation, useNavigate } from 'react-router';
 import { useCoreEnv } from '../../runtime';
 import css from './Tabs.module.css';
 
-type TabValue = 'subscription' | 'payment';
+type TabValue = 'subscription' | 'payments';
 
 interface TabDef {
   id: TabValue;
@@ -14,7 +14,7 @@ interface TabDef {
   icon: React.ReactNode;
 }
 
-const TAB_VALUES: TabValue[] = ['subscription', 'payment'];
+const TAB_VALUES: TabValue[] = ['subscription', 'payments'];
 
 function normalizePath(p: string) {
   if (p === '/') return '/';
@@ -26,7 +26,7 @@ function getActiveTab(pathname: string, subscriptionPath: string, paymentPath: s
   const pay = normalizePath(paymentPath);
   const sub = normalizePath(subscriptionPath);
   if (norm === pay) {
-    return 'payment';
+    return 'payments';
   }
   if (norm === sub || (sub === '/' && norm === '/')) {
     return 'subscription';
@@ -46,7 +46,7 @@ export const Navbar = () => {
     () =>
       ({
         subscription: profileSubscriptionPath,
-        payment: profilePaymentPath,
+        payments: profilePaymentPath,
       }) satisfies Record<TabValue, string>,
     [profileSubscriptionPath, profilePaymentPath],
   );
@@ -59,7 +59,7 @@ export const Navbar = () => {
         icon: <IconWallet className='size-4' />,
       },
       {
-        id: 'payment',
+        id: 'payments',
         label: t('profileTabs.payment'),
         icon: <IconPigFilled className='size-4' />,
       },

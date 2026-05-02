@@ -6,12 +6,12 @@ export const apiRoutes = {
     messagesBatch: (broadcastId: number | string) => `/broadcasts/${broadcastId}/messages/batch`,
   },
   payments: {
-    stripeCreateSession: '/payments/stripe/create-session',
-    yookassaCreateSession: '/payments/yookassa/create-session',
+    stripeCreateSession: '/stripe/create-session',
+    yookassaCreateSession: '/yookassa/create-session',
     yookassaSavedMethods: (userId: string) =>
-      `/payments/yookassa/saved-methods/${encodeURIComponent(userId)}`,
+      `/yookassa/saved-methods/${encodeURIComponent(userId)}`,
     yookassaSavedMethodById: (userId: string, id: string) =>
-      `/payments/yookassa/saved-methods/${encodeURIComponent(userId)}/${encodeURIComponent(id)}`,
+      `/yookassa/saved-methods/${encodeURIComponent(userId)}/${encodeURIComponent(id)}`,
   },
   referrals: {
     collection: '/referrals',

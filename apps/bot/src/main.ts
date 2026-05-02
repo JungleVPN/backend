@@ -8,6 +8,8 @@ async function bootstrap() {
     rawBody: true,
   });
 
+  app.setGlobalPrefix('bot');
+
   const port = Number(process.env.BOT_PORT) || 7000;
 
   await app.listen(port, '0.0.0.0');
