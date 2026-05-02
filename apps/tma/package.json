@@ -10,6 +10,7 @@
     "lint": "biome check ./src"
   },
   "dependencies": {
+    "serve": "^14.2.4",
     "@heroui/styles": "^3.0.3",
     "@tma.js/sdk-react": "^3.0.19",
     "@workspace/core": "workspace:*",
