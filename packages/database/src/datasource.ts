@@ -9,11 +9,8 @@ import { SavedPaymentMethod } from './entities/saved-payment-method.entity';
 import { StripePayment } from './entities/stripe-payment.entity';
 import { YookassaPayment } from './entities/yookassa-payment.entity';
 
-if (process.env.NODE_ENV === 'development') {
-  config({ path: path.resolve(process.cwd(), '.env.development') });
-  config({ path: path.resolve(process.cwd(), '../../.env.development') });
-}
-
+config({ path: path.resolve(process.cwd(), '.env.development') });
+config({ path: path.resolve(process.cwd(), '../../.env.development') });
 config({ path: path.resolve(process.cwd(), '.env') });
 config({ path: path.resolve(process.cwd(), '../../.env') });
 

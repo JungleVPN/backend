@@ -9,7 +9,6 @@
   isolation: isolate;
   margin-block: 0;
   margin-inline: auto;
-  height: 51px;
 }
 
 .list {
@@ -62,32 +61,16 @@
   will-change: transform;
   z-index: 3;
   padding-block: 5px;
+  font-weight: 600;
+  transition: color 100ms ease;
+  color: var(--tg-theme-text-color);
 }
 
 .indicator {
   border-radius: 4rem;
   box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
-  background-color: rgb(from rgb(255, 255, 255) r g b / 10%);
+  background-color: rgb(from var(--tg-theme-accent-text-color) r g b / 10%);
   border-color: transparent;
-}
-
-.tab {
-  z-index: 1;
-  font-weight: 600;
-  transition: color 100ms ease;
-  color: rgba(255, 255, 255, 0.55);
-}
-
-.tab[aria-selected="true"] {
-  color: #fff;
-}
-
-.tabSection {
-  margin: 0;
-}
-
-.tabIcon {
-  background: transparent;
 }
 
 .tabLabel {
@@ -95,11 +78,20 @@
   flex-direction: column;
   align-items: center;
   font-size: 12px;
-  font-weight: 400;
+  font-weight: 500;
   line-height: 14px;
-  color: rgba(255, 255, 255, 0.45);
 }
 
-.tab[aria-selected="true"] .tabLabel {
-  color: rgba(255, 255, 255, 0.85);
+.tabIcon {
+  background: transparent;
+  fill: var(--tg-theme-text-color);
+}
+
+.tab[aria-selected="true"] .tabLabel,
+.tab[aria-selected="true"] .tabIcon {
+  color: var(--tg-theme-accent-text-color);
+}
+
+.tabSection {
+  margin: 0;
 }

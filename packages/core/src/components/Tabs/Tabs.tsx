@@ -56,12 +56,12 @@ export const Navbar = () => {
       {
         id: 'subscription',
         label: t('profileTabs.subscription'),
-        icon: <IconWallet className='size-4' />,
+        icon: <IconWallet className='size-6' />,
       },
       {
         id: 'payments',
         label: t('profileTabs.payment'),
-        icon: <IconPigFilled className='size-4' />,
+        icon: <IconPigFilled className='size-6' />,
       },
     ],
     [t],
@@ -82,8 +82,8 @@ export const Navbar = () => {
         <Tabs.List aria-label={t('profileTabs.ariaLabel')} className={css.list}>
           {tabs.map((tab) => (
             <Tabs.Tab key={tab.id} id={tab.id} className={css.tab}>
-              <span>{tab.icon}</span>
-              <span>{tab.label}</span>
+              <span className={css.tabIcon}>{tab.icon}</span>
+              <span className={css.tabLabel}>{tab.label}</span>
               <Tabs.Indicator className={css.indicator} />
             </Tabs.Tab>
           ))}

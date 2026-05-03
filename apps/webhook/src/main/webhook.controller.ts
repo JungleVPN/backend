@@ -7,8 +7,10 @@ import {
   Post,
   type RawBodyRequest,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import type { PaymentWebhookNotification, TRemnawaveWebhookEvent } from '@workspace/types';
+import { RemnaSignatureGuard } from './remna-signature.guard';
 import { WebhookService } from './webhook.service';
 
 @Controller()
@@ -21,6 +23,7 @@ export class WebhookController {
    * Authenticated by RemnaSignatureGuard (HMAC-SHA256 of the JSON body),
    * so the handler receives only pre-validated payloads.
    */
+  @UseGuards(RemnaSignatureGuard)
   @Post('remnawave')
   async handleRemnaEvents(@Body() payload: TRemnawaveWebhookEvent) {
     await this.webhookService.processRemnaEvent(payload);
