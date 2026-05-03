@@ -25,7 +25,7 @@ x-nest-hc: &nest-hc
 services:
   db:
     image: postgres:17.6
-    container_name: db
+    container_name: jungle-database
     env_file: .env
     # sync-db-password.sh wraps the normal postgres entrypoint and runs
     # ALTER USER after every startup so POSTGRES_PASSWORD in .env is always
