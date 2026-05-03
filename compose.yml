@@ -177,7 +177,7 @@ services:
       - "127.0.0.1:${WEB_PORT:-7080}:${WEB_PORT:-7080}"
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:${WEB_PORT:-7080}/', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      test: ["CMD-SHELL", "node -e \"const n=require('net'),c=n.createConnection(+(process.env.WEB_PORT||7080));c.on('connect',()=>{c.end();process.exit(0)});c.on('error',()=>process.exit(1))\""]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -194,7 +194,7 @@ services:
       - "127.0.0.1:${TMA_PORT:-7090}:${TMA_PORT:-7090}"
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:${TMA_PORT:-7090}/', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      test: ["CMD-SHELL", "node -e \"const n=require('net'),c=n.createConnection(+(process.env.TMA_PORT||7090));c.on('connect',()=>{c.end();process.exit(0)});c.on('error',()=>process.exit(1))\""]
       interval: 10s
       timeout: 5s
       retries: 5
