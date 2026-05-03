@@ -9,11 +9,13 @@ x-app-build: &app-build
     VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
     VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
     VITE_SUBPAGE_CONFIG: ${VITE_SUBPAGE_CONFIG}
-    VITE_TRIAL_PERIOD_IN_DAYS: ${VITE_TRIAL_PERIOD_IN_DAYS}
     VITE_ALLOWED_AMOUNTS: ${VITE_ALLOWED_AMOUNTS}
     VITE_ALLOWED_PERIODS: ${VITE_ALLOWED_PERIODS}
 
-# Reusable healthcheck timing for NestJS services
+# Reusable healthcheck for NestJS services — TCP-only so no HTTP 404s flood logs.
+# The NestJS apps have a global prefix (/remnawave, /payments, etc.) so hitting /
+# returns 404, which GlobalExceptionFilter logs as ERROR every probe interval.
+# A TCP check just confirms the port is open without making any HTTP request.
 x-nest-hc: &nest-hc
   interval: 10s
   timeout: 5s
@@ -67,7 +69,7 @@ services:
       - "127.0.0.1:${REMNAWAVE_PORT}:${REMNAWAVE_PORT}"
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:' + process.env.REMNAWAVE_PORT, r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      test: ["CMD-SHELL", "node -e \"const n=require('net'),c=n.createConnection(+process.env.REMNAWAVE_PORT||3002);c.on('connect',()=>{c.end();process.exit(0)});c.on('error',()=>process.exit(1))\""]
       <<: *nest-hc
 
   payments:
@@ -89,7 +91,7 @@ services:
       - "127.0.0.1:${PAYMENTS_PORT}:${PAYMENTS_PORT}"
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:' + process.env.PAYMENTS_PORT, r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      test: ["CMD-SHELL", "node -e \"const n=require('net'),c=n.createConnection(+process.env.PAYMENTS_PORT||3001);c.on('connect',()=>{c.end();process.exit(0)});c.on('error',()=>process.exit(1))\""]
       <<: *nest-hc
 
   referrals:
@@ -111,7 +113,7 @@ services:
       - "127.0.0.1:${REFERRALS_PORT}:${REFERRALS_PORT}"
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:' + process.env.REFERRALS_PORT, r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      test: ["CMD-SHELL", "node -e \"const n=require('net'),c=n.createConnection(+process.env.REFERRALS_PORT||3004);c.on('connect',()=>{c.end();process.exit(0)});c.on('error',()=>process.exit(1))\""]
       <<: *nest-hc
 
   broadcasts:
@@ -131,7 +133,7 @@ services:
       - "127.0.0.1:${BROADCASTS_PORT}:${BROADCASTS_PORT}"
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:' + process.env.BROADCASTS_PORT, r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      test: ["CMD-SHELL", "node -e \"const n=require('net'),c=n.createConnection(+process.env.BROADCASTS_PORT||3005);c.on('connect',()=>{c.end();process.exit(0)});c.on('error',()=>process.exit(1))\""]
       <<: *nest-hc
 
   webhook:
@@ -153,7 +155,7 @@ services:
       - "127.0.0.1:${WEBHOOK_PORT}:${WEBHOOK_PORT}"
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:' + process.env.WEBHOOK_PORT, r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      test: ["CMD-SHELL", "node -e \"const n=require('net'),c=n.createConnection(+process.env.WEBHOOK_PORT||3003);c.on('connect',()=>{c.end();process.exit(0)});c.on('error',()=>process.exit(1))\""]
       <<: *nest-hc
 
   web:
@@ -215,7 +217,7 @@ services:
       - "127.0.0.1:${BOT_PORT:-7070}:${BOT_PORT:-7070}"
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:' + (process.env.BOT_PORT || 7070), r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      test: ["CMD-SHELL", "node -e \"const n=require('net'),c=n.createConnection(+process.env.BOT_PORT||7070);c.on('connect',()=>{c.end();process.exit(0)});c.on('error',()=>process.exit(1))\""]
       <<: *nest-hc
 
 
