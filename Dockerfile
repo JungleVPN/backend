@@ -26,6 +26,27 @@ COPY . .
 # exhaust RAM on small VPSes (swap → build looks "stuck"). Override when needed:
 #   docker compose build --build-arg TURBO_CONCURRENCY=4
 ARG TURBO_CONCURRENCY=2
+
+# Vite bakes these into the JS bundle at build time — they must be available
+# here, not at runtime. Pass them via docker compose build args so that .env
+# never needs to be copied into the image.
+ARG VITE_REMNAWAVE_URL
+ARG VITE_PAYMENTS_URL
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ARG VITE_SUBPAGE_CONFIG
+ARG VITE_TRIAL_PERIOD_IN_DAYS
+ARG VITE_ALLOWED_AMOUNTS
+ARG VITE_ALLOWED_PERIODS
+ENV VITE_REMNAWAVE_URL=$VITE_REMNAWAVE_URL \
+    VITE_PAYMENTS_URL=$VITE_PAYMENTS_URL \
+    VITE_SUPABASE_URL=$VITE_SUPABASE_URL \
+    VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY \
+    VITE_SUBPAGE_CONFIG=$VITE_SUBPAGE_CONFIG \
+    VITE_TRIAL_PERIOD_IN_DAYS=$VITE_TRIAL_PERIOD_IN_DAYS \
+    VITE_ALLOWED_AMOUNTS=$VITE_ALLOWED_AMOUNTS \
+    VITE_ALLOWED_PERIODS=$VITE_ALLOWED_PERIODS
+
 # Build all packages except Vite apps first (Turbo runs many Nest builds in parallel).
 RUN pnpm turbo build --concurrency=${TURBO_CONCURRENCY} --filter='!@jungle/web' --filter='!@jungle/tma'
 # Vite apps: skip full-project `tsc -b` here — heavy on small VPS RAM; Vite already compiles TS.
