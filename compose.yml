@@ -27,19 +27,27 @@ services:
     image: postgres:17.6
     container_name: db
     env_file: .env
+    # sync-db-password.sh wraps the normal postgres entrypoint and runs
+    # ALTER USER after every startup so POSTGRES_PASSWORD in .env is always
+    # the active password — even when the data volume already exists.
+    entrypoint: ["sh", "/usr/local/bin/sync-db-password.sh"]
+    command: ["postgres"]
     ports:
       - "127.0.0.1:${POSTGRES_HOST_PORT}:5432"
     networks:
       - jungle-net
     volumes:
       - db:/var/lib/postgresql/data
+      - ./scripts/sync-db-password.sh:/usr/local/bin/sync-db-password.sh:ro
     restart: always
     healthcheck:
-      # pg_isready only checks the socket; the psql SELECT 1 verifies auth is ready too
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB && psql -U $$POSTGRES_USER -d $$POSTGRES_DB -c 'SELECT 1' > /dev/null 2>&1"]
+      # Only passes after sync-db-password.sh writes /tmp/db-ready,
+      # guaranteeing the password matches .env before migration connects.
+      test: ["CMD-SHELL", "test -f /tmp/db-ready && pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 12
+      start_period: 15s
 
   migration:
     build:
