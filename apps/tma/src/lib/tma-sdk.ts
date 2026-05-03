@@ -44,6 +44,10 @@ export const initTma = async (options: {
   closingBehavior.mount();
   closingBehavior.enableConfirmation();
 
+  if (swipeBehavior.isSupported()) {
+    swipeBehavior.disableVertical();
+  }
+
   if (miniApp.mount.isAvailable()) {
     themeParams.mount();
     miniApp.mount();
