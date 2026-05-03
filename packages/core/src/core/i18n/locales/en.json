@@ -49,7 +49,6 @@
     "pageSubtitle": "Manage your payment methods here",
     "methodsHeading": "Saved payment methods",
     "emptyMethods": "No saved payment methods yet.",
-    "autopaymentActive": "Autopayment is active. To pay manually, remove your saved card first.",
     "payButton": "Pay {{amount}} ₽",
     "extendButton": "Extend",
     "deleteMethod": {
@@ -98,7 +97,7 @@
     "dialog": {
       "title": "Subscription terms",
       "activationTitle": "Subscription activation",
-      "activationBody": "The subscription will be activated after payment confirmation is sent to your email.",
+      "activationBody": "The subscription will be activated after payment confirmation is sent to your email. To pay manually, remove your saved card first.",
       "autoRenewalTitle": "Auto-renewal",
       "autoRenewalLead": "Your subscription will automatically renew at the end of the initial subscription period. You can turn off auto-renewal anytime in your account",
       "renewalCostTitle": "Renewal cost",

@@ -1,17 +1,17 @@
 import { AlertDialog, Button, Card, Spinner, useOverlayState } from '@heroui/react';
-import { Fragment, useEffect } from 'react';
+import { Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRemnawaveApi } from '../../../api';
 import PaymentPageIcon from '../../../assets/icons/payment-icon.svg?url';
 import { ExtendCard, Link, SavedMethodRow } from '../../../components';
-import {
-  useCreatePaymentSession,
-  useDeleteSavedMethod,
-  useSavedMethods,
-  useUpdateUser,
-} from '../../../hooks';
+import { useCreatePaymentSession, useDeleteSavedMethod, useUpdateUser } from '../../../hooks';
 import { useCoreEnv, usePaymentsApi } from '../../../runtime';
-import { useAuthStoreActions, useAuthStoreInfo } from '../../../stores';
+import {
+  useAuthStoreActions,
+  useAuthStoreInfo,
+  useSavedMethodsStoreActions,
+  useSavedMethodsStoreInfo,
+} from '../../../stores';
 import { Page } from '../../../ui';
 
 export default function PaymentPage() {
@@ -27,22 +27,15 @@ export default function PaymentPage() {
   const { rmnUser, tgUser } = useAuthStoreInfo();
   const { setRmnUser } = useAuthStoreActions();
 
-  const {
-    data: savedMethods,
-    isLoading: loadingMethods,
-    execute: fetchMethods,
-  } = useSavedMethods(paymentsApi);
+  // Filled by ProfileLayout's useSavedMethodsData; refreshed here after delete.
+  const savedMethods = useSavedMethodsStoreInfo();
+  const { setSavedMethods } = useSavedMethodsStoreActions();
+  const isLoadingMethods = savedMethods === null;
 
   const { isLoading: isPaying, execute: createSession } = useCreatePaymentSession(paymentsApi);
   const { isLoading: isDeleting, execute: deleteMethod } = useDeleteSavedMethod(paymentsApi);
   const { execute: updateUser } = useUpdateUser(remnawaveApi);
   const termsState = useOverlayState();
-
-  useEffect(() => {
-    if (rmnUser?.uuid) {
-      fetchMethods(rmnUser.uuid);
-    }
-  }, [fetchMethods, rmnUser?.uuid]);
 
   const hasActiveMethod = savedMethods?.some((m) => m.isActive) ?? false;
   const needsEmailInput = Boolean(tgUser) && !rmnUser?.email;
@@ -50,7 +43,8 @@ export default function PaymentPage() {
   const handleDelete = async (id: string) => {
     if (!rmnUser?.uuid) return;
     await deleteMethod(rmnUser.uuid, id);
-    await fetchMethods(rmnUser.uuid);
+    const list = await paymentsApi.getSavedMethods(rmnUser.uuid);
+    setSavedMethods(list);
   };
 
   const handleExtend = async (email?: string) => {
@@ -92,7 +86,7 @@ export default function PaymentPage() {
 
             <Card className='w-full overflow-hidden p-0' variant='default'>
               <Card.Content className='flex flex-col gap-0 p-0'>
-                {loadingMethods ? (
+                {isLoadingMethods ? (
                   <div className='flex min-h-[120px] items-center justify-center py-8'>
                     <Spinner color='accent' size='sm' />
                   </div>
@@ -113,7 +107,6 @@ export default function PaymentPage() {
           </div>
 
           <div className='mt-1 flex w-full flex-col gap-1 px-4 text-start'>
-            <p className='text-xs text-muted'>{t('payment.autopaymentActive')}</p>
             <p className='text-xs text-muted'>
               {t('terms.paymentConsentLead')}
               <button

@@ -33,7 +33,7 @@ export function PlatformSelector({ options, selectedPlatformId, onSelect }: Plat
       }}
     >
       <Label className='sr-only'>{t('a11y.platform')}</Label>
-      <Select.Trigger>
+      <Select.Trigger className={'items-center'}>
         <span
           className='flex size-5 shrink-0 items-center justify-center mr-1'
           // biome-ignore lint/security/noDangerouslySetInnerHtml: trusted SVG icon string
